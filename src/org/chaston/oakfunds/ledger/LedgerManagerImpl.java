@@ -1,3 +1,18 @@
+/*
+ * Copyright 2014 Miles Chaston
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.chaston.oakfunds.ledger;
 
 import com.google.inject.Inject;
@@ -108,10 +123,11 @@ class LedgerManagerImpl implements LedgerManager {
 
   @Override
   public void setInterestRate(BankAccount bankAccount, BigDecimal interestRate, Instant start,
-      Instant end) throws StorageException{
+      Instant end) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(ATTRIBUTE_INTEREST_RATE, interestRate);
-    store.updateIntervalRecord(bankAccount, BANK_ACCOUNT_INTEREST_RECORD_FACTORY, start, end, attributes);
+    store.updateIntervalRecord(bankAccount, BANK_ACCOUNT_INTEREST_RECORD_FACTORY, start, end,
+        attributes);
   }
 
   @Override
@@ -157,12 +173,14 @@ class LedgerManagerImpl implements LedgerManager {
   }
 
   @Override
-  public void recordTransaction(Account account, Instant date, BigDecimal amount) throws StorageException {
+  public void recordTransaction(Account account, Instant date, BigDecimal amount)
+      throws StorageException {
     recordTransaction(account, date, amount, null);
   }
 
   @Override
-  public void recordTransaction(Account account, Instant date, BigDecimal amount, String comment) throws StorageException {
+  public void recordTransaction(Account account, Instant date, BigDecimal amount, String comment)
+      throws StorageException {
     recordTransaction(account, date, amount, comment, null);
   }
 
@@ -176,7 +194,8 @@ class LedgerManagerImpl implements LedgerManager {
     if (sisterTransactionId != null) {
       attributes.put(ATTRIBUTE_SISTER_TRANSACTION_ID, sisterTransactionId);
     }
-    int recordId = store.insertInstantRecord(account, ACCOUNT_TRANSACTION_RECORD_FACTORY, date, attributes);
+    int recordId = store
+        .insertInstantRecord(account, ACCOUNT_TRANSACTION_RECORD_FACTORY, date, attributes);
     if (account instanceof ExpenseAccount) {
       ExpenseAccount expenseAccount = (ExpenseAccount) account;
       BankAccount bankAccount = getBankAccount(expenseAccount.getDefaultSourceAccountId());
