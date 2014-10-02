@@ -15,27 +15,18 @@
  */
 package org.chaston.oakfunds.model;
 
-import org.chaston.oakfunds.storage.Attribute;
-import org.chaston.oakfunds.storage.Record;
-import org.chaston.oakfunds.storage.RecordType;
+import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
+import org.chaston.oakfunds.storage.Store;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class Model extends Record {
-
-  @Attribute(name = "title")
-  private String title;
-
-  Model(int id) {
-    super(RecordType.MODEL, id);
-  }
-
-  public String getTitle() {
-    return title;
-  }
-
-  public void setTitle(String title) {
-    this.title = title;
+public class ModelModule extends AbstractModule {
+  @Override
+  protected void configure() {
+    requireBinding(Store.class);
+    bind(ModelManagerImpl.class).in(Singleton.class);
+    bind(ModelManager.class).to(ModelManagerImpl.class);
   }
 }
