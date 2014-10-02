@@ -8,6 +8,11 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" exported="" name="guava" level="project" />
+    <orderEntry type="library" exported="" name="guice" level="project" />
+    <orderEntry type="library" exported="" name="joda-time" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="junit" level="project" />
+    <orderEntry type="library" exported="" name="mockito" level="project" />
   </component>
 </module>
 

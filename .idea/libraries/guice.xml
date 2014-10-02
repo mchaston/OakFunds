@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="guice">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/libraries/guice/aopalliance.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/guice/guice-3.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/guice/guice-assistedinject-3.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/guice/guice-multibindings-3.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/guice/guice-servlet-3.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/guice/javax.inject.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
