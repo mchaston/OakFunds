@@ -15,6 +15,8 @@
  */
 package org.chaston.oakfunds.storage;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.chaston.oakfunds.util.Pair;
 import org.joda.time.Instant;
 
@@ -102,6 +104,36 @@ public class InMemoryStore implements Store {
     T record = recordFactory.newInstance(id);
     populateRecord(record, inMemoryRecord.getAttributes());
     return record;
+  }
+
+  @Override
+  public <T extends Record> List<T> findRecords(RecordFactory<T> recordFactory,
+      List<SearchTerm> searchTerms) throws StorageException {
+    InMemoryTransaction currentTransaction = CURRENT_TRANSACTION.get();
+    Map<Integer, InMemoryRecord> results = ImmutableMap.of();
+    if (currentTransaction != null) {
+      results =
+          currentTransaction.findRecords(recordFactory.getRecordType(), searchTerms);
+    }
+    results = new HashMap<>(results);
+    for (Map.Entry<Integer, InMemoryRecord> entry :
+        getTable(recordFactory.getRecordType()).entrySet()) {
+      int id = entry.getKey();
+      InMemoryRecord record = entry.getValue();
+      if (!results.containsKey(id)
+          && !currentTransaction.containsRecord(recordFactory.getRecordType(), id)
+          && record.matchesSearchTerms(searchTerms)) {
+        results.put(id, record);
+      }
+    }
+    // TODO(mchaston): add ordering
+    ImmutableList.Builder<T> resultList = ImmutableList.builder();
+    for (Map.Entry<Integer, InMemoryRecord> entry : results.entrySet()) {
+      T record = recordFactory.newInstance(entry.getKey());
+      populateRecord(record, entry.getValue().getAttributes());
+      resultList.add(record);
+    }
+    return resultList.build();
   }
 
   @Override

@@ -21,6 +21,7 @@ import org.chaston.oakfunds.util.Pair;
 import org.joda.time.Instant;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -83,5 +84,15 @@ class InMemoryRecord {
       return null;
     }
     return intervalRecordSet.getIntervalRecord(date);
+  }
+
+  public boolean matchesSearchTerms(List<SearchTerm> searchTerms) {
+    for (SearchTerm searchTerm : searchTerms) {
+      Object attribute = attributes.get(searchTerm.getAttribute());
+      if (!searchTerm.getOperator().matches(attribute, searchTerm.getValue())) {
+        return false;
+      }
+    }
+    return true;
   }
 }

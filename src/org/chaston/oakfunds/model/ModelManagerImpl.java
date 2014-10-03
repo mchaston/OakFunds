@@ -15,13 +15,19 @@
  */
 package org.chaston.oakfunds.model;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.storage.RecordFactory;
 import org.chaston.oakfunds.storage.RecordType;
+import org.chaston.oakfunds.storage.SearchOperator;
+import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
+import org.chaston.oakfunds.storage.Transaction;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,13 +46,39 @@ class ModelManagerImpl implements ModelManager {
     }
   };
 
+  private static final String ATTRIBUTE_BASE_MODEL = "base_model";
   private static final String ATTRIBUTE_TITLE = "title";
 
   private final Store store;
+  private int baseModelId;
 
   @Inject
-  ModelManagerImpl(Store store) {
+  ModelManagerImpl(Store store) throws StorageException {
     this.store = store;
+    List<SearchTerm> searchTerms =
+        ImmutableList.of(SearchTerm.of(ATTRIBUTE_BASE_MODEL, SearchOperator.EQUALS, true));
+    List<Model> baseModels = store.findRecords(MODEL_RECORD_FACTORY, searchTerms);
+    Model baseModel;
+    if (baseModels.isEmpty()) {
+      Map<String, Object> attributes = new HashMap<>();
+      attributes.put(ATTRIBUTE_TITLE, "[base]");
+      attributes.put(ATTRIBUTE_BASE_MODEL, true);
+      Transaction transaction = store.startTransaction();
+      boolean success = false;
+      try {
+        baseModel = store.createRecord(MODEL_RECORD_FACTORY, attributes);
+        success = true;
+      } finally {
+        if (success) {
+          transaction.commit();
+        } else {
+          transaction.rollback();
+        }
+      }
+    } else {
+      baseModel = Iterables.getOnlyElement(baseModels);
+    }
+    baseModelId = baseModel.getId();
   }
 
   @Override
@@ -54,6 +86,11 @@ class ModelManagerImpl implements ModelManager {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(ATTRIBUTE_TITLE, title);
     return store.createRecord(MODEL_RECORD_FACTORY, attributes);
+  }
+
+  @Override
+  public Model getBaseModel() throws StorageException {
+    return getModel(baseModelId);
   }
 
   @Override

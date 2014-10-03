@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.model;
+package org.chaston.oakfunds.storage;
 
-import org.chaston.oakfunds.storage.StorageException;
+import java.util.Objects;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface ModelManager {
-  Model createNewModel(String title) throws StorageException;
+public enum SearchOperator {
+  EQUALS {
+    @Override
+    public boolean matches(Object lhs, Object rhs) {
+      return Objects.equals(lhs, rhs);
+    }
+  };
 
-  Model getBaseModel() throws StorageException;
-
-  Model getModel(int modelId) throws StorageException;
+  public abstract boolean matches(Object lhs, Object rhs);
 }

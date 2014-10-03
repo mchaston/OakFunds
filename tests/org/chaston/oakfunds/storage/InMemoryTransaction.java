@@ -15,9 +15,11 @@
  */
 package org.chaston.oakfunds.storage;
 
+import com.google.common.collect.ImmutableMap;
 import org.joda.time.Instant;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -89,6 +91,22 @@ class InMemoryTransaction implements Transaction, RecordInserter {
   int insertInstantRecord(InMemoryRecord inMemoryRecord, RecordType recordType,
       Instant instant, Map<String, Object> attributes) throws StorageException {
     return inMemoryRecord.insertInstantRecord(this, recordType, instant, attributes);
+  }
+
+  boolean containsRecord(RecordType recordType, int id) {
+    return getTable(recordType).containsKey(id);
+  }
+
+  Map<Integer, InMemoryRecord> findRecords(RecordType recordType,
+      List<SearchTerm> searchTerms) {
+    ImmutableMap.Builder<Integer, InMemoryRecord> results = ImmutableMap.builder();
+    for (Map.Entry<Integer, InMemoryRecord> entry : getTable(recordType).entrySet()) {
+      InMemoryRecord record = entry.getValue();
+      if (record.matchesSearchTerms(searchTerms)) {
+        results.put(entry);
+      }
+    }
+    return results.build();
   }
 
   private int getNextId(RecordType recordType) {

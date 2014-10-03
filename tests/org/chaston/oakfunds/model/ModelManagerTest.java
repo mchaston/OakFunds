@@ -30,6 +30,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -61,5 +62,10 @@ public class ModelManagerTest {
     transaction.commit();
 
     assertEquals("New Model", modelManager.getModel(model.getId()).getTitle());
+  }
+
+  @Test
+  public void getBaseModel() throws StorageException {
+    assertNotNull(modelManager.getBaseModel());
   }
 }

@@ -13,40 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.model;
-
-import org.chaston.oakfunds.storage.Attribute;
-import org.chaston.oakfunds.storage.Record;
-import org.chaston.oakfunds.storage.RecordType;
+package org.chaston.oakfunds.storage;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class Model extends Record {
+public class SearchTerm {
+  private final String attribute;
+  private final SearchOperator operator;
+  private final Object value;
 
-  @Attribute(name = "title")
-  private String title;
-
-  @Attribute(name = "base_model", propertyName = "baseModel")
-  private boolean baseModel;
-
-  Model(int id) {
-    super(RecordType.MODEL, id);
+  private SearchTerm(String attribute, SearchOperator operator, Object value) {
+    this.attribute = attribute;
+    this.operator = operator;
+    this.value = value;
   }
 
-  public String getTitle() {
-    return title;
+  public static SearchTerm of(String attribute, SearchOperator operator, Object value) {
+    return new SearchTerm(attribute, operator, value);
   }
 
-  public void setTitle(String title) {
-    this.title = title;
+  public String getAttribute() {
+    return attribute;
   }
 
-  public boolean isBaseModel() {
-    return baseModel;
+  public SearchOperator getOperator() {
+    return operator;
   }
 
-  public void setBaseModel(boolean baseModel) {
-    this.baseModel = baseModel;
+  public Object getValue() {
+    return value;
   }
 }

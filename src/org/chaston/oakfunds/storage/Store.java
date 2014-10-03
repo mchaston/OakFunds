@@ -17,6 +17,7 @@ package org.chaston.oakfunds.storage;
 
 import org.joda.time.Instant;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -47,4 +48,7 @@ public interface Store {
 
   <T extends IntervalRecord> T getIntervalRecord(Record containingRecord,
       IntervalRecordFactory<T> recordFactory, Instant date) throws StorageException;
+
+  <T extends Record> List<T> findRecords(RecordFactory<T> recordFactory,
+      List<SearchTerm> searchTerms) throws StorageException;
 }
