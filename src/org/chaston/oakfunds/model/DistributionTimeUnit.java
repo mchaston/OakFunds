@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
+package org.chaston.oakfunds.model;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public enum RecordTemporalType {
-  NONE,
-  INSTANT,
-  TYPE, INTERVAL
+public enum DistributionTimeUnit {
+  MONTHS,
+  YEARS
 }

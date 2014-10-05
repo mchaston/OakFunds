@@ -61,7 +61,7 @@ public class IntervalRecordSetTest {
       @Override
       public int insertIntervalRecord(RecordType recordType, Instant start, Instant end,
           Map<String, Object> attributes) throws StorageException {
-        assertEquals(RecordType.ACCOUNT, recordType);
+        assertEquals(TestIntervalRecord.TYPE, recordType);
         return counter++;
       }
     };
@@ -77,7 +77,7 @@ public class IntervalRecordSetTest {
   @Test
   public void simpleInsert() throws StorageException {
     IntervalRecordSet intervalRecordSet = new IntervalRecordSet();
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(1));
 
     assertEquals(1, intervalRecordSet.getRecords().size());
@@ -89,9 +89,9 @@ public class IntervalRecordSetTest {
   @Test
   public void insertBefore() throws StorageException {
     IntervalRecordSet intervalRecordSet = new IntervalRecordSet();
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(1));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2013-01-01"), Instant.parse("2013-11-01"), createAttributes(2));
 
     assertEquals(2, intervalRecordSet.getRecords().size());
@@ -105,9 +105,9 @@ public class IntervalRecordSetTest {
   @Test
   public void insertImmediatelyBefore() throws StorageException {
     IntervalRecordSet intervalRecordSet = new IntervalRecordSet();
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(1));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2013-01-01"), Instant.parse("2014-01-01"), createAttributes(2));
 
     assertEquals(2, intervalRecordSet.getRecords().size());
@@ -121,9 +121,9 @@ public class IntervalRecordSetTest {
   @Test
   public void insertAfter() throws StorageException {
     IntervalRecordSet intervalRecordSet = new IntervalRecordSet();
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(1));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2015-02-01"), Instant.parse("2016-01-01"), createAttributes(2));
 
     assertEquals(2, intervalRecordSet.getRecords().size());
@@ -137,9 +137,9 @@ public class IntervalRecordSetTest {
   @Test
   public void insertAfterBefore() throws StorageException {
     IntervalRecordSet intervalRecordSet = new IntervalRecordSet();
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(1));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2015-01-01"), Instant.parse("2016-01-01"), createAttributes(2));
 
     assertEquals(2, intervalRecordSet.getRecords().size());
@@ -153,9 +153,9 @@ public class IntervalRecordSetTest {
   @Test
   public void insertReplace() throws StorageException {
     IntervalRecordSet intervalRecordSet = new IntervalRecordSet();
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(1));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(2));
 
     assertEquals(1, intervalRecordSet.getRecords().size());
@@ -167,9 +167,9 @@ public class IntervalRecordSetTest {
   @Test
   public void insertOverlapStart() throws StorageException {
     IntervalRecordSet intervalRecordSet = new IntervalRecordSet();
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(1));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2013-01-01"), Instant.parse("2014-06-01"), createAttributes(2));
 
     assertEquals(2, intervalRecordSet.getRecords().size());
@@ -183,9 +183,9 @@ public class IntervalRecordSetTest {
   @Test
   public void insertOverlapEnd() throws StorageException {
     IntervalRecordSet intervalRecordSet = new IntervalRecordSet();
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(1));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-06-01"), Instant.parse("2016-01-01"), createAttributes(2));
 
     assertEquals(2, intervalRecordSet.getRecords().size());
@@ -199,9 +199,9 @@ public class IntervalRecordSetTest {
   @Test
   public void insertOverlapComplete() throws StorageException {
     IntervalRecordSet intervalRecordSet = new IntervalRecordSet();
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(1));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2013-01-01"), Instant.parse("2016-01-01"), createAttributes(2));
 
     assertEquals(1, intervalRecordSet.getRecords().size());
@@ -213,11 +213,11 @@ public class IntervalRecordSetTest {
   @Test
   public void insertBetween() throws StorageException {
     IntervalRecordSet intervalRecordSet = new IntervalRecordSet();
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2012-01-01"), Instant.parse("2013-01-01"), createAttributes(1));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(2));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2013-01-01"), Instant.parse("2014-01-01"), createAttributes(3));
 
     assertEquals(3, intervalRecordSet.getRecords().size());
@@ -233,11 +233,11 @@ public class IntervalRecordSetTest {
   @Test
   public void insertOverlapStraddle() throws StorageException {
     IntervalRecordSet intervalRecordSet = new IntervalRecordSet();
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2012-01-01"), Instant.parse("2013-01-01"), createAttributes(1));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(2));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2012-06-01"), Instant.parse("2014-06-01"), createAttributes(3));
 
     assertEquals(3, intervalRecordSet.getRecords().size());
@@ -253,17 +253,17 @@ public class IntervalRecordSetTest {
   @Test
   public void insertOverlapStraddleComplex() throws StorageException {
     IntervalRecordSet intervalRecordSet = new IntervalRecordSet();
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2012-01-01"), Instant.parse("2013-01-01"), createAttributes(1));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), createAttributes(2));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2016-01-01"), Instant.parse("2017-01-01"), createAttributes(3));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2018-01-01"), Instant.parse("2019-01-01"), createAttributes(4));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2020-01-01"), Instant.parse("2021-01-01"), createAttributes(5));
-    intervalRecordSet.update(recordInserter, RecordType.ACCOUNT,
+    intervalRecordSet.update(recordInserter, TestIntervalRecord.TYPE,
         Instant.parse("2014-06-01"), Instant.parse("2018-06-01"), createAttributes(6));
 
     assertEquals(5, intervalRecordSet.getRecords().size());
@@ -294,5 +294,16 @@ public class IntervalRecordSetTest {
 
   private Map<String, Object> createAttributes(int seed) {
     return ImmutableMap.of("value", (Object) seed);
+  }
+  
+  private static class TestIntervalRecord extends IntervalRecord {
+
+    private static final RecordType<TestIntervalRecord> TYPE =
+        new RecordType<>("test_interval_type", TestIntervalRecord.class,
+            RecordTemporalType.INTERVAL, true);
+
+    protected TestIntervalRecord(int id, Instant start, Instant end) {
+      super(TYPE, id, start, end);
+    }
   }
 }

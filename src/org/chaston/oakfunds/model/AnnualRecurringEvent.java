@@ -13,32 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.ledger;
+package org.chaston.oakfunds.model;
 
 import org.chaston.oakfunds.storage.Attribute;
 import org.chaston.oakfunds.storage.RecordType;
+import org.joda.time.Instant;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class BankAccount extends Account {
+public class AnnualRecurringEvent extends RecurringEvent {
 
-  static final RecordType<BankAccount> TYPE =
-      new RecordType<>("bank_account", BankAccount.class,
-          Account.TYPE, true);
+  static final RecordType<AnnualRecurringEvent> TYPE =
+      new RecordType<>("annual_recurring_event",
+          AnnualRecurringEvent.class, RecurringEvent.TYPE, true);
 
-  @Attribute(name = "bank_account_type", propertyName = "bankAccountType")
-  private BankAccountType bankAccountType;
+  @Attribute(name = "payment_month", propertyName = "paymentMonth")
+  private int paymentMonth;
 
-  BankAccount(int id) {
-    super(TYPE, id);
+  AnnualRecurringEvent(int id, Instant start, Instant end) {
+    super(TYPE, id, start, end);
   }
 
-  public BankAccountType getBankAccountType() {
-    return bankAccountType;
+  public int getPaymentMonth() {
+    return paymentMonth;
   }
 
-  public void setBankAccountType(BankAccountType bankAccountType) {
-    this.bankAccountType = bankAccountType;
+  public void setPaymentMonth(int paymentMonth) {
+    this.paymentMonth = paymentMonth;
   }
 }

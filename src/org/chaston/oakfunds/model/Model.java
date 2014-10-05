@@ -17,12 +17,16 @@ package org.chaston.oakfunds.model;
 
 import org.chaston.oakfunds.storage.Attribute;
 import org.chaston.oakfunds.storage.Record;
+import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
 public class Model extends Record {
+
+  static final RecordType<Model> TYPE =
+      new RecordType<>("model", Model.class, RecordTemporalType.NONE, true);
 
   @Attribute(name = "title")
   private String title;
@@ -31,7 +35,7 @@ public class Model extends Record {
   private boolean baseModel;
 
   Model(int id) {
-    super(RecordType.MODEL, id);
+    super(TYPE, id);
   }
 
   public String getTitle() {

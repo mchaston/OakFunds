@@ -27,7 +27,8 @@ import java.math.BigDecimal;
 public interface LedgerManager {
   BankAccount getBankAccount(int id) throws StorageException;
 
-  BankAccount createBankAccount(AccountCode accountCode, String title) throws StorageException;
+  BankAccount createBankAccount(AccountCode accountCode, String title,
+      BankAccountType bankAccountType) throws StorageException;
 
   void setInterestRate(BankAccount bankAccount, BigDecimal interestRate, Instant start, Instant end)
       throws StorageException;

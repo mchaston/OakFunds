@@ -21,14 +21,20 @@ import org.joda.time.Instant;
  * TODO(mchaston): write JavaDocs
  */
 class IntervalRecordKey implements Comparable<IntervalRecordKey> {
+  private final RecordType recordType;
   private final int id;
   private final Instant start;
   private Instant end;
 
-  IntervalRecordKey(int id, Instant start, Instant end) {
+  IntervalRecordKey(RecordType recordType, int id, Instant start, Instant end) {
+    this.recordType = recordType;
     this.id = id;
     this.start = start;
     this.end = end;
+  }
+
+  public RecordType getRecordType() {
+    return recordType;
   }
 
   public int getId() {

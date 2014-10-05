@@ -20,6 +20,23 @@ import org.joda.time.Instant;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface IntervalRecordFactory<T extends IntervalRecord> {
-  T newInstance(RecordType recordType, int id, Instant start, Instant end);
+public abstract class FinalIntervalRecordFactory<T extends IntervalRecord>
+    implements IntervalRecordFactory<T> {
+  private final RecordType<T> recordType;
+
+  public FinalIntervalRecordFactory(RecordType<T> recordType) {
+    this.recordType = recordType;
+  }
+
+  @Override
+  public T newInstance(RecordType recordType, int id, Instant start, Instant end) {
+    if (this.recordType == recordType) {
+      return newInstance(id, start, end);
+    }
+    throw new IllegalArgumentException(
+        "RecordType " + recordType + " is not supported by the "
+            + this.recordType.getName() + " record factory.");
+  }
+
+  protected abstract T newInstance(int id, Instant start, Instant end);
 }

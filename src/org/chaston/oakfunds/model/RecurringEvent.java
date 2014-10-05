@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.ledger;
+package org.chaston.oakfunds.model;
 
 import org.chaston.oakfunds.storage.Attribute;
-import org.chaston.oakfunds.storage.InstantRecord;
+import org.chaston.oakfunds.storage.IntervalRecord;
 import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 import org.joda.time.Instant;
@@ -26,23 +26,23 @@ import java.math.BigDecimal;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class AccountTransaction extends InstantRecord {
+public abstract class RecurringEvent extends IntervalRecord {
 
-  public static final RecordType<AccountTransaction> TYPE =
-      new RecordType<>("account_transaction", AccountTransaction.class,
-          RecordTemporalType.INSTANT, true);
+  static final RecordType<RecurringEvent> TYPE =
+      new RecordType<>("record_type", RecurringEvent.class,
+          RecordTemporalType.INTERVAL, false);
+
+  @Attribute(name = "model_id", propertyName = "modelId")
+  private int modelId;
+
+  @Attribute(name = "account_id", propertyName = "accountId")
+  private int accountId;
 
   @Attribute(name = "amount")
   private BigDecimal amount;
 
-  @Attribute(name = "comment")
-  private String comment;
-
-  @Attribute(name = "sister_transaction_id", propertyName = "sisterTransactionId")
-  private int sisterTransactionId;
-
-  AccountTransaction(int id, Instant instant) {
-    super(TYPE, id, instant);
+  RecurringEvent(RecordType recordType, int id, Instant start, Instant end) {
+    super(recordType, id, start, end);
   }
 
   public BigDecimal getAmount() {
@@ -53,19 +53,19 @@ public class AccountTransaction extends InstantRecord {
     this.amount = amount;
   }
 
-  public String getComment() {
-    return comment;
+  public int getModelId() {
+    return modelId;
   }
 
-  public void setComment(String comment) {
-    this.comment = comment;
+  public void setModelId(int modelId) {
+    this.modelId = modelId;
   }
 
-  public int getSisterTransactionId() {
-    return sisterTransactionId;
+  public int getAccountId() {
+    return accountId;
   }
 
-  public void setSisterTransactionId(int sisterTransactionId) {
-    this.sisterTransactionId = sisterTransactionId;
+  public void setAccountId(int accountId) {
+    this.accountId = accountId;
   }
 }

@@ -21,10 +21,12 @@ import org.joda.time.Instant;
  * TODO(mchaston): write JavaDocs
  */
 class InstantRecordKey implements Comparable<InstantRecordKey> {
+  private final RecordType recordType;
   private final Instant instant;
   private final int id;
 
-  InstantRecordKey(Instant instant, int id) {
+  InstantRecordKey(RecordType recordType, Instant instant, int id) {
+    this.recordType = recordType;
     this.instant = instant;
     this.id = id;
   }
@@ -44,5 +46,9 @@ class InstantRecordKey implements Comparable<InstantRecordKey> {
       result = this.id - that.id;
     }
     return result;
+  }
+
+  public RecordType getRecordType() {
+    return recordType;
   }
 }

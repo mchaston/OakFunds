@@ -13,32 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.ledger;
+package org.chaston.oakfunds.model;
 
 import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.Record;
+import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class BankAccount extends Account {
+public abstract class ModelAccount extends Record {
 
-  static final RecordType<BankAccount> TYPE =
-      new RecordType<>("bank_account", BankAccount.class,
-          Account.TYPE, true);
+  public static final RecordType<ModelAccount> TYPE =
+      new RecordType<>("model_account", ModelAccount.class,
+          RecordTemporalType.NONE, false);
 
-  @Attribute(name = "bank_account_type", propertyName = "bankAccountType")
-  private BankAccountType bankAccountType;
+  @Attribute(name = "title")
+  private String title;
 
-  BankAccount(int id) {
-    super(TYPE, id);
+  ModelAccount(RecordType recordType, int id) {
+    super(recordType, id);
   }
 
-  public BankAccountType getBankAccountType() {
-    return bankAccountType;
+  public String getTitle() {
+    return title;
   }
 
-  public void setBankAccountType(BankAccountType bankAccountType) {
-    this.bankAccountType = bankAccountType;
+  public void setTitle(String title) {
+    this.title = title;
   }
 }

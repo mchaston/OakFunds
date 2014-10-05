@@ -13,13 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
+package org.chaston.oakfunds.system;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.google.inject.util.Providers;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public enum RecordTemporalType {
-  NONE,
-  INSTANT,
-  TYPE, INTERVAL
+public class SystemModule extends AbstractModule {
+  @Override
+  protected void configure() {
+    install(new BaseSystemModule());
+    bind(new TypeLiteral<Iterable<SystemPropertyLoader>>() {})
+        .toProvider(Providers.<Iterable<SystemPropertyLoader>>of(null));
+  }
 }

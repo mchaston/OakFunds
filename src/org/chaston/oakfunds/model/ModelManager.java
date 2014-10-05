@@ -15,7 +15,11 @@
  */
 package org.chaston.oakfunds.model;
 
+import org.chaston.oakfunds.ledger.BankAccountType;
 import org.chaston.oakfunds.storage.StorageException;
+import org.joda.time.Instant;
+
+import java.math.BigDecimal;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -26,4 +30,26 @@ public interface ModelManager {
   Model getBaseModel() throws StorageException;
 
   Model getModel(int modelId) throws StorageException;
+
+  ModelExpenseAccount createModelExpenseAccount(String title,
+      BankAccountType sourceBankAccountType) throws StorageException;
+
+  ModelRevenueAccount createModelRevenueAccount(String title,
+      BankAccountType depositBankAccountType) throws StorageException;
+
+  MonthlyRecurringEvent setMonthlyRecurringEventDetails(Model model, ModelAccount account,
+      Instant start, Instant end, BigDecimal amount) throws StorageException;
+
+  AnnualRecurringEvent setAnnualRecurringEventDetails(Model model, ModelAccount account,
+      Instant start, Instant end, int paymentMonth, BigDecimal amount) throws StorageException;
+
+  ModelAccountTransaction createAdHocEvent(Model model, ModelAccount account, Instant date,
+      int distributionTime, DistributionTimeUnit distributionTimeUnit, BigDecimal amount)
+      throws StorageException;
+
+  Iterable<ModelAccountTransaction> getModelTransactions(Model model, ModelAccount account,
+      Instant start, Instant end) throws StorageException;
+
+  Iterable<ModelDistributionTransaction> getModelDistributionTransactions(Model model,
+      ModelAccount account, Instant start, Instant end) throws StorageException;
 }

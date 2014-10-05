@@ -24,31 +24,47 @@ import java.util.Map;
  * TODO(mchaston): write JavaDocs
  */
 public interface Store {
+
+  <T extends Record> void registerType(RecordType<T> recordType, RecordFactory<? extends T> recordFactory);
+
+  <T extends InstantRecord> void registerType(RecordType<T> recordType,
+      InstantRecordFactory<? extends T> recordFactory);
+
+  <T extends IntervalRecord> void registerType(RecordType<T> recordType,
+      IntervalRecordFactory<? extends T> recordFactory);
+
   Transaction startTransaction() throws StorageException;
 
-  <T extends Record> T createRecord(RecordFactory<T> recordFactory, int id,
+  <T extends Record> T createRecord(RecordType<T> recordType, int id,
       Map<String, Object> attributes) throws StorageException;
 
-  <T extends Record> T createRecord(RecordFactory<T> recordFactory,
+  <T extends Record> T createRecord(RecordType<T> recordType,
       Map<String, Object> attributes) throws StorageException;
 
-  <T extends Record> T getRecord(RecordFactory<T> recordFactory, int id) throws StorageException;
+  <T extends Record> T getRecord(RecordType<T> recordType, int id) throws StorageException;
 
-  <T extends IntervalRecord> void updateIntervalRecord(Record containingRecord,
-      IntervalRecordFactory<T> recordFactory, Instant start, Instant end,
+  <T extends Record> T updateRecord(T record, Map<String, Object> attributes) throws StorageException;
+
+  <T extends IntervalRecord> T updateIntervalRecord(Record containingRecord,
+      RecordType<T> recordType, Instant start, Instant end,
       Map<String, Object> attributes)
       throws StorageException;
 
-  <T extends InstantRecord> int insertInstantRecord(Record containingRecord,
-      InstantRecordFactory<T> recordFactory, Instant instant, Map<String, Object> attributes)
+  <T extends InstantRecord> T insertInstantRecord(Record containingRecord,
+      RecordType<T> recordType, Instant instant, Map<String, Object> attributes)
       throws StorageException;
 
-  <T extends InstantRecord> Iterable<T> getInstantRecords(Record containingRecord,
-      InstantRecordFactory<T> recordFactory, Instant start, Instant end) throws StorageException;
+  <T extends InstantRecord> Iterable<T> findInstantRecords(Record containingRecord,
+      RecordType<T> recordType, Instant start, Instant end,
+      List<SearchTerm> searchTerms) throws StorageException;
 
   <T extends IntervalRecord> T getIntervalRecord(Record containingRecord,
-      IntervalRecordFactory<T> recordFactory, Instant date) throws StorageException;
+      RecordType<T> recordType, Instant date) throws StorageException;
 
-  <T extends Record> List<T> findRecords(RecordFactory<T> recordFactory,
+  <T extends Record> Iterable<T> findRecords(RecordType<T> recordType,
       List<SearchTerm> searchTerms) throws StorageException;
+
+  <T extends IntervalRecord> Iterable<T> findIntervalRecords(Record containingRecord,
+      RecordType<T> recordType, Instant start, Instant end, List<SearchTerm> searchTerms)
+      throws StorageException;
 }

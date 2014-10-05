@@ -13,13 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
+package org.chaston.oakfunds.system;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Key;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import org.chaston.oakfunds.storage.Store;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public enum RecordTemporalType {
-  NONE,
-  INSTANT,
-  TYPE, INTERVAL
+class BaseSystemModule extends AbstractModule {
+  @Override
+  protected void configure() {
+    requireBinding(Store.class);
+    requireBinding(Key.get(new TypeLiteral<Iterable<SystemPropertyLoader>>() {}));
+    bind(SystemPropertiesManagerImpl.class).in(Singleton.class);
+    bind(SystemPropertiesManager.class).to(SystemPropertiesManagerImpl.class);
+  }
 }

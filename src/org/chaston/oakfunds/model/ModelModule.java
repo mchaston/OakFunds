@@ -18,6 +18,7 @@ package org.chaston.oakfunds.model;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import org.chaston.oakfunds.storage.Store;
+import org.chaston.oakfunds.system.SystemPropertiesManager;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -25,6 +26,7 @@ import org.chaston.oakfunds.storage.Store;
 public class ModelModule extends AbstractModule {
   @Override
   protected void configure() {
+    requireBinding(SystemPropertiesManager.class);
     requireBinding(Store.class);
     bind(ModelManagerImpl.class).in(Singleton.class);
     bind(ModelManager.class).to(ModelManagerImpl.class);

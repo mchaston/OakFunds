@@ -22,11 +22,16 @@ import org.chaston.oakfunds.storage.RecordType;
  * TODO(mchaston): write JavaDocs
  */
 public class RevenueAccount extends Account {
+
+  static final RecordType<RevenueAccount> TYPE =
+      new RecordType<>("revenue_account", RevenueAccount.class,
+          Account.TYPE, true);
+
   @Attribute(name = "default_deposit_account_id", propertyName = "defaultDepositAccountId")
   private int defaultDepositAccountId;
 
   RevenueAccount(int id) {
-    super(RecordType.REVENUE_ACCOUNT, id);
+    super(TYPE, id);
   }
 
   public int getDefaultDepositAccountId() {

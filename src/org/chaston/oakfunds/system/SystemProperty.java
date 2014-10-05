@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.ledger;
+package org.chaston.oakfunds.system;
 
 import org.chaston.oakfunds.storage.Attribute;
 import org.chaston.oakfunds.storage.Record;
@@ -23,24 +23,35 @@ import org.chaston.oakfunds.storage.RecordType;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public abstract class Account extends Record {
+public class SystemProperty extends Record {
 
-  static final RecordType<Account> TYPE =
-      new RecordType<>("account", Account.class,
-          RecordTemporalType.NONE, false);
+  static final RecordType<SystemProperty> TYPE =
+      new RecordType<SystemProperty>("system_property",
+          SystemProperty.class, RecordTemporalType.NONE, true);
 
-  @Attribute(name = "title")
-  private String title;
+  @Attribute(name = "name")
+  private String name;
 
-  Account(RecordType recordType, int id) {
-    super(recordType, id);
+  @Attribute(name = "integer_value", propertyName = "integerValue")
+  private Integer integerValue;
+
+  protected SystemProperty(int id) {
+    super(TYPE, id);
   }
 
-  public String getTitle() {
-    return title;
+  public String getName() {
+    return name;
   }
 
-  public void setTitle(String title) {
-    this.title = title;
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public Integer getIntegerValue() {
+    return integerValue;
+  }
+
+  public void setIntegerValue(Integer integerValue) {
+    this.integerValue = integerValue;
   }
 }

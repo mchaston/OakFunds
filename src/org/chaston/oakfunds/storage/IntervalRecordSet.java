@@ -16,6 +16,7 @@
 package org.chaston.oakfunds.storage;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import org.chaston.oakfunds.util.Pair;
 import org.joda.time.Instant;
 
@@ -31,26 +32,23 @@ class IntervalRecordSet {
   private SortedMap<Instant, Pair<IntervalRecordKey, Map<String, Object>>> records =
       new TreeMap<>();
 
-  void update(RecordInserter recordInserter, RecordType recordType,
+  int update(RecordInserter recordInserter, RecordType recordType,
       Instant start, Instant end, Map<String, Object> attributes) throws StorageException {
     // First entry.
     if (records.isEmpty()) {
-      insertRecord(recordInserter, recordType, start, end, attributes);
-      return;
+      return insertRecord(recordInserter, recordType, start, end, attributes);
     }
     // New key is entirely before the first entry.
     Instant existingKeyStart = records.firstKey();
     if (existingKeyStart.isAfter(end) || existingKeyStart.equals(end)) {
-      insertRecord(recordInserter, recordType, start, end, attributes);
-      return;
+      return insertRecord(recordInserter, recordType, start, end, attributes);
     }
     // New key is entirely after the last entry.
     existingKeyStart = records.lastKey();
     Pair<IntervalRecordKey, Map<String, Object>> lastRecord = records.get(existingKeyStart);
     if (lastRecord.getFirst().getEnd().isBefore(start)
         || lastRecord.getFirst().getEnd().equals(start)) {
-      insertRecord(recordInserter, recordType, start, end, attributes);
-      return;
+      return insertRecord(recordInserter, recordType, start, end, attributes);
     }
     // Work with keys that start before this does.
     SortedMap<Instant, Pair<IntervalRecordKey, Map<String, Object>>> beforeStart =
@@ -72,8 +70,7 @@ class IntervalRecordSet {
           insertRecord(recordInserter, recordType, end, lastRecord.getFirst().getEnd(),
               lastRecord.getSecond());
           lastRecord.getFirst().setEnd(start);
-          insertRecord(recordInserter, recordType, start, end, attributes);
-          return;
+          return insertRecord(recordInserter, recordType, start, end, attributes);
         }
       }
     }
@@ -91,7 +88,7 @@ class IntervalRecordSet {
       // Remove everything in the overlapping set.
       during.clear();
     }
-    insertRecord(recordInserter, recordType, start, end, attributes);
+    return insertRecord(recordInserter, recordType, start, end, attributes);
   }
 
   @VisibleForTesting
@@ -99,16 +96,30 @@ class IntervalRecordSet {
     return records;
   }
 
-  private void insertRecord(RecordInserter recordInserter, RecordType recordType, Instant start,
+  private int insertRecord(RecordInserter recordInserter, RecordType recordType, Instant start,
       Instant end, Map<String, Object> attributes) throws StorageException {
     int id = recordInserter.insertIntervalRecord(recordType, start, end, attributes);
-    records.put(start, Pair.of(new IntervalRecordKey(id, start, end), attributes));
+    records.put(start, Pair.of(new IntervalRecordKey(recordType, id, start, end), attributes));
+    return id;
   }
 
   public Pair<IntervalRecordKey, Map<String, Object>> getIntervalRecord(Instant date) {
-    SortedMap<Instant, Pair<IntervalRecordKey, Map<String, Object>>> earlierRecords = records
-        .headMap(date.plus(1));
+    SortedMap<Instant, Pair<IntervalRecordKey, Map<String, Object>>> earlierRecords =
+        records.headMap(date.plus(1));
     Instant lastKey = earlierRecords.lastKey();
     return earlierRecords.get(lastKey);
+  }
+
+  public Iterable<Pair<IntervalRecordKey, Map<String, Object>>> getIntervalRecords(
+      Instant start, Instant end) {
+    ImmutableList.Builder<Pair<IntervalRecordKey, Map<String, Object>>> resultList =
+        ImmutableList.builder();
+    SortedMap<Instant, Pair<IntervalRecordKey, Map<String, Object>>> earlierRecords =
+        records.headMap(start);
+    if (!earlierRecords.isEmpty()) {
+      resultList.add(earlierRecords.get(earlierRecords.lastKey()));
+    }
+    resultList.addAll(records.subMap(start, end).values());
+    return resultList.build();
   }
 }

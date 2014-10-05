@@ -16,8 +16,7 @@
 package org.chaston.oakfunds.account;
 
 import com.google.inject.Inject;
-import org.chaston.oakfunds.storage.RecordFactory;
-import org.chaston.oakfunds.storage.RecordType;
+import org.chaston.oakfunds.storage.FinalRecordFactory;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 
@@ -29,19 +28,6 @@ import java.util.Map;
  */
 class AccountCodeManagerImpl implements AccountCodeManager {
 
-  private static final RecordFactory<AccountCode> RECORD_FACTORY =
-      new RecordFactory<AccountCode>() {
-        @Override
-        public AccountCode newInstance(int id) {
-          return new AccountCode(id);
-        }
-
-        @Override
-        public RecordType getRecordType() {
-          return RecordType.ACCOUNT_CODE;
-        }
-      };
-
   private static final String ATTRIBUTE_TITLE = "title";
 
   private final Store store;
@@ -49,6 +35,13 @@ class AccountCodeManagerImpl implements AccountCodeManager {
   @Inject
   AccountCodeManagerImpl(Store store) {
     this.store = store;
+    store.registerType(AccountCode.TYPE,
+        new FinalRecordFactory<AccountCode>(AccountCode.TYPE) {
+          @Override
+          protected AccountCode newInstance(int id) {
+            return new AccountCode(id);
+          }
+        });
   }
 
   @Override
@@ -56,11 +49,11 @@ class AccountCodeManagerImpl implements AccountCodeManager {
       throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(ATTRIBUTE_TITLE, title);
-    return store.createRecord(RECORD_FACTORY, accountCodeNumber, attributes);
+    return store.createRecord(AccountCode.TYPE, accountCodeNumber, attributes);
   }
 
   @Override
   public AccountCode getAccountCode(int accountCodeNumber) throws StorageException {
-    return store.getRecord(RECORD_FACTORY, accountCodeNumber);
+    return store.getRecord(AccountCode.TYPE, accountCodeNumber);
   }
 }

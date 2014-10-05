@@ -53,14 +53,14 @@ class InMemoryTransaction implements Transaction, RecordInserter {
   public int insertRecord(RecordType recordType, Map<String, Object> attributes)
       throws StorageException {
     int id = getNextId(recordType);
-    addRecordToTransaction(recordType, id, new InMemoryRecord(attributes));
+    addRecordToTransaction(recordType, id, new InMemoryRecord(recordType, attributes));
     return id;
   }
 
   @Override
   public void insertRecord(RecordType recordType, int id, Map<String, Object> attributes)
       throws StorageException {
-    addRecordToTransaction(recordType, id, new InMemoryRecord(attributes));
+    addRecordToTransaction(recordType, id, new InMemoryRecord(recordType, attributes));
   }
 
   @Override
@@ -83,9 +83,9 @@ class InMemoryTransaction implements Transaction, RecordInserter {
     return getTable(recordType).get(id);
   }
 
-  void updateIntervalRecord(InMemoryRecord inMemoryRecord, RecordType recordType,
+  int updateIntervalRecord(InMemoryRecord inMemoryRecord, RecordType recordType,
       Instant start, Instant end, Map<String, Object> attributes) throws StorageException {
-    inMemoryRecord.updateIntervalRecord(this, recordType, start, end, attributes);
+    return inMemoryRecord.updateIntervalRecord(this, recordType, start, end, attributes);
   }
 
   int insertInstantRecord(InMemoryRecord inMemoryRecord, RecordType recordType,
@@ -113,16 +113,16 @@ class InMemoryTransaction implements Transaction, RecordInserter {
     AtomicInteger counter = TYPE_COUNTERS.get(recordType.getRootType());
     if (counter == null) {
       counter = new AtomicInteger(1000);
-      TYPE_COUNTERS.put(recordType, counter);
+      TYPE_COUNTERS.put(recordType.getRootType(), counter);
     }
     return counter.getAndIncrement();
   }
 
   private Map<Integer, InMemoryRecord> getTable(RecordType recordType) {
-    Map<Integer, InMemoryRecord> table = tables.get(recordType);
+    Map<Integer, InMemoryRecord> table = tables.get(recordType.getRootType());
     if (table == null) {
       table = new HashMap<>();
-      tables.put(recordType, table);
+      tables.put(recordType.getRootType(), table);
     }
     return table;
   }

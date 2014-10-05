@@ -15,12 +15,15 @@
  */
 package org.chaston.oakfunds.ledger;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.account.AccountCode;
-import org.chaston.oakfunds.storage.InstantRecordFactory;
-import org.chaston.oakfunds.storage.IntervalRecordFactory;
+import org.chaston.oakfunds.storage.FinalInstantRecordFactory;
+import org.chaston.oakfunds.storage.FinalIntervalRecordFactory;
+import org.chaston.oakfunds.storage.FinalRecordFactory;
 import org.chaston.oakfunds.storage.RecordFactory;
 import org.chaston.oakfunds.storage.RecordType;
+import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.util.DateUtil;
@@ -35,70 +38,8 @@ import java.util.Map;
  */
 class LedgerManagerImpl implements LedgerManager {
 
-  private static final RecordFactory<BankAccount> BANK_ACCOUNT_RECORD_FACTORY =
-      new RecordFactory<BankAccount>() {
-        @Override
-        public BankAccount newInstance(int id) {
-          return new BankAccount(id);
-        }
-
-        @Override
-        public RecordType getRecordType() {
-          return RecordType.BANK_ACCOUNT;
-        }
-      };
-
-  private static final IntervalRecordFactory<BankAccountInterest> BANK_ACCOUNT_INTEREST_RECORD_FACTORY =
-      new IntervalRecordFactory<BankAccountInterest>() {
-        @Override
-        public BankAccountInterest newInstance(int id, Instant start, Instant end) {
-          return new BankAccountInterest(id, start, end);
-        }
-
-        @Override
-        public RecordType getRecordType() {
-          return RecordType.BANK_ACCOUNT_INTEREST;
-        }
-      };
-
-  private static final InstantRecordFactory<AccountTransaction> ACCOUNT_TRANSACTION_RECORD_FACTORY =
-      new InstantRecordFactory<AccountTransaction>() {
-        @Override
-        public AccountTransaction newInstance(int id, Instant instant) {
-          return new AccountTransaction(id, instant);
-        }
-
-        @Override
-        public RecordType getRecordType() {
-          return RecordType.ACCOUNT_TRANSACTION;
-        }
-      };
-
-  private static final RecordFactory<ExpenseAccount> EXPENSE_ACCOUNT_RECORD_FACTORY = new RecordFactory<ExpenseAccount>() {
-    @Override
-    public ExpenseAccount newInstance(int id) {
-      return new ExpenseAccount(id);
-    }
-
-    @Override
-    public RecordType getRecordType() {
-      return RecordType.EXPENSE_ACCOUNT;
-    }
-  };
-
-  private static final RecordFactory<RevenueAccount> REVENUE_ACCOUNT_RECORD_FACTORY = new RecordFactory<RevenueAccount>() {
-    @Override
-    public RevenueAccount newInstance(int id) {
-      return new RevenueAccount(id);
-    }
-
-    @Override
-    public RecordType getRecordType() {
-      return RecordType.REVENUE_ACCOUNT;
-    }
-  };
-
   private static final String ATTRIBUTE_AMOUNT = "amount";
+  private static final String ATTRIBUTE_BANK_ACCOUNT_TYPE = "bank_account_type";
   private static final String ATTRIBUTE_COMMENT = "comment";
   private static final String ATTRIBUTE_DEFAULT_DEPOSIT_ACCOUNT_ID = "default_deposit_account_id";
   private static final String ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID = "default_source_account_id";
@@ -111,14 +52,67 @@ class LedgerManagerImpl implements LedgerManager {
   @Inject
   LedgerManagerImpl(Store store) {
     this.store = store;
+    store.registerType(Account.TYPE,
+        new RecordFactory<Account>() {
+          @Override
+          public Account newInstance(RecordType recordType, int id) {
+            if (recordType == BankAccount.TYPE) {
+              return new BankAccount(id);
+            }
+            if (recordType == ExpenseAccount.TYPE) {
+              return new ExpenseAccount(id);
+            }
+            if (recordType == RevenueAccount.TYPE) {
+              return new RevenueAccount(id);
+            }
+            throw new IllegalArgumentException(
+                "RecordType " + recordType + " is not supported by the account record factory.");
+          }
+        });
+    store.registerType(AccountTransaction.TYPE,
+        new FinalInstantRecordFactory<AccountTransaction>(AccountTransaction.TYPE) {
+          @Override
+          protected AccountTransaction newInstance(int id, Instant instant) {
+            return new AccountTransaction(id, instant);
+          }
+        });
+    store.registerType(BankAccount.TYPE,
+        new FinalRecordFactory<BankAccount>(BankAccount.TYPE) {
+          @Override
+          protected BankAccount newInstance(int id) {
+            return new BankAccount(id);
+          }
+        });
+    store.registerType(BankAccountInterest.TYPE,
+        new FinalIntervalRecordFactory<BankAccountInterest>(BankAccountInterest.TYPE) {
+          @Override
+          protected BankAccountInterest newInstance(int id, Instant start, Instant end) {
+            return new BankAccountInterest(id, start, end);
+          }
+        });
+    store.registerType(ExpenseAccount.TYPE,
+        new FinalRecordFactory<ExpenseAccount>(ExpenseAccount.TYPE) {
+          @Override
+          protected ExpenseAccount newInstance(int id) {
+            return new ExpenseAccount(id);
+          }
+        });
+    store.registerType(RevenueAccount.TYPE,
+        new FinalRecordFactory<RevenueAccount>(RevenueAccount.TYPE) {
+          @Override
+          protected RevenueAccount newInstance(int id) {
+            return new RevenueAccount(id);
+          }
+        });
   }
 
   @Override
-  public BankAccount createBankAccount(AccountCode accountCode, String title)
-      throws StorageException {
+  public BankAccount createBankAccount(AccountCode accountCode, String title,
+      BankAccountType bankAccountType) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(ATTRIBUTE_TITLE, title);
-    return store.createRecord(BANK_ACCOUNT_RECORD_FACTORY, attributes);
+    attributes.put(ATTRIBUTE_BANK_ACCOUNT_TYPE, bankAccountType);
+    return store.createRecord(BankAccount.TYPE, attributes);
   }
 
   @Override
@@ -126,22 +120,22 @@ class LedgerManagerImpl implements LedgerManager {
       Instant end) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(ATTRIBUTE_INTEREST_RATE, interestRate);
-    store.updateIntervalRecord(bankAccount, BANK_ACCOUNT_INTEREST_RECORD_FACTORY, start, end,
+    store.updateIntervalRecord(bankAccount, BankAccountInterest.TYPE, start, end,
         attributes);
   }
 
   @Override
   public BigDecimal getInterestRate(BankAccount bankAccount, Instant date) throws StorageException {
     BankAccountInterest interestRecord =
-        store.getIntervalRecord(bankAccount, BANK_ACCOUNT_INTEREST_RECORD_FACTORY, date);
+        store.getIntervalRecord(bankAccount, BankAccountInterest.TYPE, date);
     return interestRecord.getInterestRate();
   }
 
   @Override
   public BigDecimal getBalance(BankAccount bankAccount, Instant date) throws StorageException {
     Iterable<AccountTransaction> accountTransactions =
-        store.getInstantRecords(bankAccount, ACCOUNT_TRANSACTION_RECORD_FACTORY,
-            DateUtil.BEGINNING_OF_TIME, date);
+        store.findInstantRecords(bankAccount, AccountTransaction.TYPE,
+            DateUtil.BEGINNING_OF_TIME, date, ImmutableList.<SearchTerm>of());
     BigDecimal balance = BigDecimal.ZERO;
     for (AccountTransaction accountTransaction : accountTransactions) {
       balance = balance.add(accountTransaction.getAmount());
@@ -151,7 +145,7 @@ class LedgerManagerImpl implements LedgerManager {
 
   @Override
   public BankAccount getBankAccount(int id) throws StorageException {
-    return store.getRecord(BANK_ACCOUNT_RECORD_FACTORY, id);
+    return store.getRecord(BankAccount.TYPE, id);
   }
 
   @Override
@@ -160,7 +154,7 @@ class LedgerManagerImpl implements LedgerManager {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(ATTRIBUTE_TITLE, title);
     attributes.put(ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID, defaultSourceAccount.getId());
-    return store.createRecord(EXPENSE_ACCOUNT_RECORD_FACTORY, attributes);
+    return store.createRecord(ExpenseAccount.TYPE, attributes);
   }
 
   @Override
@@ -169,7 +163,7 @@ class LedgerManagerImpl implements LedgerManager {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(ATTRIBUTE_TITLE, title);
     attributes.put(ATTRIBUTE_DEFAULT_DEPOSIT_ACCOUNT_ID, defaultDepositAccount.getId());
-    return store.createRecord(REVENUE_ACCOUNT_RECORD_FACTORY, attributes);
+    return store.createRecord(RevenueAccount.TYPE, attributes);
   }
 
   @Override
@@ -194,17 +188,17 @@ class LedgerManagerImpl implements LedgerManager {
     if (sisterTransactionId != null) {
       attributes.put(ATTRIBUTE_SISTER_TRANSACTION_ID, sisterTransactionId);
     }
-    int recordId = store
-        .insertInstantRecord(account, ACCOUNT_TRANSACTION_RECORD_FACTORY, date, attributes);
+    AccountTransaction transaction =
+        store.insertInstantRecord(account, AccountTransaction.TYPE, date, attributes);
     if (account instanceof ExpenseAccount) {
       ExpenseAccount expenseAccount = (ExpenseAccount) account;
       BankAccount bankAccount = getBankAccount(expenseAccount.getDefaultSourceAccountId());
-      recordTransaction(bankAccount, date, amount.negate(), comment, recordId);
+      recordTransaction(bankAccount, date, amount.negate(), comment, transaction.getId());
     }
     if (account instanceof RevenueAccount) {
       RevenueAccount revenueAccount = (RevenueAccount) account;
       BankAccount bankAccount = getBankAccount(revenueAccount.getDefaultDepositAccountId());
-      recordTransaction(bankAccount, date, amount, comment, recordId);
+      recordTransaction(bankAccount, date, amount, comment, transaction.getId());
     }
   }
 }

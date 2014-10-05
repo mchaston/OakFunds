@@ -18,8 +18,23 @@ package org.chaston.oakfunds.storage;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public enum RecordTemporalType {
-  NONE,
-  INSTANT,
-  TYPE, INTERVAL
+public abstract class FinalRecordFactory<T extends Record>
+    implements RecordFactory<T> {
+  private final RecordType<T> recordType;
+
+  public FinalRecordFactory(RecordType<T> recordType) {
+    this.recordType = recordType;
+  }
+
+  @Override
+  public T newInstance(RecordType recordType, int id) {
+    if (this.recordType == recordType) {
+      return newInstance(id);
+    }
+    throw new IllegalArgumentException(
+        "RecordType " + recordType + " is not supported by the "
+            + this.recordType.getName() + " record factory.");
+  }
+
+  protected abstract T newInstance(int id);
 }

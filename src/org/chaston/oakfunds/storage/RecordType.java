@@ -18,27 +18,25 @@ package org.chaston.oakfunds.storage;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public enum RecordType {
-  ACCOUNT_CODE(RecordTemporalType.NONE, true),
-  ACCOUNT(RecordTemporalType.NONE, false),
-  BANK_ACCOUNT(ACCOUNT, true),
-  EXPENSE_ACCOUNT(ACCOUNT, true),
-  REVENUE_ACCOUNT(ACCOUNT, true),
-  MODEL(RecordTemporalType.NONE, true),
-  BANK_ACCOUNT_INTEREST(RecordTemporalType.INTERVAL, true),
-  ACCOUNT_TRANSACTION(RecordTemporalType.INSTANT, true);
+public class RecordType<T extends Record> {
 
+  private final String name;
+  private final Class<T> recordTypeClass;
   private final RecordTemporalType temporalType;
   private final RecordType parentType;
   private final boolean isFinalType;
 
-  RecordType(RecordType baseType, boolean isFinalType) {
+  public RecordType(String name, Class<T> recordTypeClass, RecordType<? super T> baseType, boolean isFinalType) {
+    this.name = name;
+    this.recordTypeClass = recordTypeClass;
     this.temporalType = baseType.getRootType().getTemporalType();
     this.parentType = baseType;
     this.isFinalType = isFinalType;
   }
 
-  RecordType(RecordTemporalType temporalType, boolean isFinalType) {
+  public RecordType(String name, Class<T> recordTypeClass, RecordTemporalType temporalType, boolean isFinalType) {
+    this.name = name;
+    this.recordTypeClass = recordTypeClass;
     this.temporalType = temporalType;
     this.parentType = null;
     this.isFinalType = isFinalType;
@@ -57,5 +55,22 @@ public enum RecordType {
 
   public boolean isFinalType() {
     return isFinalType;
+  }
+
+  public Class<T> getRecordTypeClass() {
+    return recordTypeClass;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public String toString() {
+    return name;
+  }
+
+  public <T extends IntervalRecord> boolean isTypeOf(RecordType<T> recordType) {
+    return recordType.getRecordTypeClass().isAssignableFrom(recordTypeClass);
   }
 }

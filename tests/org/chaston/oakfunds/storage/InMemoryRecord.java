@@ -15,8 +15,11 @@
  */
 package org.chaston.oakfunds.storage;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import org.chaston.oakfunds.util.Pair;
 import org.joda.time.Instant;
 
@@ -30,11 +33,13 @@ import java.util.TreeMap;
  * TODO(mchaston): write JavaDocs
  */
 class InMemoryRecord {
+  private final RecordType recordType;
   private final ImmutableMap<String, Object> attributes;
   private final Map<RecordType, IntervalRecordSet> intervalRecordSets = new HashMap<>();
   private final Map<RecordType, SortedMap<InstantRecordKey, Map<String, Object>>> instantRecordSets = new HashMap<>();
 
-  public InMemoryRecord(Map<String, Object> attributes) {
+  public InMemoryRecord(RecordType recordType, Map<String, Object> attributes) {
+    this.recordType = recordType;
     this.attributes = ImmutableMap.copyOf(attributes);
   }
 
@@ -42,57 +47,89 @@ class InMemoryRecord {
     return attributes;
   }
 
-  public void updateIntervalRecord(
+  public void updateRecord(Map<String, Object> attributes) {
+    attributes.putAll(attributes);
+  }
+
+  public int updateIntervalRecord(
       RecordInserter recordInserter, RecordType recordType,
       Instant start, Instant end, Map<String, Object> attributes) throws StorageException {
-    IntervalRecordSet intervalRecordSet = intervalRecordSets.get(recordType);
+    IntervalRecordSet intervalRecordSet = intervalRecordSets.get(recordType.getRootType());
     if (intervalRecordSet == null) {
       intervalRecordSet = new IntervalRecordSet();
-      intervalRecordSets.put(recordType, intervalRecordSet);
+      intervalRecordSets.put(recordType.getRootType(), intervalRecordSet);
     }
-    intervalRecordSet.update(recordInserter, recordType, start, end, attributes);
+    return intervalRecordSet.update(recordInserter, recordType, start, end, attributes);
   }
 
   public int insertInstantRecord(
       RecordInserter recordInserter, RecordType recordType,
       Instant instant, Map<String, Object> attributes) throws StorageException {
-    SortedMap<InstantRecordKey, Map<String, Object>> instantRecordSet = instantRecordSets.get(recordType);
+    SortedMap<InstantRecordKey, Map<String, Object>> instantRecordSet = instantRecordSets.get(recordType.getRootType());
     if (instantRecordSet == null) {
       instantRecordSet = new TreeMap<>();
-      instantRecordSets.put(recordType, instantRecordSet);
+      instantRecordSets.put(recordType.getRootType(), instantRecordSet);
     }
     int id = recordInserter.insertInstantRecord(recordType, instant, attributes);
-    instantRecordSet.put(new InstantRecordKey(instant, id), attributes);
+    instantRecordSet.put(new InstantRecordKey(recordType, instant, id), attributes);
     return id;
   }
 
-  public SortedMap<InstantRecordKey, Map<String, Object>> getInstantRecords(RecordType recordType,
-      Instant start, Instant end) {
-    SortedMap<InstantRecordKey, Map<String, Object>> instantRecordSet = instantRecordSets.get(recordType);
+  public Iterable<Map.Entry<InstantRecordKey, Map<String, Object>>> getInstantRecords(
+      final RecordType recordType, Instant start, Instant end) {
+    SortedMap<InstantRecordKey, Map<String, Object>> instantRecordSet = instantRecordSets.get(recordType.getRootType());
     if (instantRecordSet == null) {
-      return ImmutableSortedMap.of();
+      return ImmutableList.of();
     }
-    return ImmutableSortedMap.copyOf(
-        instantRecordSet.subMap(
-            new InstantRecordKey(start, 0), new InstantRecordKey(end, Integer.MAX_VALUE)));
+    return ImmutableList.copyOf(
+        Sets.filter(
+            instantRecordSet.subMap(
+                new InstantRecordKey(recordType, start, 0),
+                new InstantRecordKey(recordType, end, Integer.MAX_VALUE))
+                    .entrySet(),
+            new Predicate<Map.Entry<InstantRecordKey, Map<String, Object>>>() {
+              @Override
+              public boolean apply(Map.Entry<InstantRecordKey, Map<String, Object>> entry) {
+                return entry.getKey().getRecordType().isTypeOf(recordType);
+              }
+            }));
   }
 
   public Pair<IntervalRecordKey, Map<String, Object>> getIntervalRecord(RecordType recordType,
       Instant date) {
-    IntervalRecordSet intervalRecordSet = intervalRecordSets.get(recordType);
+    IntervalRecordSet intervalRecordSet = intervalRecordSets.get(recordType.getRootType());
     if (intervalRecordSet == null) {
       return null;
     }
-    return intervalRecordSet.getIntervalRecord(date);
+    Pair<IntervalRecordKey, Map<String, Object>> intervalRecord =
+        intervalRecordSet.getIntervalRecord(date);
+    if (intervalRecord.getFirst().getRecordType().isTypeOf(recordType)) {
+      return intervalRecord;
+    }
+    return null;
+  }
+
+  public <T extends IntervalRecord> Iterable<Pair<IntervalRecordKey, Map<String, Object>>>
+      getIntervalRecords(final RecordType<T> recordType, Instant start, Instant end) {
+    IntervalRecordSet intervalRecordSet = intervalRecordSets.get(recordType.getRootType());
+    if (intervalRecordSet == null) {
+      return ImmutableList.of();
+    }
+    return Iterables.filter(
+        intervalRecordSet.getIntervalRecords(start, end),
+        new Predicate<Pair<IntervalRecordKey, Map<String, Object>>>() {
+          @Override
+          public boolean apply(Pair<IntervalRecordKey, Map<String, Object>> entry) {
+            return entry.getFirst().getRecordType().isTypeOf(recordType);
+          }
+        });
   }
 
   public boolean matchesSearchTerms(List<SearchTerm> searchTerms) {
-    for (SearchTerm searchTerm : searchTerms) {
-      Object attribute = attributes.get(searchTerm.getAttribute());
-      if (!searchTerm.getOperator().matches(attribute, searchTerm.getValue())) {
-        return false;
-      }
-    }
-    return true;
+    return InMemoryStore.matchesSearchTerms(attributes, searchTerms);
+  }
+
+  public RecordType getRecordType() {
+    return recordType;
   }
 }

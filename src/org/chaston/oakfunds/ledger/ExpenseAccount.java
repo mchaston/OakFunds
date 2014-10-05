@@ -23,11 +23,15 @@ import org.chaston.oakfunds.storage.RecordType;
  */
 public class ExpenseAccount extends Account {
 
+  static final RecordType<ExpenseAccount> TYPE =
+      new RecordType<>("expense_account", ExpenseAccount.class,
+          Account.TYPE, true);
+
   @Attribute(name = "default_source_account_id", propertyName = "defaultSourceAccountId")
   private int defaultSourceAccountId;
 
   ExpenseAccount(int id) {
-    super(RecordType.EXPENSE_ACCOUNT, id);
+    super(TYPE, id);
   }
 
   public int getDefaultSourceAccountId() {

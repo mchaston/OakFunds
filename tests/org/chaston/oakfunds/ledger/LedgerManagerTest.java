@@ -62,7 +62,7 @@ public class LedgerManagerTest {
   public void createNewBankAccount() throws StorageException {
     Transaction transaction = store.startTransaction();
     AccountCode accountCode = accountCodeManager.createAccountCode(80000, "Operating");
-    BankAccount bankAccount = ledgerManager.createBankAccount(accountCode, "Bob's bank");
+    BankAccount bankAccount = ledgerManager.createBankAccount(accountCode, "Bob's bank", BankAccountType.OPERATING);
     BigDecimal interestRate = BigDecimal.valueOf(0.03); // 3%
     ledgerManager.setInterestRate(bankAccount, interestRate, DateUtil.BEGINNING_OF_TIME,
         DateUtil.END_OF_TIME);
@@ -93,7 +93,7 @@ public class LedgerManagerTest {
   public void payExpense() throws StorageException {
     Transaction transaction = store.startTransaction();
     AccountCode operatingAccountCode = accountCodeManager.createAccountCode(80000, "Operating");
-    BankAccount bankAccount = ledgerManager.createBankAccount(operatingAccountCode, "Bob's bank");
+    BankAccount bankAccount = ledgerManager.createBankAccount(operatingAccountCode, "Bob's bank", BankAccountType.OPERATING);
     BigDecimal interestRate = BigDecimal.valueOf(0.03); // 3%
     ledgerManager.setInterestRate(bankAccount, interestRate, DateUtil.BEGINNING_OF_TIME,
         DateUtil.END_OF_TIME);
@@ -129,7 +129,7 @@ public class LedgerManagerTest {
   public void payExpenseWithRevenue() throws StorageException {
     Transaction transaction = store.startTransaction();
     AccountCode operatingAccountCode = accountCodeManager.createAccountCode(80000, "Operating");
-    BankAccount bankAccount = ledgerManager.createBankAccount(operatingAccountCode, "Bob's bank");
+    BankAccount bankAccount = ledgerManager.createBankAccount(operatingAccountCode, "Bob's bank", BankAccountType.OPERATING);
     BigDecimal interestRate = BigDecimal.valueOf(0.03); // 3%
     ledgerManager.setInterestRate(bankAccount, interestRate, DateUtil.BEGINNING_OF_TIME,
         DateUtil.END_OF_TIME);

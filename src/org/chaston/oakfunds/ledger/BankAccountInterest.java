@@ -17,6 +17,7 @@ package org.chaston.oakfunds.ledger;
 
 import org.chaston.oakfunds.storage.Attribute;
 import org.chaston.oakfunds.storage.IntervalRecord;
+import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 import org.joda.time.Instant;
 
@@ -27,11 +28,15 @@ import java.math.BigDecimal;
  */
 public class BankAccountInterest extends IntervalRecord {
 
+  public static final RecordType<BankAccountInterest> TYPE =
+      new RecordType<>("bank_account_interest", BankAccountInterest.class,
+          RecordTemporalType.INTERVAL, true);
+
   @Attribute(name = "interest_rate", propertyName = "interestRate")
   private BigDecimal interestRate;
 
   protected BankAccountInterest(int id, Instant start, Instant end) {
-    super(RecordType.BANK_ACCOUNT_INTEREST, id, start, end);
+    super(TYPE, id, start, end);
   }
 
   public BigDecimal getInterestRate() {
