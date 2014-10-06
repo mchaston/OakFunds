@@ -227,4 +227,39 @@ public class ModelManagerTest {
     assertEquals(BigDecimal.valueOf(1000.0), secondModelDistributionTransaction.getAmount());
     assertEquals(Instant.parse("2014-02-01"), secondModelDistributionTransaction.getInstant());
   }
+
+  @Test
+  public void createAdHocEventBeyondTimeHorizon() throws StorageException {
+    Transaction transaction = store.startTransaction();
+    ModelExpenseAccount expenseAccount =
+        modelManager.createModelExpenseAccount("House Painting", BankAccountType.OPERATING);
+    ModelAccountTransaction modelAccountTransaction =
+        modelManager.createAdHocEvent(modelManager.getBaseModel(), expenseAccount,
+            Instant.parse("2027-01-01"),
+            50, DistributionTimeUnit.YEARS, BigDecimal.valueOf(60000.0));
+    transaction.commit();
+
+    assertNotNull(modelAccountTransaction);
+
+    Iterable<ModelDistributionTransaction> modelDistributionTransactions =
+        modelManager.getModelDistributionTransactions(modelManager.getBaseModel(), expenseAccount,
+            Instant.parse("2014-01-01"), Instant.parse("2015-01-01"));
+
+    assertEquals(12, Iterables.size(modelDistributionTransactions));
+    ModelDistributionTransaction firstModelDistributionTransaction = Iterables.getFirst(
+        modelDistributionTransactions, null);
+    assertNotNull(firstModelDistributionTransaction);
+    assertEquals(modelManager.getBaseModel().getId(), firstModelDistributionTransaction.getModelId());
+    // First one is a roll up of the previous distributions.
+    assertEquals(BigDecimal.valueOf(44400.0), firstModelDistributionTransaction.getAmount());
+    assertEquals(Instant.parse("2014-01-01"), firstModelDistributionTransaction.getInstant());
+
+    // Regular ones are a normal size.
+    ModelDistributionTransaction secondModelDistributionTransaction =
+        Iterables.get(modelDistributionTransactions, 1, null);
+    assertNotNull(secondModelDistributionTransaction);
+    assertEquals(modelManager.getBaseModel().getId(), secondModelDistributionTransaction.getModelId());
+    assertEquals(BigDecimal.valueOf(100.0), secondModelDistributionTransaction.getAmount());
+    assertEquals(Instant.parse("2014-02-01"), secondModelDistributionTransaction.getInstant());
+  }
 }
