@@ -15,30 +15,18 @@
  */
 package org.chaston.oakfunds.ledger;
 
-import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class ExpenseAccount extends Account<ExpenseAccount> {
+public interface ExpenseAccount extends Account<ExpenseAccount> {
 
   static final RecordType<ExpenseAccount> TYPE =
       new RecordType<>("expense_account", ExpenseAccount.class,
           Account.TYPE, true);
 
-  @Attribute(name = "default_source_account_id", propertyName = "defaultSourceAccountId")
-  private int defaultSourceAccountId;
-
-  ExpenseAccount(int id) {
-    super(TYPE, id);
-  }
-
-  public int getDefaultSourceAccountId() {
-    return defaultSourceAccountId;
-  }
-
-  public void setDefaultSourceAccountId(int defaultSourceAccountId) {
-    this.defaultSourceAccountId = defaultSourceAccountId;
-  }
+  @AttributeMethod(attribute = "default_source_account_id")
+  int getDefaultSourceAccountId();
 }

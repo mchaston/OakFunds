@@ -16,30 +16,18 @@
 package org.chaston.oakfunds.model;
 
 import org.chaston.oakfunds.ledger.BankAccountType;
-import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class ModelExpenseAccount extends ModelAccount<ModelExpenseAccount> {
+public interface ModelExpenseAccount extends ModelAccount<ModelExpenseAccount> {
 
   static final RecordType<ModelExpenseAccount> TYPE =
       new RecordType<>("model_expense_account", ModelExpenseAccount.class,
           ModelAccount.TYPE, true);
 
-  @Attribute(name = "source_bank_account_type", propertyName = "sourceBankAccountType")
-  private BankAccountType sourceBankAccountType;
-
-  ModelExpenseAccount(int id) {
-    super(TYPE, id);
-  }
-
-  public BankAccountType getSourceBankAccountType() {
-    return sourceBankAccountType;
-  }
-
-  public void setSourceBankAccountType(BankAccountType sourceBankAccountType) {
-    this.sourceBankAccountType = sourceBankAccountType;
-  }
+  @AttributeMethod(attribute = "source_bank_account_type")
+  BankAccountType getSourceBankAccountType();
 }

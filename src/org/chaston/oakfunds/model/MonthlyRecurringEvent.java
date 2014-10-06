@@ -16,18 +16,13 @@
 package org.chaston.oakfunds.model;
 
 import org.chaston.oakfunds.storage.RecordType;
-import org.joda.time.Instant;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class MonthlyRecurringEvent extends RecurringEvent<MonthlyRecurringEvent> {
+public interface MonthlyRecurringEvent extends RecurringEvent<MonthlyRecurringEvent> {
 
   static final RecordType<MonthlyRecurringEvent> TYPE =
       new RecordType<>("monthly_recurring_event", MonthlyRecurringEvent.class,
           RecurringEvent.TYPE, true);
-
-  MonthlyRecurringEvent(int id, Instant start, Instant end) {
-    super(TYPE, id, start, end);
-  }
 }

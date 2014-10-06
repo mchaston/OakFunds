@@ -15,11 +15,17 @@
  */
 package org.chaston.oakfunds.storage;
 
-import org.joda.time.Instant;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface IntervalRecordFactory<T extends IntervalRecord> {
-  T newInstance(RecordType recordType, int id, Instant start, Instant end);
+@RunWith(JUnit4.class)
+public class ProxyTest {
+  @Test
+  public void recordProxy() {
+
+  }
 }

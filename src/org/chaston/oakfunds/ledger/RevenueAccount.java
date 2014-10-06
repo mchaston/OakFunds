@@ -15,30 +15,18 @@
  */
 package org.chaston.oakfunds.ledger;
 
-import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class RevenueAccount extends Account<RevenueAccount> {
+public interface RevenueAccount extends Account<RevenueAccount> {
 
   static final RecordType<RevenueAccount> TYPE =
       new RecordType<>("revenue_account", RevenueAccount.class,
           Account.TYPE, true);
 
-  @Attribute(name = "default_deposit_account_id", propertyName = "defaultDepositAccountId")
-  private int defaultDepositAccountId;
-
-  RevenueAccount(int id) {
-    super(TYPE, id);
-  }
-
-  public int getDefaultDepositAccountId() {
-    return defaultDepositAccountId;
-  }
-
-  public void setDefaultDepositAccountId(int defaultDepositAccountId) {
-    this.defaultDepositAccountId = defaultDepositAccountId;
-  }
+  @AttributeMethod(attribute = "default_deposit_account_id")
+  int getDefaultDepositAccountId();
 }

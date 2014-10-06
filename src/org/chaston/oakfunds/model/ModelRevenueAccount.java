@@ -16,30 +16,18 @@
 package org.chaston.oakfunds.model;
 
 import org.chaston.oakfunds.ledger.BankAccountType;
-import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class ModelRevenueAccount extends ModelAccount<ModelRevenueAccount> {
+public interface ModelRevenueAccount extends ModelAccount<ModelRevenueAccount> {
 
   static final RecordType<ModelRevenueAccount> TYPE =
       new RecordType<>("model_revenue_account", ModelRevenueAccount.class,
           ModelAccount.TYPE, true);
 
-  @Attribute(name = "deposit_bank_account_type", propertyName = "depositBankAccountType")
-  private BankAccountType depositBankAccountType;
-
-  ModelRevenueAccount(int id) {
-    super(TYPE, id);
-  }
-
-  public BankAccountType getDepositBankAccountType() {
-    return depositBankAccountType;
-  }
-
-  public void setDepositBankAccountType(BankAccountType depositBankAccountType) {
-    this.depositBankAccountType = depositBankAccountType;
-  }
+  @AttributeMethod(attribute = "deposit_bank_account_type")
+  BankAccountType getDepositBankAccountType();
 }

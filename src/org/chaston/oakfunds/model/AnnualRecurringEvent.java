@@ -15,31 +15,18 @@
  */
 package org.chaston.oakfunds.model;
 
-import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.RecordType;
-import org.joda.time.Instant;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class AnnualRecurringEvent extends RecurringEvent<AnnualRecurringEvent> {
+public interface AnnualRecurringEvent extends RecurringEvent<AnnualRecurringEvent> {
 
   static final RecordType<AnnualRecurringEvent> TYPE =
       new RecordType<>("annual_recurring_event",
           AnnualRecurringEvent.class, RecurringEvent.TYPE, true);
 
-  @Attribute(name = "payment_month", propertyName = "paymentMonth")
-  private int paymentMonth;
-
-  AnnualRecurringEvent(int id, Instant start, Instant end) {
-    super(TYPE, id, start, end);
-  }
-
-  public int getPaymentMonth() {
-    return paymentMonth;
-  }
-
-  public void setPaymentMonth(int paymentMonth) {
-    this.paymentMonth = paymentMonth;
-  }
+  @AttributeMethod(attribute = "payment_month")
+  int getPaymentMonth();
 }

@@ -296,14 +296,9 @@ public class IntervalRecordSetTest {
     return ImmutableMap.of("value", (Object) seed);
   }
   
-  private static class TestIntervalRecord extends IntervalRecord<TestIntervalRecord> {
-
-    private static final RecordType<TestIntervalRecord> TYPE =
+  private static interface TestIntervalRecord extends IntervalRecord<TestIntervalRecord> {
+    static final RecordType<TestIntervalRecord> TYPE =
         new RecordType<>("test_interval_type", TestIntervalRecord.class,
             RecordTemporalType.INTERVAL, true);
-
-    protected TestIntervalRecord(int id, Instant start, Instant end) {
-      super(TYPE, id, start, end);
-    }
   }
 }

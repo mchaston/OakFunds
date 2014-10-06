@@ -70,7 +70,7 @@ public class RecordType<T extends Record> {
     return name;
   }
 
-  public <T extends IntervalRecord> boolean isTypeOf(RecordType<T> recordType) {
+  public <T extends Record> boolean isTypeOf(RecordType<T> recordType) {
     return recordType.getRecordTypeClass().isAssignableFrom(recordTypeClass);
   }
 }

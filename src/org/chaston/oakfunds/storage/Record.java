@@ -18,20 +18,8 @@ package org.chaston.oakfunds.storage;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public abstract class Record<T extends Record<T>> {
-  private final int id;
-  private final RecordType<T> recordType;
+public interface Record<T extends Record> {
+  int getId();
 
-  protected Record(RecordType<T> recordType, int id) {
-    this.recordType = recordType;
-    this.id = id;
-  }
-
-  public int getId() {
-    return id;
-  }
-
-  RecordType<T> getRecordType() {
-    return recordType;
-  }
+  RecordType<T> getRecordType();
 }

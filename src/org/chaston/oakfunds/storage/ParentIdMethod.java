@@ -15,26 +15,15 @@
  */
 package org.chaston.oakfunds.storage;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
-public abstract class FinalRecordFactory<T extends Record>
-    implements RecordFactory<T> {
-  private final RecordType<T> recordType;
-
-  public FinalRecordFactory(RecordType<T> recordType) {
-    this.recordType = recordType;
-  }
-
-  @Override
-  public T newInstance(RecordType recordType, int id) {
-    if (this.recordType == recordType) {
-      return newInstance(id);
-    }
-    throw new IllegalArgumentException(
-        "RecordType " + recordType + " is not supported by the "
-            + this.recordType.getName() + " record factory.");
-  }
-
-  protected abstract T newInstance(int id);
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface ParentIdMethod {
 }

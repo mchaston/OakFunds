@@ -15,91 +15,38 @@
  */
 package org.chaston.oakfunds.model;
 
-import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.InstantRecord;
-import org.chaston.oakfunds.storage.ParentIdAttribute;
+import org.chaston.oakfunds.storage.ParentIdMethod;
 import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
-import org.joda.time.Instant;
 
 import java.math.BigDecimal;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class ModelAccountTransaction extends InstantRecord<ModelAccountTransaction> {
+public interface ModelAccountTransaction extends InstantRecord<ModelAccountTransaction> {
 
   public static final RecordType<ModelAccountTransaction> TYPE =
       new RecordType<>("model_account_transaction", ModelAccountTransaction.class,
           RecordTemporalType.INSTANT, true);
 
-  @Attribute(name = "model_id", propertyName = "modelId")
-  private int modelId;
+  @AttributeMethod(attribute = "model_id")
+  int getModelId();
 
-  @ParentIdAttribute(propertyName = "accountId")
-  private int accountId;
+  @ParentIdMethod
+  int getAccountId();
 
-  @Attribute(name = "amount")
-  private BigDecimal amount;
+  @AttributeMethod(attribute = "amount")
+  BigDecimal getAmount();
 
-  @Attribute(name = "distribution_time", propertyName = "distributionTime")
-  private int distributionTime;
+  @AttributeMethod(attribute = "distribution_time")
+  int getDistributionTime();
 
-  @Attribute(name = "distribution_time_unit", propertyName = "distributionTimeUnit")
-  private DistributionTimeUnit distributionTimeUnit;
+  @AttributeMethod(attribute = "distribution_time_unit")
+  DistributionTimeUnit getDistributionTimeUnit();
 
-  @Attribute(name = "derived")
-  private boolean derived;
-
-  ModelAccountTransaction(int id, Instant instant) {
-    super(TYPE, id, instant);
-  }
-
-  public int getModelId() {
-    return modelId;
-  }
-
-  public void setModelId(int modelId) {
-    this.modelId = modelId;
-  }
-
-  public int getAccountId() {
-    return accountId;
-  }
-
-  public void setAccountId(int accountId) {
-    this.accountId = accountId;
-  }
-
-  public BigDecimal getAmount() {
-    return amount;
-  }
-
-  public void setAmount(BigDecimal amount) {
-    this.amount = amount;
-  }
-
-  public int getDistributionTime() {
-    return distributionTime;
-  }
-
-  public void setDistributionTime(int distributionTime) {
-    this.distributionTime = distributionTime;
-  }
-
-  public DistributionTimeUnit getDistributionTimeUnit() {
-    return distributionTimeUnit;
-  }
-
-  public void setDistributionTimeUnit(DistributionTimeUnit distributionTimeUnit) {
-    this.distributionTimeUnit = distributionTimeUnit;
-  }
-
-  public boolean isDerived() {
-    return derived;
-  }
-
-  public void setDerived(boolean derived) {
-    this.derived = derived;
-  }
+  @AttributeMethod(attribute = "derived")
+  boolean isDerived();
 }

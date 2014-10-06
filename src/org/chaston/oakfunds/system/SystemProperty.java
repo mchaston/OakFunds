@@ -15,7 +15,7 @@
  */
 package org.chaston.oakfunds.system;
 
-import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.Record;
 import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
@@ -23,35 +23,15 @@ import org.chaston.oakfunds.storage.RecordType;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class SystemProperty extends Record<SystemProperty> {
+public interface SystemProperty extends Record<SystemProperty> {
 
   static final RecordType<SystemProperty> TYPE =
       new RecordType<>("system_property", SystemProperty.class,
           RecordTemporalType.NONE, true);
 
-  @Attribute(name = "name")
-  private String name;
+  @AttributeMethod(attribute = "name")
+  String getName();
 
-  @Attribute(name = "integer_value", propertyName = "integerValue")
-  private Integer integerValue;
-
-  protected SystemProperty(int id) {
-    super(TYPE, id);
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public Integer getIntegerValue() {
-    return integerValue;
-  }
-
-  public void setIntegerValue(Integer integerValue) {
-    this.integerValue = integerValue;
-  }
+  @AttributeMethod(attribute = "integer_value")
+  Integer getIntegerValue();
 }

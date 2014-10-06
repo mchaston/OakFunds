@@ -25,13 +25,7 @@ import java.util.Map;
  */
 public interface Store {
 
-  <T extends Record> void registerType(RecordType<T> recordType, RecordFactory<? extends T> recordFactory);
-
-  <T extends InstantRecord> void registerType(RecordType<T> recordType,
-      InstantRecordFactory<? extends T> recordFactory);
-
-  <T extends IntervalRecord> void registerType(RecordType<T> recordType,
-      IntervalRecordFactory<? extends T> recordFactory);
+  void registerType(RecordType<?> recordType);
 
   Transaction startTransaction() throws StorageException;
 

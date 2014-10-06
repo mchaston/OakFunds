@@ -15,30 +15,18 @@
  */
 package org.chaston.oakfunds.ledger;
 
-import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class BankAccount extends Account<BankAccount> {
+public interface BankAccount extends Account<BankAccount> {
 
   static final RecordType<BankAccount> TYPE =
       new RecordType<>("bank_account", BankAccount.class,
           Account.TYPE, true);
 
-  @Attribute(name = "bank_account_type", propertyName = "bankAccountType")
-  private BankAccountType bankAccountType;
-
-  BankAccount(int id) {
-    super(TYPE, id);
-  }
-
-  public BankAccountType getBankAccountType() {
-    return bankAccountType;
-  }
-
-  public void setBankAccountType(BankAccountType bankAccountType) {
-    this.bankAccountType = bankAccountType;
-  }
+  @AttributeMethod(attribute = "bank_account_type")
+  BankAccountType getBankAccountType();
 }

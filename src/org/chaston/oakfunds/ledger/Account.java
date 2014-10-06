@@ -15,7 +15,7 @@
  */
 package org.chaston.oakfunds.ledger;
 
-import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.Record;
 import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
@@ -23,24 +23,12 @@ import org.chaston.oakfunds.storage.RecordType;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public abstract class Account<T extends Account<T>> extends Record<T> {
+public interface Account<T extends Account<T>> extends Record<T> {
 
   static final RecordType<Account> TYPE =
       new RecordType<>("account", Account.class,
           RecordTemporalType.NONE, false);
 
-  @Attribute(name = "title")
-  private String title;
-
-  Account(RecordType<T> recordType, int id) {
-    super(recordType, id);
-  }
-
-  public String getTitle() {
-    return title;
-  }
-
-  public void setTitle(String title) {
-    this.title = title;
-  }
+  @AttributeMethod(attribute = "title")
+  String getTitle();
 }

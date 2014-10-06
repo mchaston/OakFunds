@@ -26,7 +26,6 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
@@ -100,9 +99,8 @@ public class InMemoryStore extends AbstractStore {
       throw new StorageException(
           String.format("Record of type %s and ID %s was not found.", recordType, id));
     }
-    T record = getRecordFactory(recordType).newInstance(inMemoryRecord.getRecordType(), id);
-    populateRecord(record, inMemoryRecord.getAttributes(), null);
-    return record;
+    return RecordProxy.proxyRecord((RecordType<T>) inMemoryRecord.getRecordType(),
+        null, id, inMemoryRecord.getAttributes());
   }
 
   @Override
@@ -127,10 +125,8 @@ public class InMemoryStore extends AbstractStore {
           record.getRecordType(), record.getId(), inMemoryRecord);
     }
     inMemoryRecord.updateRecord(attributes);
-    RecordFactory<T> recordFactory = getRecordFactory(record.getRecordType());
-    T newRecord = recordFactory.newInstance(record.getRecordType(), record.getId());
-    populateRecord(newRecord, inMemoryRecord.getAttributes(), null);
-    return newRecord;
+    return RecordProxy.proxyRecord((RecordType<T>) record.getRecordType(),
+        null, record.getId(), inMemoryRecord.getAttributes());
   }
 
   @Override
@@ -154,11 +150,10 @@ public class InMemoryStore extends AbstractStore {
     }
     // TODO(mchaston): add ordering
     ImmutableList.Builder<T> resultList = ImmutableList.builder();
-    RecordFactory<T> recordFactory = getRecordFactory(recordType);
     for (Map.Entry<Integer, InMemoryRecord> entry : results.entrySet()) {
       InMemoryRecord inMemoryRecord = entry.getValue();
-      T record = recordFactory.newInstance(inMemoryRecord.getRecordType(), entry.getKey());
-      populateRecord(record, entry.getValue().getAttributes(), null);
+      T record = RecordProxy.proxyRecord((RecordType<T>) inMemoryRecord.getRecordType(),
+          null, entry.getKey(), entry.getValue().getAttributes());
       resultList.add(record);
     }
     return resultList.build();
@@ -188,9 +183,8 @@ public class InMemoryStore extends AbstractStore {
     }
     int id = currentTransaction.updateIntervalRecord(
         inMemoryRecord, recordType, start, end, attributes);
-    T record = getIntervalRecordFactory(recordType).newInstance(recordType, id, start, end);
-    populateRecord(record, attributes, containingRecord);
-    return record;
+    return RecordProxy.proxyIntervalRecord((RecordType<T>) recordType,
+        containingRecord, id, start, end, attributes);
   }
 
   @Override
@@ -213,11 +207,10 @@ public class InMemoryStore extends AbstractStore {
     Pair<IntervalRecordKey, Map<String, Object>> rawRecord =
         inMemoryRecord.getIntervalRecord(recordType, date);
     IntervalRecordKey intervalRecordKey = rawRecord.getFirst();
-    T record = getIntervalRecordFactory(recordType).newInstance(
-        intervalRecordKey.getRecordType(),
-        intervalRecordKey.getId(), intervalRecordKey.getStart(), intervalRecordKey.getEnd());
-    populateRecord(record, rawRecord.getSecond(), containingRecord);
-    return record;
+    return RecordProxy.proxyIntervalRecord((RecordType<T>) intervalRecordKey.getRecordType(),
+        containingRecord, intervalRecordKey.getId(),
+        intervalRecordKey.getStart(), intervalRecordKey.getEnd(),
+        rawRecord.getSecond());
   }
 
   @Override
@@ -240,15 +233,15 @@ public class InMemoryStore extends AbstractStore {
     }
     Iterable<Pair<IntervalRecordKey, Map<String, Object>>> rawRecords =
         inMemoryRecord.getIntervalRecords(recordType, start, end);
-    IntervalRecordFactory<T> intervalRecordFactory = getIntervalRecordFactory(recordType);
     ImmutableList.Builder<T> resultList = ImmutableList.builder();
     for (Pair<IntervalRecordKey, Map<String, Object>> rawRecord : rawRecords) {
       if (matchesSearchTerms(rawRecord.getSecond(), searchTerms)) {
         IntervalRecordKey intervalRecordKey = rawRecord.getFirst();
-        T record = intervalRecordFactory.newInstance(
-            intervalRecordKey.getRecordType(),
-            intervalRecordKey.getId(), intervalRecordKey.getStart(), intervalRecordKey.getEnd());
-        populateRecord(record, rawRecord.getSecond(), containingRecord);
+        T record = RecordProxy.proxyIntervalRecord(
+            (RecordType<T>) intervalRecordKey.getRecordType(),
+            containingRecord, intervalRecordKey.getId(),
+            intervalRecordKey.getStart(), intervalRecordKey.getEnd(),
+            rawRecord.getSecond());
         resultList.add(record);
       }
     }
@@ -279,9 +272,8 @@ public class InMemoryStore extends AbstractStore {
     }
     int id = currentTransaction.insertInstantRecord(
         inMemoryRecord, recordType, instant, attributes);
-    T record = getInstantRecordFactory(recordType).newInstance(recordType, id, instant);
-    populateRecord(record, attributes, containingRecord);
-    return record;
+    return RecordProxy.proxyInstantRecord((RecordType<T>) recordType,
+        containingRecord, id, instant, attributes);
   }
 
   @Override
@@ -305,13 +297,11 @@ public class InMemoryStore extends AbstractStore {
     Iterable<Map.Entry<InstantRecordKey, Map<String, Object>>> rawRecords =
         inMemoryRecord.getInstantRecords(recordType, start, end);
     ImmutableList.Builder<T> resultsList = ImmutableList.builder();
-    InstantRecordFactory<T> instantRecordFactory = getInstantRecordFactory(recordType);
     for (Map.Entry<InstantRecordKey, Map<String, Object>> entry : rawRecords) {
       if (matchesSearchTerms(entry.getValue(), searchTerms)) {
         InstantRecordKey key = entry.getKey();
-        T record = instantRecordFactory.newInstance(key.getRecordType(), key.getId(),
-            key.getInstant());
-        populateRecord(record, entry.getValue(), containingRecord);
+        T record = RecordProxy.proxyInstantRecord((RecordType<T>) key.getRecordType(),
+            containingRecord, key.getId(), key.getInstant(), entry.getValue());
         resultsList.add(record);
       }
     }
@@ -326,39 +316,6 @@ public class InMemoryStore extends AbstractStore {
       }
     }
     return true;
-  }
-
-  private <T extends Record> void populateRecord(
-      T record, Map<String, Object> attributes, @Nullable Record parentRecord)
-      throws StorageException {
-    Map<String, Method> writeMethodMap = loadWriteMethodMap(record.getClass());
-    for (Map.Entry<String, Object> attribute : attributes.entrySet()) {
-      Method method = writeMethodMap.get(attribute.getKey());
-      if (method == null) {
-        throw new StorageException(
-            String.format("Attribute %s is not a valid attribute on record class %s.",
-                attribute.getKey(), record.getClass()));
-      }
-      try {
-        method.invoke(record, attribute.getValue());
-      } catch (InvocationTargetException | IllegalAccessException e) {
-        throw new StorageException(
-            String.format("Attribute %s failed to be written to record class %s.",
-                attribute.getKey(), record.getClass()), e);
-      }
-    }
-    if (parentRecord != null) {
-      Method parentIdentifierWriteMethod = loadParentIdentifierWriteMethod(record.getClass());
-      if (parentIdentifierWriteMethod != null) {
-        try {
-          parentIdentifierWriteMethod.invoke(record, parentRecord.getId());
-        } catch (InvocationTargetException | IllegalAccessException e) {
-          throw new StorageException(
-              String.format("Parent ID failed to be written to record class %s.",
-                  record.getClass()), e);
-        }
-      }
-    }
   }
 
   private static Map<String, Method> loadWriteMethodMap(Class<? extends Record> recordClass)

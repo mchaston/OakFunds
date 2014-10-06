@@ -15,7 +15,7 @@
  */
 package org.chaston.oakfunds.account;
 
-import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.Record;
 import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
@@ -23,24 +23,12 @@ import org.chaston.oakfunds.storage.RecordType;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class AccountCode extends Record<AccountCode> {
+public interface AccountCode extends Record<AccountCode> {
 
   static final RecordType<AccountCode> TYPE =
       new RecordType<>("account_code", AccountCode.class,
           RecordTemporalType.NONE, true);
 
-  @Attribute(name = "title")
-  private String title;
-
-  AccountCode(int id) {
-    super(TYPE, id);
-  }
-
-  public String getTitle() {
-    return title;
-  }
-
-  public void setTitle(String title) {
-    this.title = title;
-  }
+  @AttributeMethod(attribute = "title")
+  String getTitle();
 }

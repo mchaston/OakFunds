@@ -17,7 +17,6 @@ package org.chaston.oakfunds.system;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import org.chaston.oakfunds.storage.FinalRecordFactory;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
@@ -46,13 +45,8 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
   SystemPropertiesManagerImpl(Store store,
       @Nullable Iterable<SystemPropertyLoader> bootstrappingSystemPropertyLoaders) throws StorageException {
     this.store = store;
-    store.registerType(SystemProperty.TYPE,
-        new FinalRecordFactory<SystemProperty>(SystemProperty.TYPE) {
-          @Override
-          protected SystemProperty newInstance(int id) {
-            return new SystemProperty(id);
-          }
-        });
+    store.registerType(SystemProperty.TYPE
+    );
 
     if (bootstrappingSystemPropertyLoaders != null) {
       Transaction transaction = store.startTransaction();

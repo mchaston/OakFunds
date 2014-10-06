@@ -15,7 +15,7 @@
  */
 package org.chaston.oakfunds.model;
 
-import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.Record;
 import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
@@ -23,34 +23,14 @@ import org.chaston.oakfunds.storage.RecordType;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class Model extends Record<Model> {
+public interface Model extends Record<Model> {
 
   static final RecordType<Model> TYPE =
       new RecordType<>("model", Model.class, RecordTemporalType.NONE, true);
 
-  @Attribute(name = "title")
-  private String title;
+  @AttributeMethod(attribute = "title")
+  String getTitle();
 
-  @Attribute(name = "base_model", propertyName = "baseModel")
-  private boolean baseModel;
-
-  Model(int id) {
-    super(TYPE, id);
-  }
-
-  public String getTitle() {
-    return title;
-  }
-
-  public void setTitle(String title) {
-    this.title = title;
-  }
-
-  public boolean isBaseModel() {
-    return baseModel;
-  }
-
-  public void setBaseModel(boolean baseModel) {
-    this.baseModel = baseModel;
-  }
+  @AttributeMethod(attribute = "base_model")
+  boolean isBaseModel();
 }

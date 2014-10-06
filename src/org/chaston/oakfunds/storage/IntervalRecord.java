@@ -20,21 +20,8 @@ import org.joda.time.Instant;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class IntervalRecord<T extends IntervalRecord<T>> extends Record<T> {
-  private final Instant start;
-  private final Instant end;
+public interface IntervalRecord<T extends IntervalRecord> extends Record<T> {
+  Instant getStart();
 
-  protected IntervalRecord(RecordType<T> recordType, int id, Instant start, Instant end) {
-    super(recordType, id);
-    this.start = start;
-    this.end = end;
-  }
-
-  public Instant getStart() {
-    return start;
-  }
-
-  public Instant getEnd() {
-    return end;
-  }
+  Instant getEnd();
 }

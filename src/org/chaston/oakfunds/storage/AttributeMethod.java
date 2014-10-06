@@ -15,11 +15,16 @@
  */
 package org.chaston.oakfunds.storage;
 
-import org.joda.time.Instant;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface InstantRecordFactory<T extends InstantRecord> {
-  T newInstance(RecordType recordType, int id, Instant instant);
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface AttributeMethod {
+  String attribute();
 }

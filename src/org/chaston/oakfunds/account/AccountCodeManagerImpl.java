@@ -16,7 +16,6 @@
 package org.chaston.oakfunds.account;
 
 import com.google.inject.Inject;
-import org.chaston.oakfunds.storage.FinalRecordFactory;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 
@@ -35,13 +34,7 @@ class AccountCodeManagerImpl implements AccountCodeManager {
   @Inject
   AccountCodeManagerImpl(Store store) {
     this.store = store;
-    store.registerType(AccountCode.TYPE,
-        new FinalRecordFactory<AccountCode>(AccountCode.TYPE) {
-          @Override
-          protected AccountCode newInstance(int id) {
-            return new AccountCode(id);
-          }
-        });
+    store.registerType(AccountCode.TYPE);
   }
 
   @Override

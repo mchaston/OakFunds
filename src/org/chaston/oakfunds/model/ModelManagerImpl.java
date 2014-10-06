@@ -19,12 +19,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.ledger.BankAccountType;
-import org.chaston.oakfunds.storage.FinalInstantRecordFactory;
-import org.chaston.oakfunds.storage.FinalIntervalRecordFactory;
-import org.chaston.oakfunds.storage.FinalRecordFactory;
-import org.chaston.oakfunds.storage.IntervalRecordFactory;
-import org.chaston.oakfunds.storage.RecordFactory;
-import org.chaston.oakfunds.storage.RecordType;
 import org.chaston.oakfunds.storage.SearchOperator;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
@@ -68,89 +62,27 @@ class ModelManagerImpl implements ModelManager {
     this.systemPropertiesManager = systemPropertiesManager;
     this.store = store;
 
-    store.registerType(Model.TYPE,
-        new FinalRecordFactory<Model>(Model.TYPE) {
-          @Override
-          protected Model newInstance(int id) {
-            return new Model(id);
-          }
-        });
+    store.registerType(Model.TYPE
+    );
 
-    store.registerType(RecurringEvent.TYPE,
-        new IntervalRecordFactory<RecurringEvent>() {
-          @Override
-          public RecurringEvent newInstance(RecordType recordType, int id, Instant start,
-              Instant end) {
-            if (recordType == AnnualRecurringEvent.TYPE) {
-              return new AnnualRecurringEvent(id, start, end);
-            }
-            if (recordType == MonthlyRecurringEvent.TYPE) {
-              return new MonthlyRecurringEvent(id, start, end);
-            }
-            throw new IllegalArgumentException(
-                "RecordType " + recordType
-                    + " is not supported by the recurring_event record factory.");
-          }
-        });
-    store.registerType(AnnualRecurringEvent.TYPE,
-        new FinalIntervalRecordFactory<AnnualRecurringEvent>(AnnualRecurringEvent.TYPE) {
-          @Override
-          protected AnnualRecurringEvent newInstance(int id, Instant start, Instant end) {
-            return new AnnualRecurringEvent(id, start, end);
-          }
-        });
-    store.registerType(MonthlyRecurringEvent.TYPE,
-        new FinalIntervalRecordFactory<MonthlyRecurringEvent>(MonthlyRecurringEvent.TYPE) {
-          @Override
-          protected MonthlyRecurringEvent newInstance(int id, Instant start, Instant end) {
-            return new MonthlyRecurringEvent(id, start, end);
-          }
-        });
+    store.registerType(RecurringEvent.TYPE
+    );
+    store.registerType(AnnualRecurringEvent.TYPE
+    );
+    store.registerType(MonthlyRecurringEvent.TYPE
+    );
 
-    store.registerType(ModelAccount.TYPE,
-        new RecordFactory<ModelAccount>() {
-          @Override
-          public ModelAccount newInstance(RecordType recordType, int id) {
-            if (recordType == ModelExpenseAccount.TYPE) {
-              return new ModelExpenseAccount(id);
-            }
-            if (recordType == ModelRevenueAccount.TYPE) {
-              return new ModelRevenueAccount(id);
-            }
-            throw new IllegalArgumentException(
-                "RecordType " + recordType
-                    + " is not supported by the model_account record factory.");
-          }
-        });
-    store.registerType(ModelExpenseAccount.TYPE,
-        new FinalRecordFactory<ModelExpenseAccount>(ModelExpenseAccount.TYPE) {
-          @Override
-          protected ModelExpenseAccount newInstance(int id) {
-            return new ModelExpenseAccount(id);
-          }
-        });
-    store.registerType(ModelRevenueAccount.TYPE,
-        new FinalRecordFactory<ModelRevenueAccount>(ModelRevenueAccount.TYPE) {
-          @Override
-          protected ModelRevenueAccount newInstance(int id) {
-            return new ModelRevenueAccount(id);
-          }
-        });
+    store.registerType(ModelAccount.TYPE
+    );
+    store.registerType(ModelExpenseAccount.TYPE
+    );
+    store.registerType(ModelRevenueAccount.TYPE
+    );
 
-    store.registerType(ModelAccountTransaction.TYPE,
-        new FinalInstantRecordFactory<ModelAccountTransaction>(ModelAccountTransaction.TYPE) {
-          @Override
-          protected ModelAccountTransaction newInstance(int id, Instant instant) {
-            return new ModelAccountTransaction(id, instant);
-          }
-        });
-    store.registerType(ModelDistributionTransaction.TYPE,
-        new FinalInstantRecordFactory<ModelDistributionTransaction>(ModelDistributionTransaction.TYPE) {
-          @Override
-          protected ModelDistributionTransaction newInstance(int id, Instant instant) {
-            return new ModelDistributionTransaction(id, instant);
-          }
-        });
+    store.registerType(ModelAccountTransaction.TYPE
+    );
+    store.registerType(ModelDistributionTransaction.TYPE
+    );
 
     List<SearchTerm> searchTerms =
         ImmutableList.of(SearchTerm.of(ATTRIBUTE_BASE_MODEL, SearchOperator.EQUALS, true));
@@ -334,7 +266,8 @@ class ModelManagerImpl implements ModelManager {
         distributionAttributes.put(ATTRIBUTE_MODEL_ID, model.getId());
         distributionAttributes.put(ATTRIBUTE_ACCOUNT_TRANSACTION, modelAccountTransaction.getId());
         if (mutableDateTime.isEqual(firstDistribution)) {
-          distributionAttributes.put(ATTRIBUTE_AMOUNT, firstDistributionAmount.add(amountPerDistribution));
+          distributionAttributes.put(ATTRIBUTE_AMOUNT, firstDistributionAmount.add(
+              amountPerDistribution));
         } else {
           distributionAttributes.put(ATTRIBUTE_AMOUNT, amountPerDistribution);
         }

@@ -15,57 +15,28 @@
  */
 package org.chaston.oakfunds.model;
 
-import org.chaston.oakfunds.storage.Attribute;
+import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.IntervalRecord;
 import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
-import org.joda.time.Instant;
 
 import java.math.BigDecimal;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public abstract class RecurringEvent<T extends RecurringEvent<T>> extends IntervalRecord<T> {
+public interface RecurringEvent<T extends RecurringEvent> extends IntervalRecord<T> {
 
   static final RecordType<RecurringEvent> TYPE =
       new RecordType<>("record_type", RecurringEvent.class,
           RecordTemporalType.INTERVAL, false);
 
-  @Attribute(name = "model_id", propertyName = "modelId")
-  private int modelId;
+  @AttributeMethod(attribute = "amount")
+  BigDecimal getAmount();
 
-  @Attribute(name = "account_id", propertyName = "accountId")
-  private int accountId;
+  @AttributeMethod(attribute = "model_id")
+  int getModelId();
 
-  @Attribute(name = "amount")
-  private BigDecimal amount;
-
-  RecurringEvent(RecordType<T> recordType, int id, Instant start, Instant end) {
-    super(recordType, id, start, end);
-  }
-
-  public BigDecimal getAmount() {
-    return amount;
-  }
-
-  public void setAmount(BigDecimal amount) {
-    this.amount = amount;
-  }
-
-  public int getModelId() {
-    return modelId;
-  }
-
-  public void setModelId(int modelId) {
-    this.modelId = modelId;
-  }
-
-  public int getAccountId() {
-    return accountId;
-  }
-
-  public void setAccountId(int accountId) {
-    this.accountId = accountId;
-  }
+  @AttributeMethod(attribute = "account_id")
+  int getAccountId();
 }

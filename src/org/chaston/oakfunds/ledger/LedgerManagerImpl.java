@@ -18,11 +18,6 @@ package org.chaston.oakfunds.ledger;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.account.AccountCode;
-import org.chaston.oakfunds.storage.FinalInstantRecordFactory;
-import org.chaston.oakfunds.storage.FinalIntervalRecordFactory;
-import org.chaston.oakfunds.storage.FinalRecordFactory;
-import org.chaston.oakfunds.storage.RecordFactory;
-import org.chaston.oakfunds.storage.RecordType;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
@@ -52,58 +47,18 @@ class LedgerManagerImpl implements LedgerManager {
   @Inject
   LedgerManagerImpl(Store store) {
     this.store = store;
-    store.registerType(Account.TYPE,
-        new RecordFactory<Account>() {
-          @Override
-          public Account newInstance(RecordType recordType, int id) {
-            if (recordType == BankAccount.TYPE) {
-              return new BankAccount(id);
-            }
-            if (recordType == ExpenseAccount.TYPE) {
-              return new ExpenseAccount(id);
-            }
-            if (recordType == RevenueAccount.TYPE) {
-              return new RevenueAccount(id);
-            }
-            throw new IllegalArgumentException(
-                "RecordType " + recordType + " is not supported by the account record factory.");
-          }
-        });
-    store.registerType(AccountTransaction.TYPE,
-        new FinalInstantRecordFactory<AccountTransaction>(AccountTransaction.TYPE) {
-          @Override
-          protected AccountTransaction newInstance(int id, Instant instant) {
-            return new AccountTransaction(id, instant);
-          }
-        });
-    store.registerType(BankAccount.TYPE,
-        new FinalRecordFactory<BankAccount>(BankAccount.TYPE) {
-          @Override
-          protected BankAccount newInstance(int id) {
-            return new BankAccount(id);
-          }
-        });
-    store.registerType(BankAccountInterest.TYPE,
-        new FinalIntervalRecordFactory<BankAccountInterest>(BankAccountInterest.TYPE) {
-          @Override
-          protected BankAccountInterest newInstance(int id, Instant start, Instant end) {
-            return new BankAccountInterest(id, start, end);
-          }
-        });
-    store.registerType(ExpenseAccount.TYPE,
-        new FinalRecordFactory<ExpenseAccount>(ExpenseAccount.TYPE) {
-          @Override
-          protected ExpenseAccount newInstance(int id) {
-            return new ExpenseAccount(id);
-          }
-        });
-    store.registerType(RevenueAccount.TYPE,
-        new FinalRecordFactory<RevenueAccount>(RevenueAccount.TYPE) {
-          @Override
-          protected RevenueAccount newInstance(int id) {
-            return new RevenueAccount(id);
-          }
-        });
+    store.registerType(Account.TYPE
+    );
+    store.registerType(AccountTransaction.TYPE
+    );
+    store.registerType(BankAccount.TYPE
+    );
+    store.registerType(BankAccountInterest.TYPE
+    );
+    store.registerType(ExpenseAccount.TYPE
+    );
+    store.registerType(RevenueAccount.TYPE
+    );
   }
 
   @Override
