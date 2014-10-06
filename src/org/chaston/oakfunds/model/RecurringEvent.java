@@ -26,7 +26,7 @@ import java.math.BigDecimal;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public abstract class RecurringEvent extends IntervalRecord {
+public abstract class RecurringEvent<T extends RecurringEvent<T>> extends IntervalRecord<T> {
 
   static final RecordType<RecurringEvent> TYPE =
       new RecordType<>("record_type", RecurringEvent.class,
@@ -41,7 +41,7 @@ public abstract class RecurringEvent extends IntervalRecord {
   @Attribute(name = "amount")
   private BigDecimal amount;
 
-  RecurringEvent(RecordType recordType, int id, Instant start, Instant end) {
+  RecurringEvent(RecordType<T> recordType, int id, Instant start, Instant end) {
     super(recordType, id, start, end);
   }
 

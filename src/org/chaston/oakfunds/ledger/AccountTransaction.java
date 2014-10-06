@@ -17,6 +17,7 @@ package org.chaston.oakfunds.ledger;
 
 import org.chaston.oakfunds.storage.Attribute;
 import org.chaston.oakfunds.storage.InstantRecord;
+import org.chaston.oakfunds.storage.ParentIdAttribute;
 import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 import org.joda.time.Instant;
@@ -26,11 +27,14 @@ import java.math.BigDecimal;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class AccountTransaction extends InstantRecord {
+public class AccountTransaction extends InstantRecord<AccountTransaction> {
 
   public static final RecordType<AccountTransaction> TYPE =
       new RecordType<>("account_transaction", AccountTransaction.class,
           RecordTemporalType.INSTANT, true);
+
+  @ParentIdAttribute(propertyName = "accountId")
+  private int accountId;
 
   @Attribute(name = "amount")
   private BigDecimal amount;
@@ -67,5 +71,13 @@ public class AccountTransaction extends InstantRecord {
 
   public void setSisterTransactionId(int sisterTransactionId) {
     this.sisterTransactionId = sisterTransactionId;
+  }
+
+  public int getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(int accountId) {
+    this.accountId = accountId;
   }
 }

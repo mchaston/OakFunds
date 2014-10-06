@@ -21,7 +21,7 @@ import org.chaston.oakfunds.storage.RecordType;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class ExpenseAccount extends Account {
+public class ExpenseAccount extends Account<ExpenseAccount> {
 
   static final RecordType<ExpenseAccount> TYPE =
       new RecordType<>("expense_account", ExpenseAccount.class,

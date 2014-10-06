@@ -23,7 +23,7 @@ import org.chaston.oakfunds.storage.RecordType;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class Model extends Record {
+public class Model extends Record<Model> {
 
   static final RecordType<Model> TYPE =
       new RecordType<>("model", Model.class, RecordTemporalType.NONE, true);

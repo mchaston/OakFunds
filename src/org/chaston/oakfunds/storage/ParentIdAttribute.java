@@ -15,23 +15,16 @@
  */
 package org.chaston.oakfunds.storage;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
-public abstract class Record<T extends Record<T>> {
-  private final int id;
-  private final RecordType<T> recordType;
-
-  protected Record(RecordType<T> recordType, int id) {
-    this.recordType = recordType;
-    this.id = id;
-  }
-
-  public int getId() {
-    return id;
-  }
-
-  RecordType<T> getRecordType() {
-    return recordType;
-  }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface ParentIdAttribute {
+  String propertyName();
 }

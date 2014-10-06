@@ -21,7 +21,7 @@ import org.joda.time.Instant;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class MonthlyRecurringEvent extends RecurringEvent {
+public class MonthlyRecurringEvent extends RecurringEvent<MonthlyRecurringEvent> {
 
   static final RecordType<MonthlyRecurringEvent> TYPE =
       new RecordType<>("monthly_recurring_event", MonthlyRecurringEvent.class,

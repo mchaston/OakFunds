@@ -94,8 +94,8 @@ abstract class AbstractStore implements Store {
     if (!IntervalRecord.class.isAssignableFrom(recordType.getRecordTypeClass())) {
       throw new IllegalArgumentException("RecordType " + recordType + " does not represent an interval record type.");
     }
-    IntervalRecordFactory<T> recordFactory = (IntervalRecordFactory<T>) intervalRecordFactories.get(
-        recordType.getName());
+    IntervalRecordFactory<T> recordFactory =
+        (IntervalRecordFactory<T>) intervalRecordFactories.get(recordType.getName());
     if (recordFactory == null) {
       throw new IllegalStateException(
           "A RecordType named " + recordType.getName() + " has not been registered.");

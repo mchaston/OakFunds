@@ -17,6 +17,7 @@ package org.chaston.oakfunds.model;
 
 import org.chaston.oakfunds.storage.Attribute;
 import org.chaston.oakfunds.storage.InstantRecord;
+import org.chaston.oakfunds.storage.ParentIdAttribute;
 import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 import org.joda.time.Instant;
@@ -26,7 +27,7 @@ import java.math.BigDecimal;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class ModelAccountTransaction extends InstantRecord {
+public class ModelAccountTransaction extends InstantRecord<ModelAccountTransaction> {
 
   public static final RecordType<ModelAccountTransaction> TYPE =
       new RecordType<>("model_account_transaction", ModelAccountTransaction.class,
@@ -35,7 +36,7 @@ public class ModelAccountTransaction extends InstantRecord {
   @Attribute(name = "model_id", propertyName = "modelId")
   private int modelId;
 
-  @Attribute(name = "account_id", propertyName = "accountId")
+  @ParentIdAttribute(propertyName = "accountId")
   private int accountId;
 
   @Attribute(name = "amount")

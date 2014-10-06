@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import org.chaston.oakfunds.util.Pair;
 import org.joda.time.Instant;
 
+import javax.annotation.Nullable;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -38,6 +39,7 @@ public class InMemoryStore extends AbstractStore {
 
   public static final ThreadLocal<InMemoryTransaction> CURRENT_TRANSACTION = new ThreadLocal<>();
   public static final Map<Class, Map<String, Method>> WRITE_METHOD_MAPS = new HashMap<>();
+  public static final Map<Class, Method> PARENT_IDENTIFIER_WRITE_METHODS = new HashMap<>();
 
   private final Map<RecordType, Map<Integer, InMemoryRecord>> tables = new HashMap<>();
 
@@ -99,7 +101,7 @@ public class InMemoryStore extends AbstractStore {
           String.format("Record of type %s and ID %s was not found.", recordType, id));
     }
     T record = getRecordFactory(recordType).newInstance(inMemoryRecord.getRecordType(), id);
-    populateRecord(record, inMemoryRecord.getAttributes());
+    populateRecord(record, inMemoryRecord.getAttributes(), null);
     return record;
   }
 
@@ -127,7 +129,7 @@ public class InMemoryStore extends AbstractStore {
     inMemoryRecord.updateRecord(attributes);
     RecordFactory<T> recordFactory = getRecordFactory(record.getRecordType());
     T newRecord = recordFactory.newInstance(record.getRecordType(), record.getId());
-    populateRecord(newRecord, inMemoryRecord.getAttributes());
+    populateRecord(newRecord, inMemoryRecord.getAttributes(), null);
     return newRecord;
   }
 
@@ -156,7 +158,7 @@ public class InMemoryStore extends AbstractStore {
     for (Map.Entry<Integer, InMemoryRecord> entry : results.entrySet()) {
       InMemoryRecord inMemoryRecord = entry.getValue();
       T record = recordFactory.newInstance(inMemoryRecord.getRecordType(), entry.getKey());
-      populateRecord(record, entry.getValue().getAttributes());
+      populateRecord(record, entry.getValue().getAttributes(), null);
       resultList.add(record);
     }
     return resultList.build();
@@ -187,7 +189,7 @@ public class InMemoryStore extends AbstractStore {
     int id = currentTransaction.updateIntervalRecord(
         inMemoryRecord, recordType, start, end, attributes);
     T record = getIntervalRecordFactory(recordType).newInstance(recordType, id, start, end);
-    populateRecord(record, attributes);
+    populateRecord(record, attributes, containingRecord);
     return record;
   }
 
@@ -214,7 +216,7 @@ public class InMemoryStore extends AbstractStore {
     T record = getIntervalRecordFactory(recordType).newInstance(
         intervalRecordKey.getRecordType(),
         intervalRecordKey.getId(), intervalRecordKey.getStart(), intervalRecordKey.getEnd());
-    populateRecord(record, rawRecord.getSecond());
+    populateRecord(record, rawRecord.getSecond(), containingRecord);
     return record;
   }
 
@@ -246,7 +248,7 @@ public class InMemoryStore extends AbstractStore {
         T record = intervalRecordFactory.newInstance(
             intervalRecordKey.getRecordType(),
             intervalRecordKey.getId(), intervalRecordKey.getStart(), intervalRecordKey.getEnd());
-        populateRecord(record, rawRecord.getSecond());
+        populateRecord(record, rawRecord.getSecond(), containingRecord);
         resultList.add(record);
       }
     }
@@ -278,7 +280,7 @@ public class InMemoryStore extends AbstractStore {
     int id = currentTransaction.insertInstantRecord(
         inMemoryRecord, recordType, instant, attributes);
     T record = getInstantRecordFactory(recordType).newInstance(recordType, id, instant);
-    populateRecord(record, attributes);
+    populateRecord(record, attributes, containingRecord);
     return record;
   }
 
@@ -309,7 +311,7 @@ public class InMemoryStore extends AbstractStore {
         InstantRecordKey key = entry.getKey();
         T record = instantRecordFactory.newInstance(key.getRecordType(), key.getId(),
             key.getInstant());
-        populateRecord(record, entry.getValue());
+        populateRecord(record, entry.getValue(), containingRecord);
         resultsList.add(record);
       }
     }
@@ -326,7 +328,8 @@ public class InMemoryStore extends AbstractStore {
     return true;
   }
 
-  private <T extends Record> void populateRecord(T record, Map<String, Object> attributes)
+  private <T extends Record> void populateRecord(
+      T record, Map<String, Object> attributes, @Nullable Record parentRecord)
       throws StorageException {
     Map<String, Method> writeMethodMap = loadWriteMethodMap(record.getClass());
     for (Map.Entry<String, Object> attribute : attributes.entrySet()) {
@@ -342,6 +345,18 @@ public class InMemoryStore extends AbstractStore {
         throw new StorageException(
             String.format("Attribute %s failed to be written to record class %s.",
                 attribute.getKey(), record.getClass()), e);
+      }
+    }
+    if (parentRecord != null) {
+      Method parentIdentifierWriteMethod = loadParentIdentifierWriteMethod(record.getClass());
+      if (parentIdentifierWriteMethod != null) {
+        try {
+          parentIdentifierWriteMethod.invoke(record, parentRecord.getId());
+        } catch (InvocationTargetException | IllegalAccessException e) {
+          throw new StorageException(
+              String.format("Parent ID failed to be written to record class %s.",
+                  record.getClass()), e);
+        }
       }
     }
   }
@@ -362,6 +377,49 @@ public class InMemoryStore extends AbstractStore {
       WRITE_METHOD_MAPS.put(recordClass, writeMethodMap);
     }
     return writeMethodMap;
+  }
+
+  @Nullable
+  private static Method loadParentIdentifierWriteMethod(Class<? extends Record> recordClass)
+      throws StorageException {
+    Method parentIdentifierWriteMethod = PARENT_IDENTIFIER_WRITE_METHODS.get(recordClass);
+    if (parentIdentifierWriteMethod == null
+        && !PARENT_IDENTIFIER_WRITE_METHODS.containsKey(recordClass)) {
+      BeanInfo beanInfo;
+      try {
+        beanInfo = Introspector.getBeanInfo(recordClass);
+      } catch (IntrospectionException e) {
+        throw new StorageException(
+            String.format("Record class %s could not be introspected.", recordClass), e);
+      }
+      parentIdentifierWriteMethod = readParentIdentifierWriteMethod(beanInfo, recordClass);
+      PARENT_IDENTIFIER_WRITE_METHODS.put(recordClass, parentIdentifierWriteMethod);
+    }
+    return parentIdentifierWriteMethod;
+  }
+
+  private static Method readParentIdentifierWriteMethod(BeanInfo beanInfo,
+      Class<? extends Record> recordClass) {
+    Field[] fields = recordClass.getDeclaredFields();
+    for (Field field : fields) {
+      ParentIdAttribute attribute = field.getAnnotation(ParentIdAttribute.class);
+      if (attribute != null) {
+        String propertyName = attribute.propertyName();
+        for (PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors()) {
+          if (propertyDescriptor.getName().equals(propertyName)) {
+            return propertyDescriptor.getWriteMethod();
+          }
+        }
+        throw new IllegalStateException(
+            String.format("Property %s declared for field %s was not found for class %s.",
+                propertyName, field.getName(), recordClass));
+      }
+    }
+    Class superclass = recordClass.getSuperclass();
+    if (superclass != null) {
+      return readParentIdentifierWriteMethod(beanInfo, superclass);
+    }
+    return null;
   }
 
   private static void populateWriteMethodMap(

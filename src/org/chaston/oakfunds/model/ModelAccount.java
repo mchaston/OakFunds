@@ -23,7 +23,7 @@ import org.chaston.oakfunds.storage.RecordType;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public abstract class ModelAccount extends Record {
+public abstract class ModelAccount<T extends ModelAccount<T>> extends Record<T> {
 
   public static final RecordType<ModelAccount> TYPE =
       new RecordType<>("model_account", ModelAccount.class,
@@ -32,7 +32,7 @@ public abstract class ModelAccount extends Record {
   @Attribute(name = "title")
   private String title;
 
-  ModelAccount(RecordType recordType, int id) {
+  ModelAccount(RecordType<T> recordType, int id) {
     super(recordType, id);
   }
 

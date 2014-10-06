@@ -22,7 +22,7 @@ import org.chaston.oakfunds.storage.RecordType;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class ModelRevenueAccount extends ModelAccount {
+public class ModelRevenueAccount extends ModelAccount<ModelRevenueAccount> {
 
   static final RecordType<ModelRevenueAccount> TYPE =
       new RecordType<>("model_revenue_account", ModelRevenueAccount.class,

@@ -23,11 +23,11 @@ import org.chaston.oakfunds.storage.RecordType;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class SystemProperty extends Record {
+public class SystemProperty extends Record<SystemProperty> {
 
   static final RecordType<SystemProperty> TYPE =
-      new RecordType<SystemProperty>("system_property",
-          SystemProperty.class, RecordTemporalType.NONE, true);
+      new RecordType<>("system_property", SystemProperty.class,
+          RecordTemporalType.NONE, true);
 
   @Attribute(name = "name")
   private String name;

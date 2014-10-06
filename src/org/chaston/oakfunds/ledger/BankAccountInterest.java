@@ -26,7 +26,7 @@ import java.math.BigDecimal;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class BankAccountInterest extends IntervalRecord {
+public class BankAccountInterest extends IntervalRecord<BankAccountInterest> {
 
   public static final RecordType<BankAccountInterest> TYPE =
       new RecordType<>("bank_account_interest", BankAccountInterest.class,

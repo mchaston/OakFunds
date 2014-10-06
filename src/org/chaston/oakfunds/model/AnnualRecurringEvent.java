@@ -22,7 +22,7 @@ import org.joda.time.Instant;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class AnnualRecurringEvent extends RecurringEvent {
+public class AnnualRecurringEvent extends RecurringEvent<AnnualRecurringEvent> {
 
   static final RecordType<AnnualRecurringEvent> TYPE =
       new RecordType<>("annual_recurring_event",

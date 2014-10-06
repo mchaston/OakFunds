@@ -20,10 +20,10 @@ import org.joda.time.Instant;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class InstantRecord extends Record {
+public class InstantRecord<T extends InstantRecord<T>> extends Record<T> {
   private final Instant instant;
 
-  protected InstantRecord(RecordType recordType, int id, Instant instant) {
+  protected InstantRecord(RecordType<T> recordType, int id, Instant instant) {
     super(recordType, id);
     this.instant = instant;
   }
