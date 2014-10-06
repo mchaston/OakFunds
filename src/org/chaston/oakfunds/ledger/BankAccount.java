@@ -27,6 +27,6 @@ public interface BankAccount extends Account<BankAccount> {
       new RecordType<>("bank_account", BankAccount.class,
           Account.TYPE, true);
 
-  @AttributeMethod(attribute = "bank_account_type")
+  @AttributeMethod(attribute = "bank_account_type", required = true)
   BankAccountType getBankAccountType();
 }

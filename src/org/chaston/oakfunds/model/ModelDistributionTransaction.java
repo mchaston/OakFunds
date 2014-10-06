@@ -31,9 +31,9 @@ public interface ModelDistributionTransaction extends InstantRecord<ModelDistrib
       new RecordType<>("model_distribution_transaction",
           ModelDistributionTransaction.class, RecordTemporalType.INSTANT, true);
 
-  @AttributeMethod(attribute = "amount")
+  @AttributeMethod(attribute = "amount", required = true)
   BigDecimal getAmount();
 
-  @AttributeMethod(attribute = "model_account_transaction_id")
+  @AttributeMethod(attribute = "model_account_transaction_id", required = true)
   int getModelAccountTransactionId();
 }

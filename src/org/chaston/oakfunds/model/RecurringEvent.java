@@ -31,6 +31,6 @@ public interface RecurringEvent<T extends RecurringEvent> extends IntervalRecord
       new RecordType<>("record_type", RecurringEvent.class,
           RecordTemporalType.INTERVAL, false);
 
-  @AttributeMethod(attribute = "amount")
+  @AttributeMethod(attribute = "amount", required = true)
   BigDecimal getAmount();
 }

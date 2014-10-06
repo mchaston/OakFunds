@@ -28,9 +28,9 @@ public interface Model extends Record<Model> {
   static final RecordType<Model> TYPE =
       new RecordType<>("model", Model.class, RecordTemporalType.NONE, true);
 
-  @AttributeMethod(attribute = "title")
+  @AttributeMethod(attribute = "title", required = true)
   String getTitle();
 
-  @AttributeMethod(attribute = "base_model")
+  @AttributeMethod(attribute = "base_model", required = true)
   boolean isBaseModel();
 }

@@ -31,7 +31,7 @@ public interface ModelAccountTransaction extends InstantRecord<ModelAccountTrans
       new RecordType<>("model_account_transaction", ModelAccountTransaction.class,
           RecordTemporalType.INSTANT, true);
 
-  @AttributeMethod(attribute = "amount")
+  @AttributeMethod(attribute = "amount", required = true)
   BigDecimal getAmount();
 
   @AttributeMethod(attribute = "distribution_time")
@@ -40,6 +40,6 @@ public interface ModelAccountTransaction extends InstantRecord<ModelAccountTrans
   @AttributeMethod(attribute = "distribution_time_unit")
   DistributionTimeUnit getDistributionTimeUnit();
 
-  @AttributeMethod(attribute = "derived")
+  @AttributeMethod(attribute = "derived", required = true)
   boolean isDerived();
 }

@@ -27,6 +27,6 @@ public interface AnnualRecurringEvent extends RecurringEvent<AnnualRecurringEven
       new RecordType<>("annual_recurring_event",
           AnnualRecurringEvent.class, RecurringEvent.TYPE, true);
 
-  @AttributeMethod(attribute = "payment_month")
+  @AttributeMethod(attribute = "payment_month", required = true)
   int getPaymentMonth();
 }

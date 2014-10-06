@@ -114,6 +114,7 @@ class ModelManagerImpl implements ModelManager {
   public Model createNewModel(String title) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(ATTRIBUTE_TITLE, title);
+    attributes.put(ATTRIBUTE_BASE_MODEL, false);
     return store.createRecord(Model.TYPE, attributes);
   }
 

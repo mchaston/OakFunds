@@ -32,7 +32,7 @@ public interface AccountTransaction extends InstantRecord<AccountTransaction> {
       new RecordType<>("account_transaction", AccountTransaction.class,
           RecordTemporalType.INSTANT, true);
 
-  @AttributeMethod(attribute = "amount")
+  @AttributeMethod(attribute = "amount", required = true)
   BigDecimal getAmount();
 
   @AttributeMethod(attribute = "comment")

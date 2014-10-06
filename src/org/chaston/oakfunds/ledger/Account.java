@@ -29,6 +29,6 @@ public interface Account<T extends Account<T>> extends Record<T> {
       new RecordType<>("account", Account.class,
           RecordTemporalType.NONE, false);
 
-  @AttributeMethod(attribute = "title")
+  @AttributeMethod(attribute = "title", required = true)
   String getTitle();
 }

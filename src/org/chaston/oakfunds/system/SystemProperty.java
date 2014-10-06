@@ -29,7 +29,7 @@ public interface SystemProperty extends Record<SystemProperty> {
       new RecordType<>("system_property", SystemProperty.class,
           RecordTemporalType.NONE, true);
 
-  @AttributeMethod(attribute = "name")
+  @AttributeMethod(attribute = "name", required = true)
   String getName();
 
   @AttributeMethod(attribute = "integer_value")
