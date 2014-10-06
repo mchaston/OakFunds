@@ -38,6 +38,9 @@ public class ModelDistributionTransaction extends InstantRecord {
   @Attribute(name = "account_id", propertyName = "accountId")
   private int accountId;
 
+  @Attribute(name = "model_account_transaction_id", propertyName = "modelAccountTransactionId")
+  private int modelAccountTransactionId;
+
   @Attribute(name = "amount")
   private BigDecimal amount;
 
@@ -67,5 +70,13 @@ public class ModelDistributionTransaction extends InstantRecord {
 
   public void setAmount(BigDecimal amount) {
     this.amount = amount;
+  }
+
+  public int getModelAccountTransactionId() {
+    return modelAccountTransactionId;
+  }
+
+  public void setModelAccountTransactionId(int modelAccountTransactionId) {
+    this.modelAccountTransactionId = modelAccountTransactionId;
   }
 }

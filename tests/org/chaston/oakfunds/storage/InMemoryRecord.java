@@ -85,7 +85,7 @@ class InMemoryRecord {
         Sets.filter(
             instantRecordSet.subMap(
                 new InstantRecordKey(recordType, start, 0),
-                new InstantRecordKey(recordType, end, Integer.MAX_VALUE))
+                new InstantRecordKey(recordType, end, 0))
                     .entrySet(),
             new Predicate<Map.Entry<InstantRecordKey, Map<String, Object>>>() {
               @Override

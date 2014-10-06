@@ -135,7 +135,7 @@ class LedgerManagerImpl implements LedgerManager {
   public BigDecimal getBalance(BankAccount bankAccount, Instant date) throws StorageException {
     Iterable<AccountTransaction> accountTransactions =
         store.findInstantRecords(bankAccount, AccountTransaction.TYPE,
-            DateUtil.BEGINNING_OF_TIME, date, ImmutableList.<SearchTerm>of());
+            DateUtil.BEGINNING_OF_TIME, date.plus(1), ImmutableList.<SearchTerm>of());
     BigDecimal balance = BigDecimal.ZERO;
     for (AccountTransaction accountTransaction : accountTransactions) {
       balance = balance.add(accountTransaction.getAmount());

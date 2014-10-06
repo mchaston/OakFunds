@@ -31,7 +31,10 @@ import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.storage.Transaction;
 import org.chaston.oakfunds.system.SystemPropertiesManager;
+import org.joda.time.DateTimeFieldType;
+import org.joda.time.DurationFieldType;
 import org.joda.time.Instant;
+import org.joda.time.MutableDateTime;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -53,6 +56,7 @@ class ModelManagerImpl implements ModelManager {
   private static final String ATTRIBUTE_DISTRIBUTION_TIME = "distribution_time";
   private static final String ATTRIBUTE_DISTRIBUTION_TIME_UNIT = "distribution_time_unit";
   private static final String ATTRIBUTE_DERIVED = "derived";
+  private static final String ATTRIBUTE_ACCOUNT_TRANSACTION = "model_account_transaction_id";
 
   private final SystemPropertiesManager systemPropertiesManager;
   private final Store store;
@@ -248,7 +252,7 @@ class ModelManagerImpl implements ModelManager {
     attributes.put(ATTRIBUTE_DISTRIBUTION_TIME_UNIT, distributionTimeUnit);
     ModelAccountTransaction modelAccountTransaction =
         store.insertInstantRecord(account, ModelAccountTransaction.TYPE, date, attributes);
-    recalculateDistributionTransactions(modelAccountTransaction);
+    recalculateDistributionTransactions(model, account, modelAccountTransaction);
     return modelAccountTransaction;
   }
 
@@ -276,10 +280,93 @@ class ModelManagerImpl implements ModelManager {
         SearchTerm.of(ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
     Iterable<RecurringEvent> recurringEvents =
         store.findIntervalRecords(account, RecurringEvent.TYPE, start, end, searchTerms);
+    for (RecurringEvent recurringEvent : recurringEvents) {
+      if (recurringEvent instanceof MonthlyRecurringEvent) {
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put(ATTRIBUTE_MODEL_ID, model.getId());
+        attributes.put(ATTRIBUTE_AMOUNT, recurringEvent.getAmount());
+        attributes.put(ATTRIBUTE_DERIVED, true);
+        for (Instant instant
+            : getAllInstantsInRange(recurringEvent.getStart(), recurringEvent.getEnd())) {
+          store.insertInstantRecord(account, ModelAccountTransaction.TYPE, instant, attributes);
+        }
+      }
+      if (recurringEvent instanceof AnnualRecurringEvent) {
+        AnnualRecurringEvent annualRecurringEvent = (AnnualRecurringEvent) recurringEvent;
+        Map<String, Object> accountAttributes = new HashMap<>();
+        accountAttributes.put(ATTRIBUTE_MODEL_ID, model.getId());
+        accountAttributes.put(ATTRIBUTE_AMOUNT, recurringEvent.getAmount());
+        accountAttributes.put(ATTRIBUTE_DERIVED, true);
+        accountAttributes.put(ATTRIBUTE_DISTRIBUTION_TIME, 1);
+        accountAttributes.put(ATTRIBUTE_DISTRIBUTION_TIME_UNIT, DistributionTimeUnit.YEARS);
+
+        for (Instant instant
+            : getAllInstantsInRange(recurringEvent.getStart(), recurringEvent.getEnd())) {
+          if (instant.get(DateTimeFieldType.monthOfYear()) == annualRecurringEvent.getPaymentMonth()) {
+            ModelAccountTransaction accountTransaction =
+                store.insertInstantRecord(account, ModelAccountTransaction.TYPE, instant,
+                    accountAttributes);
+            recalculateDistributionTransactions(model, account, accountTransaction);
+          }
+        }
+      }
+    }
   }
 
-  private void recalculateDistributionTransactions(ModelAccountTransaction modelAccountTransaction)
+  private void recalculateDistributionTransactions(Model model, ModelAccount account, ModelAccountTransaction modelAccountTransaction)
       throws StorageException {
+    int distributionMonths = modelAccountTransaction.getDistributionTimeUnit() == DistributionTimeUnit.MONTHS
+        ? modelAccountTransaction.getDistributionTime()
+        : modelAccountTransaction.getDistributionTime() * 12;
+    Instant end = modelAccountTransaction.getInstant();
+    MutableDateTime mutableDateTime = modelAccountTransaction.getInstant().toMutableDateTime();
+    mutableDateTime.add(DurationFieldType.months(), 1 - distributionMonths);
+    Instant firstDistribution =
+        new MutableDateTime(systemPropertiesManager.getCurrentYear(), 1, 1, 0, 0, 0, 0).toInstant();
+    BigDecimal amountPerDistribution =
+        modelAccountTransaction.getAmount().divide(BigDecimal.valueOf(distributionMonths));
+    BigDecimal firstDistributionAmount = BigDecimal.ZERO;
+    while (mutableDateTime.isBefore(end)) {
+      if (mutableDateTime.isBefore(firstDistribution)) {
+        firstDistributionAmount = firstDistributionAmount.add(amountPerDistribution);
+      } else {
+        Map<String, Object> distributionAttributes = new HashMap<>();
+        distributionAttributes.put(ATTRIBUTE_MODEL_ID, model.getId());
+        distributionAttributes.put(ATTRIBUTE_ACCOUNT_TRANSACTION, modelAccountTransaction.getId());
+        if (mutableDateTime.isEqual(firstDistribution)) {
+          distributionAttributes.put(ATTRIBUTE_AMOUNT, firstDistributionAmount.add(amountPerDistribution));
+        } else {
+          distributionAttributes.put(ATTRIBUTE_AMOUNT, amountPerDistribution);
+        }
+        store.insertInstantRecord(account, ModelDistributionTransaction.TYPE,
+            mutableDateTime.toInstant(), distributionAttributes);
+      }
+      mutableDateTime.add(DurationFieldType.months(), 1);
+    }
+    // Add the anti-distribution that cancels out the others when the transaction is executed.
+    Map<String, Object> distributionAttributes = new HashMap<>();
+    distributionAttributes.put(ATTRIBUTE_MODEL_ID, model.getId());
+    distributionAttributes.put(ATTRIBUTE_ACCOUNT_TRANSACTION, modelAccountTransaction.getId());
+    distributionAttributes.put(ATTRIBUTE_AMOUNT,
+        amountPerDistribution.negate().multiply(BigDecimal.valueOf(distributionMonths - 1)));
+    store.insertInstantRecord(account, ModelDistributionTransaction.TYPE,
+        mutableDateTime.toInstant(), distributionAttributes);
+  }
 
+  private Iterable<Instant> getAllInstantsInRange(Instant start, Instant end) {
+    MutableDateTime mutableDateTime = new MutableDateTime(
+        systemPropertiesManager.getCurrentYear(), 1, 1, 0, 0, 0, 0);
+    long maxYear =
+        systemPropertiesManager.getCurrentYear() + systemPropertiesManager.getTimeHorizon();
+    if (mutableDateTime.isBefore(start)) {
+      mutableDateTime = start.toMutableDateTime();
+    }
+    ImmutableList.Builder<Instant> instants = ImmutableList.builder();
+    while (mutableDateTime.isBefore(end)
+        && mutableDateTime.get(DateTimeFieldType.year()) <= maxYear) {
+      instants.add(mutableDateTime.toInstant());
+      mutableDateTime.add(DurationFieldType.months(), 1);
+    }
+    return instants.build();
   }
 }

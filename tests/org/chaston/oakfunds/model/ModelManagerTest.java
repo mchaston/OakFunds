@@ -36,9 +36,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.math.BigDecimal;
-import java.util.Calendar;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -123,7 +123,6 @@ public class ModelManagerTest {
     ModelAccountTransaction firstModelTransaction = Iterables.getFirst(modelTransactions, null);
     assertNotNull(firstModelTransaction);
     assertEquals(modelManager.getBaseModel().getId(), firstModelTransaction.getModelId());
-    assertEquals(expenseAccount.getId(), firstModelTransaction.getAccountId());
     assertEquals(BigDecimal.valueOf(3000.0), firstModelTransaction.getAmount());
     assertEquals(Instant.parse("2014-01-01"), firstModelTransaction.getInstant());
 
@@ -142,11 +141,11 @@ public class ModelManagerTest {
     AnnualRecurringEvent annualRecurringEvent =
         modelManager.setAnnualRecurringEventDetails(modelManager.getBaseModel(), expenseAccount,
             DateUtil.BEGINNING_OF_TIME, DateUtil.END_OF_TIME,
-            Calendar.MARCH, BigDecimal.valueOf(12000.0));
+            3, BigDecimal.valueOf(12000.0));
     transaction.commit();
 
     assertEquals(BigDecimal.valueOf(12000.0), annualRecurringEvent.getAmount());
-    assertEquals(Calendar.MARCH, annualRecurringEvent.getPaymentMonth());
+    assertEquals(3, annualRecurringEvent.getPaymentMonth());
 
     Iterable<ModelAccountTransaction> modelTransactions =
         modelManager.getModelTransactions(modelManager.getBaseModel(), expenseAccount,
@@ -155,7 +154,6 @@ public class ModelManagerTest {
     assertEquals(1, Iterables.size(modelTransactions));
     ModelAccountTransaction modelTransaction = Iterables.getOnlyElement(modelTransactions);
     assertEquals(modelManager.getBaseModel().getId(), modelTransaction.getModelId());
-    assertEquals(expenseAccount.getId(), modelTransaction.getAccountId());
     assertEquals(BigDecimal.valueOf(12000.0), modelTransaction.getAmount());
     assertEquals(Instant.parse("2014-03-01"), modelTransaction.getInstant());
 
@@ -164,13 +162,35 @@ public class ModelManagerTest {
             Instant.parse("2014-01-01"), Instant.parse("2015-01-01"));
 
     assertEquals(12, Iterables.size(modelDistributionTransactions));
-    ModelDistributionTransaction firstModelDistributionTransaction = Iterables.getFirst(
-        modelDistributionTransactions, null);
+
+    ModelDistributionTransaction firstModelDistributionTransaction =
+        Iterables.getFirst(modelDistributionTransactions, null);
     assertNotNull(firstModelDistributionTransaction);
     assertEquals(modelManager.getBaseModel().getId(), firstModelDistributionTransaction.getModelId());
-    assertEquals(expenseAccount.getId(), firstModelDistributionTransaction.getAccountId());
-    assertEquals(BigDecimal.valueOf(1000.0), firstModelDistributionTransaction.getAmount());
+    // This is the sum of distributions until the first month of the current year.
+    assertEquals(BigDecimal.valueOf(10000.0), firstModelDistributionTransaction.getAmount());
     assertEquals(Instant.parse("2014-01-01"), firstModelDistributionTransaction.getInstant());
+
+    // This is the distribution that cancels out previous distributions.
+    ModelDistributionTransaction thirdModelDistributionTransaction =
+        Iterables.get(modelDistributionTransactions, 2, null);
+    assertNotNull(thirdModelDistributionTransaction);
+    assertEquals(modelManager.getBaseModel().getId(), thirdModelDistributionTransaction.getModelId());
+    assertEquals(BigDecimal.valueOf(-11000.0), thirdModelDistributionTransaction.getAmount());
+    assertEquals(Instant.parse("2014-03-01"), thirdModelDistributionTransaction.getInstant());
+    assertEquals(firstModelDistributionTransaction.getModelAccountTransactionId(),
+        thirdModelDistributionTransaction.getModelAccountTransactionId());
+
+    ModelDistributionTransaction fourthModelDistributionTransaction =
+        Iterables.get(modelDistributionTransactions, 3, null);
+    assertNotNull(fourthModelDistributionTransaction);
+    assertEquals(modelManager.getBaseModel().getId(),
+        fourthModelDistributionTransaction.getModelId());
+    assertEquals(BigDecimal.valueOf(1000.0), fourthModelDistributionTransaction.getAmount());
+    assertEquals(Instant.parse("2014-04-01"), fourthModelDistributionTransaction.getInstant());
+    // Different transaction from the previous ones.
+    assertNotEquals(firstModelDistributionTransaction.getModelAccountTransactionId(),
+        fourthModelDistributionTransaction.getModelAccountTransactionId());
   }
 
   @Test
@@ -195,8 +215,16 @@ public class ModelManagerTest {
         modelDistributionTransactions, null);
     assertNotNull(firstModelDistributionTransaction);
     assertEquals(modelManager.getBaseModel().getId(), firstModelDistributionTransaction.getModelId());
-    assertEquals(expenseAccount.getId(), firstModelDistributionTransaction.getAccountId());
-    assertEquals(BigDecimal.valueOf(1000.0), firstModelDistributionTransaction.getAmount());
+    // First one is a roll up of the previous distributions.
+    assertEquals(BigDecimal.valueOf(24000.0), firstModelDistributionTransaction.getAmount());
     assertEquals(Instant.parse("2014-01-01"), firstModelDistributionTransaction.getInstant());
+
+    // Regular ones are a normal size.
+    ModelDistributionTransaction secondModelDistributionTransaction =
+        Iterables.get(modelDistributionTransactions, 1, null);
+    assertNotNull(secondModelDistributionTransaction);
+    assertEquals(modelManager.getBaseModel().getId(), secondModelDistributionTransaction.getModelId());
+    assertEquals(BigDecimal.valueOf(1000.0), secondModelDistributionTransaction.getAmount());
+    assertEquals(Instant.parse("2014-02-01"), secondModelDistributionTransaction.getInstant());
   }
 }
