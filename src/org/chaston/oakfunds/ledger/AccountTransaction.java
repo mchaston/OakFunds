@@ -41,6 +41,6 @@ public interface AccountTransaction extends InstantRecord<AccountTransaction> {
   @AttributeMethod(attribute = "sister_transaction_id")
   int getSisterTransactionId();
 
-  @ParentIdMethod()
+  @ParentIdMethod
   int getAccountId();
 }

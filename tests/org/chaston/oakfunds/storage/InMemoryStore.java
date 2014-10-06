@@ -20,13 +20,6 @@ import com.google.common.collect.ImmutableMap;
 import org.chaston.oakfunds.util.Pair;
 import org.joda.time.Instant;
 
-import javax.annotation.Nullable;
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,8 +30,6 @@ import java.util.Map;
 public class InMemoryStore extends AbstractStore {
 
   public static final ThreadLocal<InMemoryTransaction> CURRENT_TRANSACTION = new ThreadLocal<>();
-  public static final Map<Class, Map<String, Method>> WRITE_METHOD_MAPS = new HashMap<>();
-  public static final Map<Class, Method> PARENT_IDENTIFIER_WRITE_METHODS = new HashMap<>();
 
   private final Map<RecordType, Map<Integer, InMemoryRecord>> tables = new HashMap<>();
 
@@ -183,7 +174,7 @@ public class InMemoryStore extends AbstractStore {
     }
     int id = currentTransaction.updateIntervalRecord(
         inMemoryRecord, recordType, start, end, attributes);
-    return RecordProxy.proxyIntervalRecord((RecordType<T>) recordType,
+    return RecordProxy.proxyIntervalRecord(recordType,
         containingRecord, id, start, end, attributes);
   }
 
@@ -272,7 +263,7 @@ public class InMemoryStore extends AbstractStore {
     }
     int id = currentTransaction.insertInstantRecord(
         inMemoryRecord, recordType, instant, attributes);
-    return RecordProxy.proxyInstantRecord((RecordType<T>) recordType,
+    return RecordProxy.proxyInstantRecord(recordType,
         containingRecord, id, instant, attributes);
   }
 
@@ -316,98 +307,6 @@ public class InMemoryStore extends AbstractStore {
       }
     }
     return true;
-  }
-
-  private static Map<String, Method> loadWriteMethodMap(Class<? extends Record> recordClass)
-      throws StorageException {
-    Map<String, Method> writeMethodMap = WRITE_METHOD_MAPS.get(recordClass);
-    if (writeMethodMap == null) {
-      writeMethodMap = new HashMap<>();
-      BeanInfo beanInfo;
-      try {
-        beanInfo = Introspector.getBeanInfo(recordClass);
-      } catch (IntrospectionException e) {
-        throw new StorageException(
-            String.format("Record class %s could not be introspected.", recordClass), e);
-      }
-      populateWriteMethodMap(writeMethodMap, beanInfo, recordClass);
-      WRITE_METHOD_MAPS.put(recordClass, writeMethodMap);
-    }
-    return writeMethodMap;
-  }
-
-  @Nullable
-  private static Method loadParentIdentifierWriteMethod(Class<? extends Record> recordClass)
-      throws StorageException {
-    Method parentIdentifierWriteMethod = PARENT_IDENTIFIER_WRITE_METHODS.get(recordClass);
-    if (parentIdentifierWriteMethod == null
-        && !PARENT_IDENTIFIER_WRITE_METHODS.containsKey(recordClass)) {
-      BeanInfo beanInfo;
-      try {
-        beanInfo = Introspector.getBeanInfo(recordClass);
-      } catch (IntrospectionException e) {
-        throw new StorageException(
-            String.format("Record class %s could not be introspected.", recordClass), e);
-      }
-      parentIdentifierWriteMethod = readParentIdentifierWriteMethod(beanInfo, recordClass);
-      PARENT_IDENTIFIER_WRITE_METHODS.put(recordClass, parentIdentifierWriteMethod);
-    }
-    return parentIdentifierWriteMethod;
-  }
-
-  private static Method readParentIdentifierWriteMethod(BeanInfo beanInfo,
-      Class<? extends Record> recordClass) {
-    Field[] fields = recordClass.getDeclaredFields();
-    for (Field field : fields) {
-      ParentIdAttribute attribute = field.getAnnotation(ParentIdAttribute.class);
-      if (attribute != null) {
-        String propertyName = attribute.propertyName();
-        for (PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors()) {
-          if (propertyDescriptor.getName().equals(propertyName)) {
-            return propertyDescriptor.getWriteMethod();
-          }
-        }
-        throw new IllegalStateException(
-            String.format("Property %s declared for field %s was not found for class %s.",
-                propertyName, field.getName(), recordClass));
-      }
-    }
-    Class superclass = recordClass.getSuperclass();
-    if (superclass != null) {
-      return readParentIdentifierWriteMethod(beanInfo, superclass);
-    }
-    return null;
-  }
-
-  private static void populateWriteMethodMap(
-      Map<String, Method> writeMethodMap, BeanInfo beanInfo, Class<?> recordClass) {
-    Field[] fields = recordClass.getDeclaredFields();
-    for (Field field : fields) {
-      Attribute attribute = field.getAnnotation(Attribute.class);
-      if (attribute != null) {
-        boolean wasFound = false;
-        String propertyName = attribute.propertyName();
-        if (propertyName.isEmpty()) {
-          propertyName = attribute.name();
-        }
-        for (PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors()) {
-          if (propertyDescriptor.getName().equals(propertyName)) {
-            writeMethodMap.put(attribute.name(), propertyDescriptor.getWriteMethod());
-            wasFound = true;
-            break;
-          }
-        }
-        if (!wasFound) {
-          throw new IllegalStateException(
-              String.format("Property %s declared for attribute %s was not found for class %s.",
-                  propertyName, attribute.name(), recordClass));
-        }
-      }
-    }
-    Class superclass = recordClass.getSuperclass();
-    if (superclass != null) {
-      populateWriteMethodMap(writeMethodMap, beanInfo, superclass);
-    }
   }
 
   private Map<Integer, InMemoryRecord> getTable(RecordType recordType) {

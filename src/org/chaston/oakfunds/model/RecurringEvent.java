@@ -25,7 +25,7 @@ import java.math.BigDecimal;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface RecurringEvent<T extends RecurringEvent> extends IntervalRecord<T> {
+public interface RecurringEvent<T extends RecurringEvent> extends IntervalRecord<T>, ModelBound, AccountChild {
 
   static final RecordType<RecurringEvent> TYPE =
       new RecordType<>("record_type", RecurringEvent.class,
@@ -33,10 +33,4 @@ public interface RecurringEvent<T extends RecurringEvent> extends IntervalRecord
 
   @AttributeMethod(attribute = "amount")
   BigDecimal getAmount();
-
-  @AttributeMethod(attribute = "model_id")
-  int getModelId();
-
-  @AttributeMethod(attribute = "account_id")
-  int getAccountId();
 }

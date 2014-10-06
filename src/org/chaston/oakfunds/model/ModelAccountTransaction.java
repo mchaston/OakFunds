@@ -17,7 +17,6 @@ package org.chaston.oakfunds.model;
 
 import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.InstantRecord;
-import org.chaston.oakfunds.storage.ParentIdMethod;
 import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 
@@ -26,17 +25,11 @@ import java.math.BigDecimal;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface ModelAccountTransaction extends InstantRecord<ModelAccountTransaction> {
+public interface ModelAccountTransaction extends InstantRecord<ModelAccountTransaction>, ModelBound, AccountChild {
 
   public static final RecordType<ModelAccountTransaction> TYPE =
       new RecordType<>("model_account_transaction", ModelAccountTransaction.class,
           RecordTemporalType.INSTANT, true);
-
-  @AttributeMethod(attribute = "model_id")
-  int getModelId();
-
-  @ParentIdMethod
-  int getAccountId();
 
   @AttributeMethod(attribute = "amount")
   BigDecimal getAmount();

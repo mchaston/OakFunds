@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
+package org.chaston.oakfunds.model;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.chaston.oakfunds.storage.ParentIdMethod;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface ParentIdAttribute {
-  String propertyName();
+public interface AccountChild {
+  @ParentIdMethod
+  int getAccountId();
 }
