@@ -19,6 +19,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.ledger.BankAccountType;
+import org.chaston.oakfunds.storage.AttributeSearchTerm;
+import org.chaston.oakfunds.storage.IdentifierSearchTerm;
 import org.chaston.oakfunds.storage.SearchOperator;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
@@ -62,30 +64,21 @@ class ModelManagerImpl implements ModelManager {
     this.systemPropertiesManager = systemPropertiesManager;
     this.store = store;
 
-    store.registerType(Model.TYPE
-    );
+    store.registerType(Model.TYPE);
 
-    store.registerType(RecurringEvent.TYPE
-    );
-    store.registerType(AnnualRecurringEvent.TYPE
-    );
-    store.registerType(MonthlyRecurringEvent.TYPE
-    );
+    store.registerType(RecurringEvent.TYPE);
+    store.registerType(AnnualRecurringEvent.TYPE);
+    store.registerType(MonthlyRecurringEvent.TYPE);
 
-    store.registerType(ModelAccount.TYPE
-    );
-    store.registerType(ModelExpenseAccount.TYPE
-    );
-    store.registerType(ModelRevenueAccount.TYPE
-    );
+    store.registerType(ModelAccount.TYPE);
+    store.registerType(ModelExpenseAccount.TYPE);
+    store.registerType(ModelRevenueAccount.TYPE);
 
-    store.registerType(ModelAccountTransaction.TYPE
-    );
-    store.registerType(ModelDistributionTransaction.TYPE
-    );
+    store.registerType(ModelAccountTransaction.TYPE);
+    store.registerType(ModelDistributionTransaction.TYPE);
 
-    List<SearchTerm> searchTerms =
-        ImmutableList.of(SearchTerm.of(ATTRIBUTE_BASE_MODEL, SearchOperator.EQUALS, true));
+    List<? extends SearchTerm> searchTerms =
+        ImmutableList.of(AttributeSearchTerm.of(ATTRIBUTE_BASE_MODEL, SearchOperator.EQUALS, true));
     Iterable<Model> baseModels = store.findRecords(Model.TYPE, searchTerms);
     Model baseModel;
     if (Iterables.isEmpty(baseModels)) {
@@ -190,10 +183,42 @@ class ModelManagerImpl implements ModelManager {
   }
 
   @Override
+  public ModelAccountTransaction updateAdHocEvent(ModelAccountTransaction modelAccountTransaction,
+      Instant date, int distributionTime, DistributionTimeUnit distributionTimeUnit,
+      BigDecimal amount) throws StorageException {
+    Map<String, Object> attributes = new HashMap<>();
+    attributes.put(ATTRIBUTE_MODEL_ID, modelAccountTransaction.getModelId());
+    attributes.put(ATTRIBUTE_AMOUNT, amount);
+    attributes.put(ATTRIBUTE_DERIVED, false);
+    attributes.put(ATTRIBUTE_DISTRIBUTION_TIME, distributionTime);
+    attributes.put(ATTRIBUTE_DISTRIBUTION_TIME_UNIT, distributionTimeUnit);
+    Model model =
+        store.getRecord(Model.TYPE, modelAccountTransaction.getModelId());
+    ModelAccount account =
+        store.getRecord(ModelAccount.TYPE, modelAccountTransaction.getAccountId());
+    ModelAccountTransaction updatedModelAccountTransaction =
+        store.updateInstantRecord(account,
+            ModelAccountTransaction.TYPE, modelAccountTransaction.getId(), date, attributes);
+    recalculateDistributionTransactions(model, account, updatedModelAccountTransaction);
+    return updatedModelAccountTransaction;
+  }
+
+  @Override
+  public void deleteAdHocEvent(ModelAccountTransaction modelAccountTransaction)
+      throws StorageException {
+    ModelAccount account =
+        store.getRecord(ModelAccount.TYPE, modelAccountTransaction.getAccountId());
+    store.deleteInstantRecords(account,
+        ModelAccountTransaction.TYPE, ImmutableList.of(
+            IdentifierSearchTerm.of(modelAccountTransaction.getId())));
+    deleteDistributionTransactions(account, modelAccountTransaction);
+  }
+
+  @Override
   public Iterable<ModelAccountTransaction> getModelTransactions(Model model, ModelAccount account,
       Instant start, Instant end) throws StorageException {
-    List<SearchTerm> searchTerms = ImmutableList.of(
-        SearchTerm.of(ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
+    List<? extends SearchTerm> searchTerms = ImmutableList.of(
+        AttributeSearchTerm.of(ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
     return store.findInstantRecords(account, ModelAccountTransaction.TYPE, start,
         end, searchTerms);
   }
@@ -201,16 +226,16 @@ class ModelManagerImpl implements ModelManager {
   @Override
   public Iterable<ModelDistributionTransaction> getModelDistributionTransactions(Model model,
       ModelAccount account, Instant start, Instant end) throws StorageException {
-    List<SearchTerm> searchTerms = ImmutableList.of(
-        SearchTerm.of(ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
+    List<? extends SearchTerm> searchTerms = ImmutableList.of(
+        AttributeSearchTerm.of(ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
     return store.findInstantRecords(account, ModelDistributionTransaction.TYPE,
         start, end, searchTerms);
   }
 
   private void recalculateAccountTransactions(Model model, ModelAccount account,
       Instant start, Instant end) throws StorageException {
-    List<SearchTerm> searchTerms = ImmutableList.of(
-        SearchTerm.of(ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
+    List<? extends SearchTerm> searchTerms = ImmutableList.of(
+        AttributeSearchTerm.of(ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
     Iterable<RecurringEvent> recurringEvents =
         store.findIntervalRecords(account, RecurringEvent.TYPE, start, end, searchTerms);
     for (RecurringEvent recurringEvent : recurringEvents) {
@@ -259,6 +284,12 @@ class ModelManagerImpl implements ModelManager {
     BigDecimal amountPerDistribution =
         modelAccountTransaction.getAmount().divide(BigDecimal.valueOf(distributionMonths));
     BigDecimal firstDistributionAmount = BigDecimal.ZERO;
+
+    // Delete previous distributions.
+    store.deleteInstantRecords(account, ModelDistributionTransaction.TYPE,
+        ImmutableList.of(AttributeSearchTerm.of(ATTRIBUTE_ACCOUNT_TRANSACTION, SearchOperator.EQUALS,
+            modelAccountTransaction.getId())));
+
     while (mutableDateTime.isBefore(end)) {
       if (mutableDateTime.isBefore(firstDistribution)) {
         firstDistributionAmount = firstDistributionAmount.add(amountPerDistribution);
@@ -285,6 +316,14 @@ class ModelManagerImpl implements ModelManager {
         amountPerDistribution.negate().multiply(BigDecimal.valueOf(distributionMonths - 1)));
     store.insertInstantRecord(account, ModelDistributionTransaction.TYPE,
         mutableDateTime.toInstant(), distributionAttributes);
+  }
+
+  private void deleteDistributionTransactions(ModelAccount account, ModelAccountTransaction modelAccountTransaction)
+      throws StorageException {
+    // Delete previous distributions.
+    store.deleteInstantRecords(account, ModelDistributionTransaction.TYPE,
+        ImmutableList.of(AttributeSearchTerm.of(ATTRIBUTE_ACCOUNT_TRANSACTION, SearchOperator.EQUALS,
+            modelAccountTransaction.getId())));
   }
 
   private Iterable<Instant> getAllInstantsInRange(Instant start, Instant end) {

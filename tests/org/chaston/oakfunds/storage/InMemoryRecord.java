@@ -24,6 +24,7 @@ import org.chaston.oakfunds.util.Pair;
 import org.joda.time.Instant;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -34,12 +35,14 @@ import java.util.TreeMap;
  */
 class InMemoryRecord {
   private final RecordType recordType;
+  private final int id;
   private final ImmutableMap<String, Object> attributes;
   private final Map<RecordType, IntervalRecordSet> intervalRecordSets = new HashMap<>();
   private final Map<RecordType, SortedMap<InstantRecordKey, Map<String, Object>>> instantRecordSets = new HashMap<>();
 
-  public InMemoryRecord(RecordType recordType, Map<String, Object> attributes) {
+  public InMemoryRecord(RecordType recordType, int id, Map<String, Object> attributes) {
     this.recordType = recordType;
+    this.id = id;
     this.attributes = ImmutableMap.copyOf(attributes);
   }
 
@@ -73,6 +76,39 @@ class InMemoryRecord {
     int id = recordInserter.insertInstantRecord(recordType, instant, attributes);
     instantRecordSet.put(new InstantRecordKey(recordType, instant, id), attributes);
     return id;
+  }
+
+  public void updateInstantRecord(RecordType recordType, int id,
+      Instant instant, Map<String, Object> attributes) throws StorageException {
+    SortedMap<InstantRecordKey, Map<String, Object>> instantRecordSet = instantRecordSets.get(recordType.getRootType());
+    if (instantRecordSet == null) {
+      throw new StorageException("No records of type " + recordType + " found.");
+    }
+    for (Map.Entry<InstantRecordKey, Map<String, Object>> entry : instantRecordSet.entrySet()) {
+      if (entry.getKey().getId() == id) {
+        instantRecordSet.remove(entry.getKey());
+        instantRecordSet.put(new InstantRecordKey(recordType, instant, id), attributes);
+        return;
+      }
+    }
+    throw new StorageException("No record of type " + recordType + " and ID " + id + " found.");
+  }
+
+  public void deleteInstantRecords(RecordType recordType, ImmutableList<? extends SearchTerm> searchTerms) {
+    SortedMap<InstantRecordKey, Map<String, Object>> instantRecordSet = instantRecordSets.get(recordType.getRootType());
+    if (instantRecordSet == null) {
+      return;
+    }
+    Iterator<Map.Entry<InstantRecordKey, Map<String, Object>>> iterator =
+        instantRecordSet.entrySet().iterator();
+    while (iterator.hasNext()) {
+      Map.Entry<InstantRecordKey, Map<String, Object>> entry = iterator.next();
+      int id = entry.getKey().getId();
+      Map<String, Object> attributes = entry.getValue();
+      if (InMemoryStore.matchesSearchTerms(id, attributes, searchTerms)) {
+        iterator.remove();
+      }
+    }
   }
 
   public Iterable<Map.Entry<InstantRecordKey, Map<String, Object>>> getInstantRecords(
@@ -125,8 +161,8 @@ class InMemoryRecord {
         });
   }
 
-  public boolean matchesSearchTerms(List<SearchTerm> searchTerms) {
-    return InMemoryStore.matchesSearchTerms(attributes, searchTerms);
+  public boolean matchesSearchTerms(List<? extends SearchTerm> searchTerms) {
+    return InMemoryStore.matchesSearchTerms(id, attributes, searchTerms);
   }
 
   public RecordType getRecordType() {

@@ -125,7 +125,7 @@ public class InMemoryStore extends AbstractStore {
 
   @Override
   public <T extends Record> Iterable<T> findRecords(RecordType<T> recordType,
-      List<SearchTerm> searchTerms) throws StorageException {
+      List<? extends SearchTerm> searchTerms) throws StorageException {
     InMemoryTransaction currentTransaction = CURRENT_TRANSACTION.get();
     Map<Integer, InMemoryRecord> results = ImmutableMap.of();
     if (currentTransaction != null) {
@@ -210,7 +210,7 @@ public class InMemoryStore extends AbstractStore {
 
   @Override
   public <T extends IntervalRecord> Iterable<T> findIntervalRecords(Record containingRecord,
-      RecordType<T> recordType, Instant start, Instant end, List<SearchTerm> searchTerms)
+      RecordType<T> recordType, Instant start, Instant end, List<? extends SearchTerm> searchTerms)
       throws StorageException {
     InMemoryTransaction currentTransaction = CURRENT_TRANSACTION.get();
     InMemoryRecord inMemoryRecord = null;
@@ -230,8 +230,8 @@ public class InMemoryStore extends AbstractStore {
         inMemoryRecord.getIntervalRecords(recordType, start, end);
     ImmutableList.Builder<T> resultList = ImmutableList.builder();
     for (Pair<IntervalRecordKey, Map<String, Object>> rawRecord : rawRecords) {
-      if (matchesSearchTerms(rawRecord.getSecond(), searchTerms)) {
-        IntervalRecordKey intervalRecordKey = rawRecord.getFirst();
+      IntervalRecordKey intervalRecordKey = rawRecord.getFirst();
+      if (matchesSearchTerms(intervalRecordKey.getId(), rawRecord.getSecond(), searchTerms)) {
         T record = RecordProxy.proxyIntervalRecord(
             (RecordType<T>) intervalRecordKey.getRecordType(),
             containingRecord, intervalRecordKey.getId(),
@@ -273,9 +273,62 @@ public class InMemoryStore extends AbstractStore {
   }
 
   @Override
+  public <T extends InstantRecord> T updateInstantRecord(Record containingRecord,
+      RecordType<T> recordType, int id, Instant instant, Map<String, Object> attributes)
+      throws StorageException {
+    validateRecordAttributes(recordType, attributes);
+    InMemoryTransaction currentTransaction = CURRENT_TRANSACTION.get();
+    if (currentTransaction == null) {
+      throw new IllegalStateException("Not within transaction.");
+    }
+    InMemoryRecord inMemoryRecord =
+        currentTransaction.getRecord(containingRecord.getRecordType(), containingRecord.getId());
+    if (inMemoryRecord == null) {
+      inMemoryRecord = getTable(containingRecord.getRecordType()).get(containingRecord.getId());
+      if (inMemoryRecord == null) {
+        throw new StorageException(
+            String.format("Record of type %s and ID %s was not found.",
+                containingRecord.getRecordType(), containingRecord.getId()));
+      }
+      // Promote the stored value to the transaction.
+      // This would be overkill for the real storage system, but is easy here.
+      currentTransaction.addRecordToTransaction(
+          containingRecord.getRecordType(), containingRecord.getId(), inMemoryRecord);
+    }
+    currentTransaction.updateInstantRecord(
+        inMemoryRecord, recordType, id, instant, attributes);
+    return RecordProxy.proxyInstantRecord(recordType,
+        containingRecord, id, instant, attributes);
+  }
+
+  @Override
+  public <T extends InstantRecord> void deleteInstantRecords(Record containingRecord,
+      RecordType<T> recordType, ImmutableList<? extends SearchTerm> searchTerms) throws StorageException {
+    InMemoryTransaction currentTransaction = CURRENT_TRANSACTION.get();
+    if (currentTransaction == null) {
+      throw new IllegalStateException("Not within transaction.");
+    }
+    InMemoryRecord inMemoryRecord =
+        currentTransaction.getRecord(containingRecord.getRecordType(), containingRecord.getId());
+    if (inMemoryRecord == null) {
+      inMemoryRecord = getTable(containingRecord.getRecordType()).get(containingRecord.getId());
+      if (inMemoryRecord == null) {
+        throw new StorageException(
+            String.format("Record of type %s and ID %s was not found.",
+                containingRecord.getRecordType(), containingRecord.getId()));
+      }
+      // Promote the stored value to the transaction.
+      // This would be overkill for the real storage system, but is easy here.
+      currentTransaction.addRecordToTransaction(
+          containingRecord.getRecordType(), containingRecord.getId(), inMemoryRecord);
+    }
+    currentTransaction.deleteInstantRecords(inMemoryRecord, recordType, searchTerms);
+  }
+
+  @Override
   public <T extends InstantRecord> Iterable<T> findInstantRecords(Record containingRecord,
       RecordType<T> recordType, Instant start, Instant end,
-      List<SearchTerm> searchTerms) throws StorageException {
+      List<? extends SearchTerm> searchTerms) throws StorageException {
     InMemoryTransaction currentTransaction = CURRENT_TRANSACTION.get();
     InMemoryRecord inMemoryRecord = null;
     if (currentTransaction != null) {
@@ -294,8 +347,8 @@ public class InMemoryStore extends AbstractStore {
         inMemoryRecord.getInstantRecords(recordType, start, end);
     ImmutableList.Builder<T> resultsList = ImmutableList.builder();
     for (Map.Entry<InstantRecordKey, Map<String, Object>> entry : rawRecords) {
-      if (matchesSearchTerms(entry.getValue(), searchTerms)) {
-        InstantRecordKey key = entry.getKey();
+      InstantRecordKey key = entry.getKey();
+      if (matchesSearchTerms(key.getId(), entry.getValue(), searchTerms)) {
         T record = RecordProxy.proxyInstantRecord((RecordType<T>) key.getRecordType(),
             containingRecord, key.getId(), key.getInstant(), entry.getValue());
         resultsList.add(record);
@@ -304,11 +357,22 @@ public class InMemoryStore extends AbstractStore {
     return resultsList.build();
   }
 
-  static boolean matchesSearchTerms(Map<String, Object> attributes, List<SearchTerm> searchTerms) {
+  static boolean matchesSearchTerms(int id, Map<String, Object> attributes, List<? extends SearchTerm> searchTerms) {
     for (SearchTerm searchTerm : searchTerms) {
-      Object attribute = attributes.get(searchTerm.getAttribute());
-      if (!searchTerm.getOperator().matches(attribute, searchTerm.getValue())) {
-        return false;
+      if (searchTerm instanceof AttributeSearchTerm) {
+        AttributeSearchTerm attributeSearchTerm = (AttributeSearchTerm) searchTerm;
+        Object attribute = attributes.get(attributeSearchTerm.getAttribute());
+        if (!attributeSearchTerm.getOperator().matches(attribute, attributeSearchTerm.getValue())) {
+          return false;
+        }
+      } else if (searchTerm instanceof IdentifierSearchTerm) {
+        IdentifierSearchTerm identifierSearchTerm = (IdentifierSearchTerm) searchTerm;
+        if (identifierSearchTerm.getId() != id) {
+          return false;
+        }
+      } else {
+        throw new UnsupportedOperationException(
+            "Search terms of type " + searchTerm.getClass() + " are not supported.");
       }
     }
     return true;

@@ -15,6 +15,7 @@
  */
 package org.chaston.oakfunds.storage;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.joda.time.Instant;
 
@@ -53,14 +54,14 @@ class InMemoryTransaction implements Transaction, RecordInserter {
   public int insertRecord(RecordType recordType, Map<String, Object> attributes)
       throws StorageException {
     int id = getNextId(recordType);
-    addRecordToTransaction(recordType, id, new InMemoryRecord(recordType, attributes));
+    addRecordToTransaction(recordType, id, new InMemoryRecord(recordType, id, attributes));
     return id;
   }
 
   @Override
   public void insertRecord(RecordType recordType, int id, Map<String, Object> attributes)
       throws StorageException {
-    addRecordToTransaction(recordType, id, new InMemoryRecord(recordType, attributes));
+    addRecordToTransaction(recordType, id, new InMemoryRecord(recordType, id, attributes));
   }
 
   @Override
@@ -93,12 +94,22 @@ class InMemoryTransaction implements Transaction, RecordInserter {
     return inMemoryRecord.insertInstantRecord(this, recordType, instant, attributes);
   }
 
+  void updateInstantRecord(InMemoryRecord inMemoryRecord, RecordType recordType, int id,
+      Instant instant, Map<String, Object> attributes) throws StorageException {
+    inMemoryRecord.updateInstantRecord(recordType, id, instant, attributes);
+  }
+
+  void deleteInstantRecords(InMemoryRecord inMemoryRecord, RecordType recordType,
+      ImmutableList<? extends SearchTerm> searchTerms) {
+    inMemoryRecord.deleteInstantRecords(recordType, searchTerms);
+  }
+
   boolean containsRecord(RecordType recordType, int id) {
     return getTable(recordType).containsKey(id);
   }
 
   Map<Integer, InMemoryRecord> findRecords(RecordType recordType,
-      List<SearchTerm> searchTerms) {
+      List<? extends SearchTerm> searchTerms) {
     ImmutableMap.Builder<Integer, InMemoryRecord> results = ImmutableMap.builder();
     for (Map.Entry<Integer, InMemoryRecord> entry : getTable(recordType).entrySet()) {
       InMemoryRecord record = entry.getValue();

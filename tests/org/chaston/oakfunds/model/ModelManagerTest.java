@@ -36,10 +36,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.math.BigDecimal;
+import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -270,5 +272,77 @@ public class ModelManagerTest {
     assertEquals(expenseAccount.getId(), secondModelDistributionTransaction.getAccountId());
     assertEquals(BigDecimal.valueOf(100.0), secondModelDistributionTransaction.getAmount());
     assertEquals(Instant.parse("2014-02-01"), secondModelDistributionTransaction.getInstant());
+  }
+
+  @Test
+  public void updateAdHocEvent() throws StorageException {
+    // Create the initial event.
+    Transaction transaction = store.startTransaction();
+    ModelExpenseAccount expenseAccount =
+        modelManager.createModelExpenseAccount("House Painting", BankAccountType.OPERATING);
+    modelManager.createAdHocEvent(modelManager.getBaseModel(), expenseAccount,
+        Instant.parse("2017-01-01"),
+        5, DistributionTimeUnit.YEARS, BigDecimal.valueOf(60000.0));
+    transaction.commit();
+
+    Iterable<ModelDistributionTransaction> oldModelDistributionTransactions =
+        modelManager.getModelDistributionTransactions(modelManager.getBaseModel(), expenseAccount,
+            Instant.parse("2014-01-01"), Instant.parse("2015-01-01"));
+
+    // Get the event back.
+    ModelAccountTransaction modelAccountTransaction = Iterables.getOnlyElement(
+        modelManager.getModelTransactions(modelManager.getBaseModel(), expenseAccount,
+            Instant.parse("2016-01-01"), Instant.parse("2017-02-01")));
+
+    transaction = store.startTransaction();
+    modelManager.updateAdHocEvent(modelAccountTransaction,
+        Instant.parse("2017-06-01"),
+        5, DistributionTimeUnit.YEARS, BigDecimal.valueOf(60000.0));
+    transaction.commit();
+
+    Iterable<ModelDistributionTransaction> newModelDistributionTransactions =
+        modelManager.getModelDistributionTransactions(modelManager.getBaseModel(), expenseAccount,
+            Instant.parse("2014-01-01"), Instant.parse("2015-01-01"));
+
+    Iterator<ModelDistributionTransaction> oldTransactionsIter =
+        oldModelDistributionTransactions.iterator();
+    Iterator<ModelDistributionTransaction> newTransactionsIter =
+        newModelDistributionTransactions.iterator();
+    for (int i = 0; i < 12; i++) {
+      ModelDistributionTransaction oldTransaction = oldTransactionsIter.next();
+      ModelDistributionTransaction newTransaction = newTransactionsIter.next();
+      assertEquals(oldTransaction.getInstant(), newTransaction.getInstant());
+      if (i == 0) {
+        assertNotEquals(oldTransaction.getAmount(), newTransaction.getAmount());
+      } else {
+        assertEquals(oldTransaction.getAmount(), newTransaction.getAmount());
+      }
+    }
+  }
+
+  @Test
+  public void deleteAdHocEvent() throws StorageException {
+    // Create the initial event.
+    Transaction transaction = store.startTransaction();
+    ModelExpenseAccount expenseAccount =
+        modelManager.createModelExpenseAccount("House Painting", BankAccountType.OPERATING);
+    modelManager.createAdHocEvent(modelManager.getBaseModel(), expenseAccount,
+        Instant.parse("2017-01-01"),
+        5, DistributionTimeUnit.YEARS, BigDecimal.valueOf(60000.0));
+    transaction.commit();
+
+    // Get the event back.
+    ModelAccountTransaction modelAccountTransaction = Iterables.getOnlyElement(
+        modelManager.getModelTransactions(modelManager.getBaseModel(), expenseAccount,
+            Instant.parse("2016-01-01"), Instant.parse("2017-02-01")));
+
+    transaction = store.startTransaction();
+    modelManager.deleteAdHocEvent(modelAccountTransaction);
+    transaction.commit();
+
+    Iterable<ModelDistributionTransaction> newModelDistributionTransactions =
+        modelManager.getModelDistributionTransactions(modelManager.getBaseModel(), expenseAccount,
+            Instant.parse("2014-01-01"), Instant.parse("2015-01-01"));
+    assertTrue(Iterables.isEmpty(newModelDistributionTransactions));
   }
 }

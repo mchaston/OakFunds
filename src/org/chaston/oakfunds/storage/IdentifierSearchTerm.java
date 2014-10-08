@@ -18,5 +18,19 @@ package org.chaston.oakfunds.storage;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public abstract class SearchTerm {
+public class IdentifierSearchTerm extends SearchTerm {
+
+  private final int id;
+
+  private IdentifierSearchTerm(int id) {
+    this.id = id;
+  }
+
+  public static IdentifierSearchTerm of(int id) {
+    return new IdentifierSearchTerm(id);
+  }
+
+  public int getId() {
+    return id;
+  }
 }

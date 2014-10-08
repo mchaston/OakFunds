@@ -47,6 +47,14 @@ public interface ModelManager {
       int distributionTime, DistributionTimeUnit distributionTimeUnit, BigDecimal amount)
       throws StorageException;
 
+  ModelAccountTransaction updateAdHocEvent(ModelAccountTransaction modelAccountTransaction,
+      Instant date, int distributionTime, DistributionTimeUnit distributionTimeUnit,
+      BigDecimal amount)
+      throws StorageException;
+
+  void deleteAdHocEvent(ModelAccountTransaction modelAccountTransaction)
+      throws StorageException;
+
   Iterable<ModelAccountTransaction> getModelTransactions(Model model, ModelAccount account,
       Instant start, Instant end) throws StorageException;
 
