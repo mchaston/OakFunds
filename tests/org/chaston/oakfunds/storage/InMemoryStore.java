@@ -15,11 +15,15 @@
  */
 package org.chaston.oakfunds.storage;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import org.chaston.oakfunds.util.DateUtil;
 import org.chaston.oakfunds.util.Pair;
 import org.joda.time.Instant;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -357,6 +361,50 @@ public class InMemoryStore extends AbstractStore {
     return resultsList.build();
   }
 
+  @Override
+  public <T extends InstantRecord> Report runReport(RecordType<T> type,
+      int startYear, int endYear, ReportDateGranularity granularity,
+      List<? extends SearchTerm> searchTerms, List<String> dimensions, List<String> measures) {
+    // Look for parent-based search terms.
+    List<SearchTerm> remainingSearchTerms = new ArrayList<>();
+    ParentIdentifierSearchTerm parentIdentifierSearchTerm = null;
+    for (SearchTerm searchTerm : searchTerms) {
+      if (searchTerm instanceof ParentIdentifierSearchTerm) {
+        if (parentIdentifierSearchTerm != null) {
+          throw new IllegalArgumentException("Multiple ParentIdentifierSearchTerms provided.");
+        }
+        parentIdentifierSearchTerm = (ParentIdentifierSearchTerm) searchTerm;
+      } else {
+        remainingSearchTerms.add(searchTerm);
+      }
+    }
+    // Get the containers and filter if there is a parent-based search term.
+    Iterable<InMemoryRecord> containingRecords = getTable(type.getContainingType()).values();
+    if (parentIdentifierSearchTerm != null) {
+      containingRecords = Iterables.filter(containingRecords,
+          new ParentIdentifierSearchTermFilter(parentIdentifierSearchTerm));
+    }
+    ReportBuilder reportBuilder =
+        new ReportBuilder(granularity, startYear, endYear, dimensions, measures);
+    for (InMemoryRecord containingRecord : containingRecords) {
+      // Get the results from the beginning of time until the end of the search range.
+      Iterable<Map.Entry<InstantRecordKey, Map<String, Object>>> instantRecords =
+          containingRecord
+              .getInstantRecords(type, DateUtil.BEGINNING_OF_TIME, DateUtil.endOfYear(endYear));
+      for (Map.Entry<InstantRecordKey, Map<String, Object>> instantRecord : instantRecords) {
+        // Filter (using the remainingSearchTerms).
+        if (matchesSearchTerms(instantRecord.getKey().getId(),
+            instantRecord.getValue(), remainingSearchTerms)) {
+          // Group and sum to create the results.
+          reportBuilder.aggregateEntry(
+              instantRecord.getKey().getInstant(), instantRecord.getValue());
+        }
+      }
+    }
+
+    return reportBuilder.build();
+  }
+
   static boolean matchesSearchTerms(int id, Map<String, Object> attributes, List<? extends SearchTerm> searchTerms) {
     for (SearchTerm searchTerm : searchTerms) {
       if (searchTerm instanceof AttributeSearchTerm) {
@@ -391,6 +439,20 @@ public class InMemoryStore extends AbstractStore {
     for (Map.Entry<RecordType, Map<Integer, InMemoryRecord>> entry : tables.entrySet()) {
       RecordType recordType = entry.getKey();
       getTable(recordType).putAll(entry.getValue());
+    }
+  }
+
+  private class ParentIdentifierSearchTermFilter
+      implements Predicate<InMemoryRecord> {
+    private final ParentIdentifierSearchTerm parentIdentifierSearchTerm;
+
+    ParentIdentifierSearchTermFilter(ParentIdentifierSearchTerm parentIdentifierSearchTerm) {
+      this.parentIdentifierSearchTerm = parentIdentifierSearchTerm;
+    }
+
+    @Override
+    public boolean apply(InMemoryRecord inMemoryRecord) {
+      return inMemoryRecord.getId() == parentIdentifierSearchTerm.getId();
     }
   }
 }

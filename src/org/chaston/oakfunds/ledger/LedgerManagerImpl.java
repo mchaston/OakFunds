@@ -18,6 +18,10 @@ package org.chaston.oakfunds.ledger;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.account.AccountCode;
+import org.chaston.oakfunds.model.ModelAccount;
+import org.chaston.oakfunds.storage.ParentIdentifierSearchTerm;
+import org.chaston.oakfunds.storage.Report;
+import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
@@ -32,15 +36,6 @@ import java.util.Map;
  * TODO(mchaston): write JavaDocs
  */
 class LedgerManagerImpl implements LedgerManager {
-
-  private static final String ATTRIBUTE_AMOUNT = "amount";
-  private static final String ATTRIBUTE_BANK_ACCOUNT_TYPE = "bank_account_type";
-  private static final String ATTRIBUTE_COMMENT = "comment";
-  private static final String ATTRIBUTE_DEFAULT_DEPOSIT_ACCOUNT_ID = "default_deposit_account_id";
-  private static final String ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID = "default_source_account_id";
-  private static final String ATTRIBUTE_INTEREST_RATE = "interest_rate";
-  private static final String ATTRIBUTE_SISTER_TRANSACTION_ID = "sister_transaction_id";
-  private static final String ATTRIBUTE_TITLE = "title";
 
   private final Store store;
 
@@ -65,8 +60,8 @@ class LedgerManagerImpl implements LedgerManager {
   public BankAccount createBankAccount(AccountCode accountCode, String title,
       BankAccountType bankAccountType) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_TITLE, title);
-    attributes.put(ATTRIBUTE_BANK_ACCOUNT_TYPE, bankAccountType);
+    attributes.put(Account.ATTRIBUTE_TITLE, title);
+    attributes.put(BankAccount.ATTRIBUTE_BANK_ACCOUNT_TYPE, bankAccountType);
     return store.createRecord(BankAccount.TYPE, attributes);
   }
 
@@ -74,7 +69,7 @@ class LedgerManagerImpl implements LedgerManager {
   public void setInterestRate(BankAccount bankAccount, BigDecimal interestRate, Instant start,
       Instant end) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_INTEREST_RATE, interestRate);
+    attributes.put(BankAccountInterest.ATTRIBUTE_INTEREST_RATE, interestRate);
     store.updateIntervalRecord(bankAccount, BankAccountInterest.TYPE, start, end,
         attributes);
   }
@@ -107,8 +102,8 @@ class LedgerManagerImpl implements LedgerManager {
   public ExpenseAccount createExpenseAccount(AccountCode accountCode, String title,
       BankAccount defaultSourceAccount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_TITLE, title);
-    attributes.put(ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID, defaultSourceAccount.getId());
+    attributes.put(Account.ATTRIBUTE_TITLE, title);
+    attributes.put(ExpenseAccount.ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID, defaultSourceAccount.getId());
     return store.createRecord(ExpenseAccount.TYPE, attributes);
   }
 
@@ -116,8 +111,8 @@ class LedgerManagerImpl implements LedgerManager {
   public RevenueAccount createRevenueAccount(AccountCode accountCode, String title,
       BankAccount defaultDepositAccount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_TITLE, title);
-    attributes.put(ATTRIBUTE_DEFAULT_DEPOSIT_ACCOUNT_ID, defaultDepositAccount.getId());
+    attributes.put(Account.ATTRIBUTE_TITLE, title);
+    attributes.put(RevenueAccount.ATTRIBUTE_DEFAULT_DEPOSIT_ACCOUNT_ID, defaultDepositAccount.getId());
     return store.createRecord(RevenueAccount.TYPE, attributes);
   }
 
@@ -133,15 +128,38 @@ class LedgerManagerImpl implements LedgerManager {
     recordTransaction(account, date, amount, comment, null);
   }
 
+  @Override
+  public void setRelatedModelAccount(Account account, ModelAccount modelAccount,
+      PaymentIncrement paymentIncrement, boolean retroactive) throws StorageException {
+    throw new UnsupportedOperationException("Not implemented yet.");
+  }
+
+  @Override
+  public void setRelatedModelAccount(AccountTransaction account, ModelAccount modelAccount,
+      PaymentIncrement paymentIncrement) throws StorageException {
+    throw new UnsupportedOperationException("Not implemented yet.");
+  }
+
+  @Override
+  public Report runReport(Account<?> account, int startYear, int endYear,
+      ReportDateGranularity granularity) {
+    ImmutableList<? extends SearchTerm> searchTerms =
+        ImmutableList.of(ParentIdentifierSearchTerm.of(account.getRecordType(), account.getId()));
+    ImmutableList<String> dimensions = ImmutableList.of();
+    ImmutableList<String> measures = ImmutableList.of(AccountTransaction.ATTRIBUTE_AMOUNT);
+    return store.runReport(AccountTransaction.TYPE, startYear, endYear, granularity,
+        searchTerms, dimensions, measures);
+  }
+
   private void recordTransaction(Account account, Instant date, BigDecimal amount, String comment,
       Integer sisterTransactionId) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_AMOUNT, amount);
+    attributes.put(AccountTransaction.ATTRIBUTE_AMOUNT, amount);
     if (comment != null) {
-      attributes.put(ATTRIBUTE_COMMENT, comment);
+      attributes.put(AccountTransaction.ATTRIBUTE_COMMENT, comment);
     }
     if (sisterTransactionId != null) {
-      attributes.put(ATTRIBUTE_SISTER_TRANSACTION_ID, sisterTransactionId);
+      attributes.put(AccountTransaction.ATTRIBUTE_SISTER_TRANSACTION_ID, sisterTransactionId);
     }
     AccountTransaction transaction =
         store.insertInstantRecord(account, AccountTransaction.TYPE, date, attributes);

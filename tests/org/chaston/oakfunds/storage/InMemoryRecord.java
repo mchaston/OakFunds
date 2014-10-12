@@ -168,4 +168,8 @@ class InMemoryRecord {
   public RecordType getRecordType() {
     return recordType;
   }
+
+  public int getId() {
+    return id;
+  }
 }

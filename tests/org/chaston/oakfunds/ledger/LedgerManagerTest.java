@@ -15,17 +15,23 @@
  */
 package org.chaston.oakfunds.ledger;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.account.AccountCodeManager;
 import org.chaston.oakfunds.account.AccountCodeModule;
+import org.chaston.oakfunds.storage.Report;
+import org.chaston.oakfunds.storage.ReportDateGranularity;
+import org.chaston.oakfunds.storage.ReportEntry;
+import org.chaston.oakfunds.storage.ReportRow;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.storage.TestStorageModule;
 import org.chaston.oakfunds.storage.Transaction;
 import org.chaston.oakfunds.util.DateUtil;
+import org.joda.time.DateTimeFieldType;
 import org.joda.time.Instant;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,6 +47,9 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(JUnit4.class)
 public class LedgerManagerTest {
+
+  private static final int YEAR_2014 = Instant.parse("2014-01-01").get(DateTimeFieldType.year());
+  private static final int YEAR_2015 = Instant.parse("2015-01-01").get(DateTimeFieldType.year());
 
   @Inject
   private AccountCodeManager accountCodeManager;
@@ -171,5 +180,83 @@ public class LedgerManagerTest {
         ledgerManager.getBalance(bankAccount, Instant.parse("2014-09-28")));
     assertEquals(BigDecimal.valueOf(13000),
         ledgerManager.getBalance(bankAccount, Instant.parse("2014-09-29")));
+  }
+
+  @Test
+  public void runReportForOneAccount() throws StorageException {
+    ReportingAccounts accounts = initReportingDataset();
+
+    Report report = ledgerManager.runReport(accounts.bankAccount,
+        YEAR_2014, YEAR_2015, ReportDateGranularity.MONTH);
+
+    assertEquals(Iterables.size(report.getRows()), 1);
+    ReportRow reportRow = Iterables.getOnlyElement(report.getRows());
+
+    assertEquals(13, Iterables.size(reportRow.getEntries()));
+
+    ReportEntry entry = Iterables.get(reportRow.getEntries(), 0);
+    assertEquals(DateUtil.endOfYear(2013), entry.getInstant());
+    assertEquals(BigDecimal.valueOf(11000),
+        entry.getMeasure(AccountTransaction.ATTRIBUTE_AMOUNT));
+
+    entry = Iterables.get(reportRow.getEntries(), 1);
+    assertEquals(DateUtil.endOfMonth(2014, 1), entry.getInstant());
+    assertEquals(BigDecimal.valueOf(12000),
+        entry.getMeasure(AccountTransaction.ATTRIBUTE_AMOUNT));
+
+    entry = Iterables.get(reportRow.getEntries(), 2);
+    assertEquals(DateUtil.endOfMonth(2014, 2), entry.getInstant());
+    assertEquals(BigDecimal.valueOf(13000),
+        entry.getMeasure(AccountTransaction.ATTRIBUTE_AMOUNT));
+
+    entry = Iterables.get(reportRow.getEntries(), 3);
+    assertEquals(DateUtil.endOfMonth(2014, 3), entry.getInstant());
+    assertEquals(BigDecimal.valueOf(15000),
+        entry.getMeasure(AccountTransaction.ATTRIBUTE_AMOUNT));
+
+    // Same value through the end of the year.
+    for (int i = 4; i <= 12; i++) {
+      entry = Iterables.get(reportRow.getEntries(), i);
+      assertEquals(DateUtil.endOfMonth(2014, i), entry.getInstant());
+      assertEquals(BigDecimal.valueOf(16000),
+          entry.getMeasure(AccountTransaction.ATTRIBUTE_AMOUNT));
+    }
+  }
+
+  private ReportingAccounts initReportingDataset() throws StorageException {
+    ReportingAccounts reportingAccounts = new ReportingAccounts();
+
+    Transaction transaction = store.startTransaction();
+    AccountCode operatingAccountCode = accountCodeManager.createAccountCode(80000, "Operating");
+    reportingAccounts.bankAccount =
+        ledgerManager.createBankAccount(operatingAccountCode, "Bob's bank", BankAccountType.OPERATING);
+    BigDecimal interestRate = BigDecimal.valueOf(0.03); // 3%
+    ledgerManager.setInterestRate(reportingAccounts.bankAccount,
+        interestRate, DateUtil.BEGINNING_OF_TIME, DateUtil.END_OF_TIME);
+    AccountCode interestAccountCode = accountCodeManager.createAccountCode(31000, "Operating Interest");
+    reportingAccounts.interestRevenueAccount =
+        ledgerManager.createRevenueAccount(interestAccountCode, "Interest from Bob's Bank",
+            reportingAccounts.bankAccount);
+
+    ledgerManager.recordTransaction(reportingAccounts.bankAccount,
+        Instant.parse("2013-12-31"), BigDecimal.valueOf(11000), "Initial value");
+    ledgerManager.recordTransaction(reportingAccounts.interestRevenueAccount,
+        Instant.parse("2014-01-04"), BigDecimal.valueOf(1000));
+    ledgerManager.recordTransaction(reportingAccounts.interestRevenueAccount,
+        Instant.parse("2014-02-02"), BigDecimal.valueOf(1000));
+    ledgerManager.recordTransaction(reportingAccounts.interestRevenueAccount,
+        Instant.parse("2014-03-01"), BigDecimal.valueOf(1000));
+    ledgerManager.recordTransaction(reportingAccounts.interestRevenueAccount,
+        Instant.parse("2014-03-15"), BigDecimal.valueOf(1000));
+    ledgerManager.recordTransaction(reportingAccounts.interestRevenueAccount,
+        Instant.parse("2014-04-15"), BigDecimal.valueOf(1000));
+    transaction.commit();
+
+    return reportingAccounts;
+  }
+
+  private static class ReportingAccounts {
+    public BankAccount bankAccount;
+    public RevenueAccount interestRevenueAccount;
   }
 }

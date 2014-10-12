@@ -70,4 +70,8 @@ public interface Store {
   <T extends IntervalRecord> Iterable<T> findIntervalRecords(Record containingRecord,
       RecordType<T> recordType, Instant start, Instant end, List<? extends SearchTerm> searchTerms)
       throws StorageException;
+
+  <T extends InstantRecord> Report runReport(RecordType<T> type,
+      int startYear, int endYear, ReportDateGranularity granularity,
+      List<? extends SearchTerm> searchTerms, List<String> dimensions, List<String> measures);
 }

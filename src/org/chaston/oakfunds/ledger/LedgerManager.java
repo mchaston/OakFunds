@@ -16,6 +16,9 @@
 package org.chaston.oakfunds.ledger;
 
 import org.chaston.oakfunds.account.AccountCode;
+import org.chaston.oakfunds.model.ModelAccount;
+import org.chaston.oakfunds.storage.Report;
+import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.StorageException;
 import org.joda.time.Instant;
 
@@ -48,4 +51,21 @@ public interface LedgerManager {
   void recordTransaction(Account account, Instant date, BigDecimal amount, String comment)
       throws StorageException;
 
+  /**
+   * Binds an Account to a ModelAccount so that AccountTransactions are automatically bound
+   * going forward.
+   */
+  void setRelatedModelAccount(Account account, ModelAccount modelAccount,
+      PaymentIncrement paymentIncrement, boolean retroactive) throws StorageException;
+
+  /**
+   * Binds an AccountTransaction to a ModelAccount in order to keep the model updated.
+   */
+  // TODO: determine if an optional modelDate attribute makes sense
+  void setRelatedModelAccount(AccountTransaction account, ModelAccount modelAccount,
+      PaymentIncrement paymentIncrement) throws StorageException;
+
+
+  Report runReport(Account<?> account, int startYear, int endYear,
+      ReportDateGranularity granularity);
 }
