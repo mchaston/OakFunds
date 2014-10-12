@@ -15,7 +15,9 @@
  */
 package org.chaston.oakfunds.util;
 
+import org.joda.time.DurationFieldType;
 import org.joda.time.Instant;
+import org.joda.time.MutableDateTime;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -23,4 +25,26 @@ import org.joda.time.Instant;
 public class DateUtil {
   public static final Instant BEGINNING_OF_TIME = Instant.parse("2000-01-01T00:00:00");
   public static final Instant END_OF_TIME = Instant.parse("2101-01-01T00:00:00");
+
+  public static Instant endOfYear(int year) {
+    MutableDateTime mutableDateTime = new MutableDateTime(year, 1, 1, 0, 0, 0, 0);
+    mutableDateTime.add(DurationFieldType.years(), 1);
+    mutableDateTime.add(DurationFieldType.millis(), -1);
+    return mutableDateTime.toInstant();
+  }
+
+  public static Instant endOfMonth(int year, int monthOfYear) {
+    MutableDateTime mutableDateTime = new MutableDateTime(year, monthOfYear, 1, 0, 0, 0, 0);
+    mutableDateTime.add(DurationFieldType.months(), 1);
+    mutableDateTime.add(DurationFieldType.millis(), -1);
+    return mutableDateTime.toInstant();
+  }
+
+  public static Instant endOfDay(int year, int monthOfYear, int dayOfMonth) {
+    MutableDateTime mutableDateTime =
+        new MutableDateTime(year, monthOfYear, dayOfMonth, 0, 0, 0, 0);
+    mutableDateTime.add(DurationFieldType.days(), 1);
+    mutableDateTime.add(DurationFieldType.millis(), -1);
+    return mutableDateTime.toInstant();
+  }
 }
