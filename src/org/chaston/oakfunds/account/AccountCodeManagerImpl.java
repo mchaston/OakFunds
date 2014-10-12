@@ -27,8 +27,6 @@ import java.util.Map;
  */
 class AccountCodeManagerImpl implements AccountCodeManager {
 
-  private static final String ATTRIBUTE_TITLE = "title";
-
   private final Store store;
 
   @Inject
@@ -41,7 +39,7 @@ class AccountCodeManagerImpl implements AccountCodeManager {
   public AccountCode createAccountCode(int accountCodeNumber, String title)
       throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_TITLE, title);
+    attributes.put(AccountCode.ATTRIBUTE_TITLE, title);
     return store.createRecord(AccountCode.TYPE, accountCodeNumber, attributes);
   }
 

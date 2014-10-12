@@ -27,8 +27,10 @@ public interface AccountCode extends Record<AccountCode> {
 
   static final RecordType<AccountCode> TYPE =
       new RecordType<>("account_code", AccountCode.class,
-          RecordTemporalType.NONE, true);
+          null, RecordTemporalType.NONE, true);
 
-  @AttributeMethod(attribute = "title", required = true)
+  String ATTRIBUTE_TITLE = "title";
+
+  @AttributeMethod(attribute = ATTRIBUTE_TITLE, required = true)
   String getTitle();
 }

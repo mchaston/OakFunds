@@ -42,18 +42,6 @@ import java.util.Map;
  */
 class ModelManagerImpl implements ModelManager {
 
-  private static final String ATTRIBUTE_BASE_MODEL = "base_model";
-  private static final String ATTRIBUTE_TITLE = "title";
-  private static final String ATTRIBUTE_MODEL_ID = "model_id";
-  private static final String ATTRIBUTE_SOURCE_BANK_ACCOUNT_TYPE = "source_bank_account_type";
-  private static final String ATTRIBUTE_DEPOSIT_BANK_ACCOUNT_TYPE = "deposit_bank_account_type";
-  private static final String ATTRIBUTE_AMOUNT = "amount";
-  private static final String ATTRIBUTE_PAYMENT_MONTH = "payment_month";
-  private static final String ATTRIBUTE_DISTRIBUTION_TIME = "distribution_time";
-  private static final String ATTRIBUTE_DISTRIBUTION_TIME_UNIT = "distribution_time_unit";
-  private static final String ATTRIBUTE_DERIVED = "derived";
-  private static final String ATTRIBUTE_ACCOUNT_TRANSACTION = "model_account_transaction_id";
-
   private final SystemPropertiesManager systemPropertiesManager;
   private final Store store;
   private int baseModelId;
@@ -78,13 +66,13 @@ class ModelManagerImpl implements ModelManager {
     store.registerType(ModelDistributionTransaction.TYPE);
 
     List<? extends SearchTerm> searchTerms =
-        ImmutableList.of(AttributeSearchTerm.of(ATTRIBUTE_BASE_MODEL, SearchOperator.EQUALS, true));
+        ImmutableList.of(AttributeSearchTerm.of(Model.ATTRIBUTE_BASE_MODEL, SearchOperator.EQUALS, true));
     Iterable<Model> baseModels = store.findRecords(Model.TYPE, searchTerms);
     Model baseModel;
     if (Iterables.isEmpty(baseModels)) {
       Map<String, Object> attributes = new HashMap<>();
-      attributes.put(ATTRIBUTE_TITLE, "[base]");
-      attributes.put(ATTRIBUTE_BASE_MODEL, true);
+      attributes.put(Model.ATTRIBUTE_TITLE, "[base]");
+      attributes.put(Model.ATTRIBUTE_BASE_MODEL, true);
       Transaction transaction = store.startTransaction();
       boolean success = false;
       try {
@@ -106,8 +94,8 @@ class ModelManagerImpl implements ModelManager {
   @Override
   public Model createNewModel(String title) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_TITLE, title);
-    attributes.put(ATTRIBUTE_BASE_MODEL, false);
+    attributes.put(Model.ATTRIBUTE_TITLE, title);
+    attributes.put(Model.ATTRIBUTE_BASE_MODEL, false);
     return store.createRecord(Model.TYPE, attributes);
   }
 
@@ -125,8 +113,8 @@ class ModelManagerImpl implements ModelManager {
   public ModelExpenseAccount createModelExpenseAccount(String title,
       BankAccountType sourceBankAccountType) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_TITLE, title);
-    attributes.put(ATTRIBUTE_SOURCE_BANK_ACCOUNT_TYPE, sourceBankAccountType);
+    attributes.put(ModelAccount.ATTRIBUTE_TITLE, title);
+    attributes.put(ModelExpenseAccount.ATTRIBUTE_SOURCE_BANK_ACCOUNT_TYPE, sourceBankAccountType);
     return store.createRecord(ModelExpenseAccount.TYPE, attributes);
   }
 
@@ -134,8 +122,8 @@ class ModelManagerImpl implements ModelManager {
   public ModelRevenueAccount createModelRevenueAccount(String title,
       BankAccountType depositBankAccountType) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_TITLE, title);
-    attributes.put(ATTRIBUTE_DEPOSIT_BANK_ACCOUNT_TYPE, depositBankAccountType);
+    attributes.put(ModelAccount.ATTRIBUTE_TITLE, title);
+    attributes.put(ModelRevenueAccount.ATTRIBUTE_DEPOSIT_BANK_ACCOUNT_TYPE, depositBankAccountType);
     return store.createRecord(ModelRevenueAccount.TYPE, attributes);
   }
 
@@ -143,8 +131,8 @@ class ModelManagerImpl implements ModelManager {
   public MonthlyRecurringEvent setMonthlyRecurringEventDetails(Model model, ModelAccount account,
       Instant start, Instant end, BigDecimal amount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_MODEL_ID, model.getId());
-    attributes.put(ATTRIBUTE_AMOUNT, amount);
+    attributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
+    attributes.put(RecurringEvent.ATTRIBUTE_AMOUNT, amount);
     MonthlyRecurringEvent monthlyRecurringEvent =
         store.updateIntervalRecord(account, MonthlyRecurringEvent.TYPE,
             start, end, attributes);
@@ -156,9 +144,9 @@ class ModelManagerImpl implements ModelManager {
   public AnnualRecurringEvent setAnnualRecurringEventDetails(Model model, ModelAccount account,
       Instant start, Instant end, int paymentMonth, BigDecimal amount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_MODEL_ID, model.getId());
-    attributes.put(ATTRIBUTE_PAYMENT_MONTH, paymentMonth);
-    attributes.put(ATTRIBUTE_AMOUNT, amount);
+    attributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
+    attributes.put(AnnualRecurringEvent.ATTRIBUTE_PAYMENT_MONTH, paymentMonth);
+    attributes.put(RecurringEvent.ATTRIBUTE_AMOUNT, amount);
     AnnualRecurringEvent annualRecurringEvent =
         store.updateIntervalRecord(account, AnnualRecurringEvent.TYPE,
             start, end, attributes);
@@ -171,11 +159,11 @@ class ModelManagerImpl implements ModelManager {
       int distributionTime, DistributionTimeUnit distributionTimeUnit, BigDecimal amount)
       throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_MODEL_ID, model.getId());
-    attributes.put(ATTRIBUTE_AMOUNT, amount);
-    attributes.put(ATTRIBUTE_DERIVED, false);
-    attributes.put(ATTRIBUTE_DISTRIBUTION_TIME, distributionTime);
-    attributes.put(ATTRIBUTE_DISTRIBUTION_TIME_UNIT, distributionTimeUnit);
+    attributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
+    attributes.put(ModelAccountTransaction.ATTRIBUTE_AMOUNT, amount);
+    attributes.put(ModelAccountTransaction.ATTRIBUTE_DERIVED, false);
+    attributes.put(ModelAccountTransaction.ATTRIBUTE_DISTRIBUTION_TIME, distributionTime);
+    attributes.put(ModelAccountTransaction.ATTRIBUTE_DISTRIBUTION_TIME_UNIT, distributionTimeUnit);
     ModelAccountTransaction modelAccountTransaction =
         store.insertInstantRecord(account, ModelAccountTransaction.TYPE, date, attributes);
     recalculateDistributionTransactions(model, account, modelAccountTransaction);
@@ -187,11 +175,11 @@ class ModelManagerImpl implements ModelManager {
       Instant date, int distributionTime, DistributionTimeUnit distributionTimeUnit,
       BigDecimal amount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_MODEL_ID, modelAccountTransaction.getModelId());
-    attributes.put(ATTRIBUTE_AMOUNT, amount);
-    attributes.put(ATTRIBUTE_DERIVED, false);
-    attributes.put(ATTRIBUTE_DISTRIBUTION_TIME, distributionTime);
-    attributes.put(ATTRIBUTE_DISTRIBUTION_TIME_UNIT, distributionTimeUnit);
+    attributes.put(ModelBound.ATTRIBUTE_MODEL_ID, modelAccountTransaction.getModelId());
+    attributes.put(ModelAccountTransaction.ATTRIBUTE_AMOUNT, amount);
+    attributes.put(ModelAccountTransaction.ATTRIBUTE_DERIVED, false);
+    attributes.put(ModelAccountTransaction.ATTRIBUTE_DISTRIBUTION_TIME, distributionTime);
+    attributes.put(ModelAccountTransaction.ATTRIBUTE_DISTRIBUTION_TIME_UNIT, distributionTimeUnit);
     Model model =
         store.getRecord(Model.TYPE, modelAccountTransaction.getModelId());
     ModelAccount account =
@@ -218,7 +206,7 @@ class ModelManagerImpl implements ModelManager {
   public Iterable<ModelAccountTransaction> getModelTransactions(Model model, ModelAccount account,
       Instant start, Instant end) throws StorageException {
     List<? extends SearchTerm> searchTerms = ImmutableList.of(
-        AttributeSearchTerm.of(ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
+        AttributeSearchTerm.of(ModelBound.ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
     return store.findInstantRecords(account, ModelAccountTransaction.TYPE, start,
         end, searchTerms);
   }
@@ -227,7 +215,7 @@ class ModelManagerImpl implements ModelManager {
   public Iterable<ModelDistributionTransaction> getModelDistributionTransactions(Model model,
       ModelAccount account, Instant start, Instant end) throws StorageException {
     List<? extends SearchTerm> searchTerms = ImmutableList.of(
-        AttributeSearchTerm.of(ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
+        AttributeSearchTerm.of(ModelBound.ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
     return store.findInstantRecords(account, ModelDistributionTransaction.TYPE,
         start, end, searchTerms);
   }
@@ -235,15 +223,15 @@ class ModelManagerImpl implements ModelManager {
   private void recalculateAccountTransactions(Model model, ModelAccount account,
       Instant start, Instant end) throws StorageException {
     List<? extends SearchTerm> searchTerms = ImmutableList.of(
-        AttributeSearchTerm.of(ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
+        AttributeSearchTerm.of(ModelBound.ATTRIBUTE_MODEL_ID, SearchOperator.EQUALS, model.getId()));
     Iterable<RecurringEvent> recurringEvents =
         store.findIntervalRecords(account, RecurringEvent.TYPE, start, end, searchTerms);
     for (RecurringEvent recurringEvent : recurringEvents) {
       if (recurringEvent instanceof MonthlyRecurringEvent) {
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put(ATTRIBUTE_MODEL_ID, model.getId());
-        attributes.put(ATTRIBUTE_AMOUNT, recurringEvent.getAmount());
-        attributes.put(ATTRIBUTE_DERIVED, true);
+        attributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
+        attributes.put(ModelAccountTransaction.ATTRIBUTE_AMOUNT, recurringEvent.getAmount());
+        attributes.put(ModelAccountTransaction.ATTRIBUTE_DERIVED, true);
         for (Instant instant
             : getAllInstantsInRange(recurringEvent.getStart(), recurringEvent.getEnd())) {
           store.insertInstantRecord(account, ModelAccountTransaction.TYPE, instant, attributes);
@@ -252,11 +240,11 @@ class ModelManagerImpl implements ModelManager {
       if (recurringEvent instanceof AnnualRecurringEvent) {
         AnnualRecurringEvent annualRecurringEvent = (AnnualRecurringEvent) recurringEvent;
         Map<String, Object> accountAttributes = new HashMap<>();
-        accountAttributes.put(ATTRIBUTE_MODEL_ID, model.getId());
-        accountAttributes.put(ATTRIBUTE_AMOUNT, recurringEvent.getAmount());
-        accountAttributes.put(ATTRIBUTE_DERIVED, true);
-        accountAttributes.put(ATTRIBUTE_DISTRIBUTION_TIME, 1);
-        accountAttributes.put(ATTRIBUTE_DISTRIBUTION_TIME_UNIT, DistributionTimeUnit.YEARS);
+        accountAttributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
+        accountAttributes.put(ModelAccountTransaction.ATTRIBUTE_AMOUNT, recurringEvent.getAmount());
+        accountAttributes.put(ModelAccountTransaction.ATTRIBUTE_DERIVED, true);
+        accountAttributes.put(ModelAccountTransaction.ATTRIBUTE_DISTRIBUTION_TIME, 1);
+        accountAttributes.put(ModelAccountTransaction.ATTRIBUTE_DISTRIBUTION_TIME_UNIT, DistributionTimeUnit.YEARS);
 
         for (Instant instant
             : getAllInstantsInRange(recurringEvent.getStart(), recurringEvent.getEnd())) {
@@ -287,7 +275,8 @@ class ModelManagerImpl implements ModelManager {
 
     // Delete previous distributions.
     store.deleteInstantRecords(account, ModelDistributionTransaction.TYPE,
-        ImmutableList.of(AttributeSearchTerm.of(ATTRIBUTE_ACCOUNT_TRANSACTION, SearchOperator.EQUALS,
+        ImmutableList.of(AttributeSearchTerm.of(
+            ModelDistributionTransaction.ATTRIBUTE_ACCOUNT_TRANSACTION_ID, SearchOperator.EQUALS,
             modelAccountTransaction.getId())));
 
     while (mutableDateTime.isBefore(end)) {
@@ -295,13 +284,13 @@ class ModelManagerImpl implements ModelManager {
         firstDistributionAmount = firstDistributionAmount.add(amountPerDistribution);
       } else {
         Map<String, Object> distributionAttributes = new HashMap<>();
-        distributionAttributes.put(ATTRIBUTE_MODEL_ID, model.getId());
-        distributionAttributes.put(ATTRIBUTE_ACCOUNT_TRANSACTION, modelAccountTransaction.getId());
+        distributionAttributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
+        distributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_ACCOUNT_TRANSACTION_ID, modelAccountTransaction.getId());
         if (mutableDateTime.isEqual(firstDistribution)) {
-          distributionAttributes.put(ATTRIBUTE_AMOUNT, firstDistributionAmount.add(
+          distributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_AMOUNT, firstDistributionAmount.add(
               amountPerDistribution));
         } else {
-          distributionAttributes.put(ATTRIBUTE_AMOUNT, amountPerDistribution);
+          distributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_AMOUNT, amountPerDistribution);
         }
         store.insertInstantRecord(account, ModelDistributionTransaction.TYPE,
             mutableDateTime.toInstant(), distributionAttributes);
@@ -310,9 +299,9 @@ class ModelManagerImpl implements ModelManager {
     }
     // Add the anti-distribution that cancels out the others when the transaction is executed.
     Map<String, Object> distributionAttributes = new HashMap<>();
-    distributionAttributes.put(ATTRIBUTE_MODEL_ID, model.getId());
-    distributionAttributes.put(ATTRIBUTE_ACCOUNT_TRANSACTION, modelAccountTransaction.getId());
-    distributionAttributes.put(ATTRIBUTE_AMOUNT,
+    distributionAttributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
+    distributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_ACCOUNT_TRANSACTION_ID, modelAccountTransaction.getId());
+    distributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_AMOUNT,
         amountPerDistribution.negate().multiply(BigDecimal.valueOf(distributionMonths - 1)));
     store.insertInstantRecord(account, ModelDistributionTransaction.TYPE,
         mutableDateTime.toInstant(), distributionAttributes);
@@ -322,7 +311,8 @@ class ModelManagerImpl implements ModelManager {
       throws StorageException {
     // Delete previous distributions.
     store.deleteInstantRecords(account, ModelDistributionTransaction.TYPE,
-        ImmutableList.of(AttributeSearchTerm.of(ATTRIBUTE_ACCOUNT_TRANSACTION, SearchOperator.EQUALS,
+        ImmutableList.of(AttributeSearchTerm.of(
+            ModelDistributionTransaction.ATTRIBUTE_ACCOUNT_TRANSACTION_ID, SearchOperator.EQUALS,
             modelAccountTransaction.getId())));
   }
 

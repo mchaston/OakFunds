@@ -26,11 +26,14 @@ import org.chaston.oakfunds.storage.RecordType;
 public interface Model extends Record<Model> {
 
   static final RecordType<Model> TYPE =
-      new RecordType<>("model", Model.class, RecordTemporalType.NONE, true);
+      new RecordType<>("model", Model.class, null, RecordTemporalType.NONE, true);
 
-  @AttributeMethod(attribute = "title", required = true)
+  String ATTRIBUTE_BASE_MODEL = "base_model";
+  String ATTRIBUTE_TITLE = "title";
+
+  @AttributeMethod(attribute = ATTRIBUTE_TITLE, required = true)
   String getTitle();
 
-  @AttributeMethod(attribute = "base_model", required = true)
+  @AttributeMethod(attribute = ATTRIBUTE_BASE_MODEL, required = true)
   boolean isBaseModel();
 }

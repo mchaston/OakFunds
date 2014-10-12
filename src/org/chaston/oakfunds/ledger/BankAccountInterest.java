@@ -29,8 +29,10 @@ public interface BankAccountInterest extends IntervalRecord<BankAccountInterest>
 
   public static final RecordType<BankAccountInterest> TYPE =
       new RecordType<>("bank_account_interest", BankAccountInterest.class,
-          RecordTemporalType.INTERVAL, true);
+          BankAccount.TYPE, RecordTemporalType.INTERVAL, true);
 
-  @AttributeMethod(attribute = "interest_rate", required = true)
+  String ATTRIBUTE_INTEREST_RATE = "interest_rate";
+
+  @AttributeMethod(attribute = ATTRIBUTE_INTEREST_RATE, required = true)
   BigDecimal getInterestRate();
 }

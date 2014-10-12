@@ -29,17 +29,22 @@ public interface ModelAccountTransaction extends InstantRecord<ModelAccountTrans
 
   public static final RecordType<ModelAccountTransaction> TYPE =
       new RecordType<>("model_account_transaction", ModelAccountTransaction.class,
-          RecordTemporalType.INSTANT, true);
+          ModelAccount.TYPE, RecordTemporalType.INSTANT, true);
 
-  @AttributeMethod(attribute = "amount", required = true)
+  String ATTRIBUTE_AMOUNT = "amount";
+  String ATTRIBUTE_DISTRIBUTION_TIME = "distribution_time";
+  String ATTRIBUTE_DISTRIBUTION_TIME_UNIT = "distribution_time_unit";
+  String ATTRIBUTE_DERIVED = "derived";
+
+  @AttributeMethod(attribute = ATTRIBUTE_AMOUNT, required = true)
   BigDecimal getAmount();
 
-  @AttributeMethod(attribute = "distribution_time")
+  @AttributeMethod(attribute = ATTRIBUTE_DISTRIBUTION_TIME)
   int getDistributionTime();
 
-  @AttributeMethod(attribute = "distribution_time_unit")
+  @AttributeMethod(attribute = ATTRIBUTE_DISTRIBUTION_TIME_UNIT)
   DistributionTimeUnit getDistributionTimeUnit();
 
-  @AttributeMethod(attribute = "derived", required = true)
+  @AttributeMethod(attribute = ATTRIBUTE_DERIVED, required = true)
   boolean isDerived();
 }

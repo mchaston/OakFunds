@@ -29,11 +29,14 @@ public interface ModelDistributionTransaction extends InstantRecord<ModelDistrib
 
   static final RecordType<ModelDistributionTransaction> TYPE =
       new RecordType<>("model_distribution_transaction",
-          ModelDistributionTransaction.class, RecordTemporalType.INSTANT, true);
+          ModelDistributionTransaction.class, ModelAccount.TYPE, RecordTemporalType.INSTANT, true);
 
-  @AttributeMethod(attribute = "amount", required = true)
+  String ATTRIBUTE_AMOUNT = "amount";
+  String ATTRIBUTE_ACCOUNT_TRANSACTION_ID = "model_account_transaction_id";
+
+  @AttributeMethod(attribute = ATTRIBUTE_AMOUNT, required = true)
   BigDecimal getAmount();
 
-  @AttributeMethod(attribute = "model_account_transaction_id", required = true)
+  @AttributeMethod(attribute = ATTRIBUTE_ACCOUNT_TRANSACTION_ID, required = true)
   int getModelAccountTransactionId();
 }

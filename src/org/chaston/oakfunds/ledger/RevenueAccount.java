@@ -27,6 +27,8 @@ public interface RevenueAccount extends Account<RevenueAccount> {
       new RecordType<>("revenue_account", RevenueAccount.class,
           Account.TYPE, true);
 
-  @AttributeMethod(attribute = "default_deposit_account_id")
+  String ATTRIBUTE_DEFAULT_DEPOSIT_ACCOUNT_ID = "default_deposit_account_id";
+
+  @AttributeMethod(attribute = ATTRIBUTE_DEFAULT_DEPOSIT_ACCOUNT_ID)
   int getDefaultDepositAccountId();
 }

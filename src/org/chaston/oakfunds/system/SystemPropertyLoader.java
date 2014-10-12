@@ -35,7 +35,7 @@ abstract class SystemPropertyLoader {
 
   void load(Store store) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(SystemPropertiesManagerImpl.ATTRIBUTE_NAME, name);
+    attributes.put(SystemProperty.ATTRIBUTE_NAME, name);
     attributes.putAll(getOtherAttributes());
     store.createRecord(SystemProperty.TYPE, attributes);
   }
@@ -46,7 +46,7 @@ abstract class SystemPropertyLoader {
     return new SystemPropertyLoader(name) {
       @Override
       Map<String, Integer> getOtherAttributes() {
-        return ImmutableMap.of(SystemPropertiesManagerImpl.ATTRIBUTE_INTEGER_VALUE, value);
+        return ImmutableMap.of(SystemProperty.ATTRIBUTE_INTEGER_VALUE, value);
       }
     };
   }

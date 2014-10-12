@@ -27,6 +27,8 @@ public interface ExpenseAccount extends Account<ExpenseAccount> {
       new RecordType<>("expense_account", ExpenseAccount.class,
           Account.TYPE, true);
 
-  @AttributeMethod(attribute = "default_source_account_id")
+  String ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID = "default_source_account_id";
+
+  @AttributeMethod(attribute = ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID)
   int getDefaultSourceAccountId();
 }

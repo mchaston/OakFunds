@@ -28,6 +28,8 @@ public interface ModelExpenseAccount extends ModelAccount<ModelExpenseAccount> {
       new RecordType<>("model_expense_account", ModelExpenseAccount.class,
           ModelAccount.TYPE, true);
 
-  @AttributeMethod(attribute = "source_bank_account_type")
+  String ATTRIBUTE_SOURCE_BANK_ACCOUNT_TYPE = "source_bank_account_type";
+
+  @AttributeMethod(attribute = ATTRIBUTE_SOURCE_BANK_ACCOUNT_TYPE)
   BankAccountType getSourceBankAccountType();
 }

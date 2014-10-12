@@ -30,15 +30,19 @@ public interface AccountTransaction extends InstantRecord<AccountTransaction> {
 
   public static final RecordType<AccountTransaction> TYPE =
       new RecordType<>("account_transaction", AccountTransaction.class,
-          RecordTemporalType.INSTANT, true);
+          Account.TYPE, RecordTemporalType.INSTANT, true);
 
-  @AttributeMethod(attribute = "amount", required = true)
+  String ATTRIBUTE_AMOUNT = "amount";
+  String ATTRIBUTE_COMMENT = "comment";
+  String ATTRIBUTE_SISTER_TRANSACTION_ID = "sister_transaction_id";
+
+  @AttributeMethod(attribute = ATTRIBUTE_AMOUNT, required = true)
   BigDecimal getAmount();
 
-  @AttributeMethod(attribute = "comment")
+  @AttributeMethod(attribute = ATTRIBUTE_COMMENT)
   String getComment();
 
-  @AttributeMethod(attribute = "sister_transaction_id")
+  @AttributeMethod(attribute = ATTRIBUTE_SISTER_TRANSACTION_ID)
   int getSisterTransactionId();
 
   @ParentIdMethod

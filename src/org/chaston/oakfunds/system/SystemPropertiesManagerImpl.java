@@ -34,9 +34,6 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
   static final String PROPERTY_CURRENT_YEAR = "current_year";
   static final String PROPERTY_TIME_HORIZON = "time_horizon";
 
-  static final String ATTRIBUTE_NAME = "name";
-  static final String ATTRIBUTE_INTEGER_VALUE = "integer_value";
-
   private final Store store;
   private SystemProperty currentYear;
   private SystemProperty timeHorizon;
@@ -91,7 +88,7 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
   @Override
   public void setCurrentYear(int year) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_INTEGER_VALUE, year);
+    attributes.put(SystemProperty.ATTRIBUTE_INTEGER_VALUE, year);
     currentYear = store.updateRecord(currentYear, attributes);
   }
 
@@ -103,7 +100,7 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
   @Override
   public void setTimeHorizon(int years) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(ATTRIBUTE_INTEGER_VALUE, years);
+    attributes.put(SystemProperty.ATTRIBUTE_INTEGER_VALUE, years);
     currentYear = store.updateRecord(currentYear, attributes);
   }
 }

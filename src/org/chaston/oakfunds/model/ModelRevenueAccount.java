@@ -28,6 +28,8 @@ public interface ModelRevenueAccount extends ModelAccount<ModelRevenueAccount> {
       new RecordType<>("model_revenue_account", ModelRevenueAccount.class,
           ModelAccount.TYPE, true);
 
-  @AttributeMethod(attribute = "deposit_bank_account_type")
+  String ATTRIBUTE_DEPOSIT_BANK_ACCOUNT_TYPE = "deposit_bank_account_type";
+
+  @AttributeMethod(attribute = ATTRIBUTE_DEPOSIT_BANK_ACCOUNT_TYPE)
   BankAccountType getDepositBankAccountType();
 }

@@ -21,6 +21,8 @@ import org.chaston.oakfunds.storage.AttributeMethod;
  * TODO(mchaston): write JavaDocs
  */
 public interface ModelBound {
-  @AttributeMethod(attribute = "model_id", required = true)
+  String ATTRIBUTE_MODEL_ID = "model_id";
+
+  @AttributeMethod(attribute = ATTRIBUTE_MODEL_ID, required = true)
   int getModelId();
 }

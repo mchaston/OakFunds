@@ -15,6 +15,10 @@
  */
 package org.chaston.oakfunds.storage;
 
+import com.google.common.base.Preconditions;
+
+import javax.annotation.Nullable;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
@@ -22,22 +26,33 @@ public class RecordType<T extends Record> {
 
   private final String name;
   private final Class<T> recordTypeClass;
+  @Nullable
+  private final RecordType<?> containingType;
   private final RecordTemporalType temporalType;
   private final RecordType parentType;
   private final boolean isFinalType;
 
-  public RecordType(String name, Class<T> recordTypeClass, RecordType<? super T> baseType, boolean isFinalType) {
+  public RecordType(String name, Class<T> recordTypeClass, RecordType<? super T> parentType, boolean isFinalType) {
     this.name = name;
     this.recordTypeClass = recordTypeClass;
-    this.temporalType = baseType.getRootType().getTemporalType();
-    this.parentType = baseType;
+    this.containingType = parentType.getRootType().getContainingType();
+    this.temporalType = parentType.getRootType().getTemporalType();
+    this.parentType = parentType;
     this.isFinalType = isFinalType;
   }
 
-  public RecordType(String name, Class<T> recordTypeClass, RecordTemporalType temporalType, boolean isFinalType) {
+  public RecordType(String name, Class<T> recordTypeClass,
+      @Nullable RecordType<?> containingType, RecordTemporalType temporalType, boolean isFinalType) {
     this.name = name;
     this.recordTypeClass = recordTypeClass;
+    this.containingType = containingType;
     this.temporalType = temporalType;
+    if (temporalType == RecordTemporalType.INSTANT) {
+      Preconditions.checkArgument(containingType != null, "Instant types must have a containing type.");
+    }
+    if (temporalType == RecordTemporalType.INTERVAL) {
+      Preconditions.checkArgument(containingType != null, "Interval types must have a containing type.");
+    }
     this.parentType = null;
     this.isFinalType = isFinalType;
   }
@@ -72,5 +87,10 @@ public class RecordType<T extends Record> {
 
   public <T extends Record> boolean isTypeOf(RecordType<T> recordType) {
     return recordType.getRecordTypeClass().isAssignableFrom(recordTypeClass);
+  }
+
+  @Nullable
+  public RecordType<?> getContainingType() {
+    return containingType;
   }
 }
