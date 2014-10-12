@@ -19,6 +19,13 @@ package org.chaston.oakfunds.ledger;
  * TODO(mchaston): write JavaDocs
  */
 public enum PaymentIncrement {
+  /**
+   * A partial payment where more may be due.
+   */
   PARTIAL,
+
+  /**
+   * A complete payment where it is not expected that more is due.
+   */
   COMPLETE
 }
