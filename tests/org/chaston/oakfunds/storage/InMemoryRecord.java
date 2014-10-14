@@ -105,7 +105,7 @@ class InMemoryRecord {
       Map.Entry<InstantRecordKey, Map<String, Object>> entry = iterator.next();
       int id = entry.getKey().getId();
       Map<String, Object> attributes = entry.getValue();
-      if (InMemoryStore.matchesSearchTerms(id, attributes, searchTerms)) {
+      if (InMemoryStore.matchesSearchTerms(this.id, id, attributes, searchTerms)) {
         iterator.remove();
       }
     }
@@ -162,7 +162,7 @@ class InMemoryRecord {
   }
 
   public boolean matchesSearchTerms(List<? extends SearchTerm> searchTerms) {
-    return InMemoryStore.matchesSearchTerms(id, attributes, searchTerms);
+    return InMemoryStore.matchesSearchTerms(null, id, attributes, searchTerms);
   }
 
   public RecordType getRecordType() {

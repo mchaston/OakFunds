@@ -18,6 +18,7 @@ package org.chaston.oakfunds.storage;
 import com.google.common.collect.ImmutableList;
 import org.joda.time.Instant;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 
@@ -73,5 +74,6 @@ public interface Store {
 
   <T extends InstantRecord> Report runReport(RecordType<T> type,
       int startYear, int endYear, ReportDateGranularity granularity,
-      List<? extends SearchTerm> searchTerms, List<String> dimensions, List<String> measures);
+      List<? extends SearchTerm> searchTerms, @Nullable String parentIdDimension,
+      List<String> dimensions, List<String> measures);
 }

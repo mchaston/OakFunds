@@ -15,36 +15,31 @@
  */
 package org.chaston.oakfunds.storage;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class ReportRow {
-  private final ImmutableMap<String, Object> dimensions;
-  private final List<ReportEntry> entries = new ArrayList<>();
+public class OrSearchTerm extends SearchTerm {
+  private final ImmutableList<SearchTerm> searchTerms;
 
-  public ReportRow(Map<String, Object> dimensions) {
-    this.dimensions = ImmutableMap.copyOf(dimensions);
+  OrSearchTerm(ImmutableList<SearchTerm> searchTerms) {
+    this.searchTerms = searchTerms;
   }
 
-  public Object getDimension(String attribute) {
-    return dimensions.get(attribute);
+  public static OrSearchTerm of(SearchTerm... searchTerms) {
+    return new OrSearchTerm(ImmutableList.copyOf(searchTerms));
   }
 
-  public Iterable<ReportEntry> getEntries() {
-    return entries;
-  }
-
-  void addEntry(ReportEntry reportEntry) {
-    entries.add(reportEntry);
-  }
-
-  public ImmutableMap<String, Object> getDimensions() {
-    return dimensions;
+  @Override
+  boolean matches(Integer parentId, int id, Map<String, Object> attributes) {
+    for (SearchTerm searchTerm : searchTerms) {
+      if (searchTerm.matches(parentId, id, attributes)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

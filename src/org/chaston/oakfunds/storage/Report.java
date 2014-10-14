@@ -15,6 +15,8 @@
  */
 package org.chaston.oakfunds.storage;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,5 +32,14 @@ public class Report {
 
   void addReportRow(ReportRow reportRow) {
     rows.add(reportRow);
+  }
+
+  public ReportRow getRow(ImmutableMap<String, Object> dimensions) {
+    for (ReportRow row : rows) {
+      if (row.getDimensions().equals(dimensions)) {
+        return row;
+      }
+    }
+    return null;
   }
 }

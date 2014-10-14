@@ -15,8 +15,11 @@
  */
 package org.chaston.oakfunds.storage;
 
+import java.util.Map;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
 public abstract class SearchTerm {
+  abstract boolean matches(Integer parentId, int id, Map<String, Object> attributes);
 }

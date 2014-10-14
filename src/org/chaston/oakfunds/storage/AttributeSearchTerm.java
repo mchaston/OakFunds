@@ -15,6 +15,8 @@
  */
 package org.chaston.oakfunds.storage;
 
+import java.util.Map;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
@@ -43,5 +45,10 @@ public class AttributeSearchTerm extends SearchTerm {
 
   public Object getValue() {
     return value;
+  }
+
+  @Override
+  boolean matches(Integer parentId, int id, Map<String, Object> attributes) {
+    return operator.matches(value, attributes.get(attribute));
   }
 }

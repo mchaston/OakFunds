@@ -15,6 +15,9 @@
  */
 package org.chaston.oakfunds.storage;
 
+import javax.annotation.Nullable;
+import java.util.Map;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
@@ -37,5 +40,13 @@ public class ParentIdentifierSearchTerm extends SearchTerm {
 
   public int getId() {
     return id;
+  }
+
+  @Override
+  boolean matches(@Nullable Integer parentId, int id, Map<String, Object> attributes) {
+    if (parentId == null) {
+      return false;
+    }
+    return this.id == parentId;
   }
 }

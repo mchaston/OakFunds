@@ -23,6 +23,7 @@ import org.chaston.oakfunds.util.DateUtil;
 import org.chaston.oakfunds.util.Pair;
 import org.joda.time.Instant;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -235,7 +236,8 @@ public class InMemoryStore extends AbstractStore {
     ImmutableList.Builder<T> resultList = ImmutableList.builder();
     for (Pair<IntervalRecordKey, Map<String, Object>> rawRecord : rawRecords) {
       IntervalRecordKey intervalRecordKey = rawRecord.getFirst();
-      if (matchesSearchTerms(intervalRecordKey.getId(), rawRecord.getSecond(), searchTerms)) {
+      if (matchesSearchTerms(containingRecord.getId(),
+          intervalRecordKey.getId(), rawRecord.getSecond(), searchTerms)) {
         T record = RecordProxy.proxyIntervalRecord(
             (RecordType<T>) intervalRecordKey.getRecordType(),
             containingRecord, intervalRecordKey.getId(),
@@ -352,7 +354,7 @@ public class InMemoryStore extends AbstractStore {
     ImmutableList.Builder<T> resultsList = ImmutableList.builder();
     for (Map.Entry<InstantRecordKey, Map<String, Object>> entry : rawRecords) {
       InstantRecordKey key = entry.getKey();
-      if (matchesSearchTerms(key.getId(), entry.getValue(), searchTerms)) {
+      if (matchesSearchTerms(containingRecord.getId(), key.getId(), entry.getValue(), searchTerms)) {
         T record = RecordProxy.proxyInstantRecord((RecordType<T>) key.getRecordType(),
             containingRecord, key.getId(), key.getInstant(), entry.getValue());
         resultsList.add(record);
@@ -364,7 +366,8 @@ public class InMemoryStore extends AbstractStore {
   @Override
   public <T extends InstantRecord> Report runReport(RecordType<T> type,
       int startYear, int endYear, ReportDateGranularity granularity,
-      List<? extends SearchTerm> searchTerms, List<String> dimensions, List<String> measures) {
+      List<? extends SearchTerm> searchTerms, @Nullable String parentIdDimension,
+      List<String> dimensions, List<String> measures) {
     // Look for parent-based search terms.
     List<SearchTerm> remainingSearchTerms = new ArrayList<>();
     ParentIdentifierSearchTerm parentIdentifierSearchTerm = null;
@@ -385,7 +388,7 @@ public class InMemoryStore extends AbstractStore {
           new ParentIdentifierSearchTermFilter(parentIdentifierSearchTerm));
     }
     ReportBuilder reportBuilder =
-        new ReportBuilder(granularity, startYear, endYear, dimensions, measures);
+        new ReportBuilder(granularity, startYear, endYear, parentIdDimension, dimensions, measures);
     for (InMemoryRecord containingRecord : containingRecords) {
       // Get the results from the beginning of time until the end of the search range.
       Iterable<Map.Entry<InstantRecordKey, Map<String, Object>>> instantRecords =
@@ -393,11 +396,11 @@ public class InMemoryStore extends AbstractStore {
               .getInstantRecords(type, DateUtil.BEGINNING_OF_TIME, DateUtil.endOfYear(endYear));
       for (Map.Entry<InstantRecordKey, Map<String, Object>> instantRecord : instantRecords) {
         // Filter (using the remainingSearchTerms).
-        if (matchesSearchTerms(instantRecord.getKey().getId(),
+        if (matchesSearchTerms(containingRecord.getId(), instantRecord.getKey().getId(),
             instantRecord.getValue(), remainingSearchTerms)) {
           // Group and sum to create the results.
-          reportBuilder.aggregateEntry(
-              instantRecord.getKey().getInstant(), instantRecord.getValue());
+          reportBuilder.aggregateEntry(instantRecord.getKey().getInstant(),
+              containingRecord.getId(), instantRecord.getValue());
         }
       }
     }
@@ -405,22 +408,11 @@ public class InMemoryStore extends AbstractStore {
     return reportBuilder.build();
   }
 
-  static boolean matchesSearchTerms(int id, Map<String, Object> attributes, List<? extends SearchTerm> searchTerms) {
+  static boolean matchesSearchTerms(@Nullable Integer parentId, int id,
+      Map<String, Object> attributes, List<? extends SearchTerm> searchTerms) {
     for (SearchTerm searchTerm : searchTerms) {
-      if (searchTerm instanceof AttributeSearchTerm) {
-        AttributeSearchTerm attributeSearchTerm = (AttributeSearchTerm) searchTerm;
-        Object attribute = attributes.get(attributeSearchTerm.getAttribute());
-        if (!attributeSearchTerm.getOperator().matches(attribute, attributeSearchTerm.getValue())) {
-          return false;
-        }
-      } else if (searchTerm instanceof IdentifierSearchTerm) {
-        IdentifierSearchTerm identifierSearchTerm = (IdentifierSearchTerm) searchTerm;
-        if (identifierSearchTerm.getId() != id) {
-          return false;
-        }
-      } else {
-        throw new UnsupportedOperationException(
-            "Search terms of type " + searchTerm.getClass() + " are not supported.");
+      if (!searchTerm.matches(parentId, id, attributes)) {
+        return false;
       }
     }
     return true;

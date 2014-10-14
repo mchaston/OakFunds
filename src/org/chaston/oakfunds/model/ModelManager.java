@@ -16,6 +16,8 @@
 package org.chaston.oakfunds.model;
 
 import org.chaston.oakfunds.ledger.BankAccountType;
+import org.chaston.oakfunds.storage.Report;
+import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.StorageException;
 import org.joda.time.Instant;
 
@@ -60,4 +62,7 @@ public interface ModelManager {
 
   Iterable<ModelDistributionTransaction> getModelDistributionTransactions(Model model,
       ModelAccount account, Instant start, Instant end) throws StorageException;
+
+  Report runDistributionReport(Model model, int startYear, int endYear,
+      ReportDateGranularity reportDateGranularity) throws StorageException;
 }

@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import org.chaston.oakfunds.util.DateUtil;
 import org.joda.time.Instant;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -36,15 +37,18 @@ class ReportBuilder {
 
   private final Map<Map<String, Object>, DimensionAggregator> dimensionAggregators =
       new HashMap<>();
+  @Nullable
+  private final String parentIdDimension;
   private final ImmutableList<String> dimensions;
   private final ImmutableList<String> measures;
   private final Set<Instant> instants;
 
   public ReportBuilder(ReportDateGranularity granularity, int startYear, int endYear,
-      List<String> dimensions, List<String> measures) {
-    instants = buildReportInstants(granularity, startYear, endYear);
+      @Nullable String parentIdDimension, List<String> dimensions, List<String> measures) {
+    this.parentIdDimension = parentIdDimension;
     this.dimensions = ImmutableList.copyOf(dimensions);
     this.measures = ImmutableList.copyOf(measures);
+    instants = buildReportInstants(granularity, startYear, endYear);
   }
 
   private Set<Instant> buildReportInstants(ReportDateGranularity granularity,
@@ -71,8 +75,8 @@ class ReportBuilder {
     return instants.build();
   }
 
-  public void aggregateEntry(Instant instant, Map<String, Object> value) {
-    ImmutableMap<String, Object> dimensionValues = readDimensionValues(value);
+  public void aggregateEntry(Instant instant, int parentId, Map<String, Object> value) {
+    ImmutableMap<String, Object> dimensionValues = readDimensionValues(parentId, value);
     DimensionAggregator dimensionAggregator = dimensionAggregators.get(dimensionValues);
     if (dimensionAggregator == null) {
       dimensionAggregator = new DimensionAggregator(dimensionValues, instants);
@@ -81,13 +85,17 @@ class ReportBuilder {
     dimensionAggregator.aggregateMeasures(instant, readMeasureValues(value));
   }
 
-  private ImmutableMap<String, Object> readDimensionValues(Map<String, Object> value) {
+  private ImmutableMap<String, Object> readDimensionValues(
+      int parentId, Map<String, Object> value) {
     ImmutableMap.Builder<String, Object> dimensionValues = ImmutableMap.builder();
     for (String dimension : dimensions) {
       Object dimensionValue = value.get(dimension);
       if (dimensionValue != null) {
         dimensionValues.put(dimension, dimensionValue);
       }
+    }
+    if (parentIdDimension != null) {
+      dimensionValues.put(parentIdDimension, parentId);
     }
     return dimensionValues.build();
   }
@@ -127,9 +135,8 @@ class ReportBuilder {
 
     public void aggregateMeasures(Instant instant, Map<String, BigDecimal> measureValues) {
       SortedMap<Instant, MeasureAggregator> tailMap = measureAggregators.tailMap(instant);
-      Instant key = tailMap.firstKey();
-      if (key != null) {
-        tailMap.get(key).aggregateMeasures(measureValues);
+      if (!tailMap.isEmpty()) {
+        tailMap.get(tailMap.firstKey()).aggregateMeasures(measureValues);
       }
     }
 

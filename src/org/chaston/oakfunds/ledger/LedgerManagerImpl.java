@@ -148,7 +148,7 @@ class LedgerManagerImpl implements LedgerManager {
     ImmutableList<String> dimensions = ImmutableList.of();
     ImmutableList<String> measures = ImmutableList.of(AccountTransaction.ATTRIBUTE_AMOUNT);
     return store.runReport(AccountTransaction.TYPE, startYear, endYear, granularity,
-        searchTerms, dimensions, measures);
+        searchTerms, "account_id", dimensions, measures);
   }
 
   private void recordTransaction(Account account, Instant date, BigDecimal amount, String comment,

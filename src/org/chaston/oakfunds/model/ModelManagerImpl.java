@@ -21,18 +21,23 @@ import com.google.inject.Inject;
 import org.chaston.oakfunds.ledger.BankAccountType;
 import org.chaston.oakfunds.storage.AttributeSearchTerm;
 import org.chaston.oakfunds.storage.IdentifierSearchTerm;
+import org.chaston.oakfunds.storage.OrSearchTerm;
+import org.chaston.oakfunds.storage.Report;
+import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.SearchOperator;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.storage.Transaction;
 import org.chaston.oakfunds.system.SystemPropertiesManager;
+import org.chaston.oakfunds.util.DateUtil;
 import org.joda.time.DateTimeFieldType;
 import org.joda.time.DurationFieldType;
 import org.joda.time.Instant;
 import org.joda.time.MutableDateTime;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -220,6 +225,22 @@ class ModelManagerImpl implements ModelManager {
         start, end, searchTerms);
   }
 
+  @Override
+  public Report runDistributionReport(Model model, int startYear, int endYear,
+      ReportDateGranularity reportDateGranularity) throws StorageException {
+    return store.runReport(ModelDistributionTransaction.TYPE, startYear, endYear,
+        reportDateGranularity,
+        ImmutableList.<SearchTerm>of(
+            OrSearchTerm.of(
+                AttributeSearchTerm.of(ModelBound.ATTRIBUTE_MODEL_ID,
+                    SearchOperator.EQUALS, getBaseModel().getId()),
+                AttributeSearchTerm.of(ModelBound.ATTRIBUTE_MODEL_ID,
+                    SearchOperator.EQUALS, model.getId()))),
+        "model_account_id",
+        ImmutableList.<String>of(),
+        ImmutableList.of(ModelDistributionTransaction.ATTRIBUTE_AMOUNT));
+  }
+
   private void recalculateAccountTransactions(Model model, ModelAccount account,
       Instant start, Instant end) throws StorageException {
     List<? extends SearchTerm> searchTerms = ImmutableList.of(
@@ -267,10 +288,10 @@ class ModelManagerImpl implements ModelManager {
     Instant end = modelAccountTransaction.getInstant();
     MutableDateTime mutableDateTime = modelAccountTransaction.getInstant().toMutableDateTime();
     mutableDateTime.add(DurationFieldType.months(), 1 - distributionMonths);
-    Instant firstDistribution =
-        new MutableDateTime(systemPropertiesManager.getCurrentYear(), 1, 1, 0, 0, 0, 0).toInstant();
+    Instant firstDistributionInstant = DateUtil.endOfYear(systemPropertiesManager.getCurrentYear() - 1);
     BigDecimal amountPerDistribution =
-        modelAccountTransaction.getAmount().divide(BigDecimal.valueOf(distributionMonths));
+        modelAccountTransaction.getAmount().divide(
+            BigDecimal.valueOf(distributionMonths), 5, RoundingMode.HALF_UP);
     BigDecimal firstDistributionAmount = BigDecimal.ZERO;
 
     // Delete previous distributions.
@@ -280,31 +301,44 @@ class ModelManagerImpl implements ModelManager {
             modelAccountTransaction.getId())));
 
     while (mutableDateTime.isBefore(end)) {
-      if (mutableDateTime.isBefore(firstDistribution)) {
+      if (mutableDateTime.isBefore(firstDistributionInstant)) {
         firstDistributionAmount = firstDistributionAmount.add(amountPerDistribution);
       } else {
         Map<String, Object> distributionAttributes = new HashMap<>();
         distributionAttributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
-        distributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_ACCOUNT_TRANSACTION_ID, modelAccountTransaction.getId());
-        if (mutableDateTime.isEqual(firstDistribution)) {
-          distributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_AMOUNT, firstDistributionAmount.add(
-              amountPerDistribution));
-        } else {
-          distributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_AMOUNT, amountPerDistribution);
-        }
+        distributionAttributes.put(
+            ModelDistributionTransaction.ATTRIBUTE_ACCOUNT_TRANSACTION_ID,
+            modelAccountTransaction.getId());
+        distributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_AMOUNT,
+            amountPerDistribution);
         store.insertInstantRecord(account, ModelDistributionTransaction.TYPE,
             mutableDateTime.toInstant(), distributionAttributes);
       }
       mutableDateTime.add(DurationFieldType.months(), 1);
     }
+    // Add the first distribution amount.
+    if (!firstDistributionAmount.equals(BigDecimal.ZERO)) {
+      Map<String, Object> firstDistributionAttributes = new HashMap<>();
+      firstDistributionAttributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
+      firstDistributionAttributes.put(
+          ModelDistributionTransaction.ATTRIBUTE_ACCOUNT_TRANSACTION_ID,
+          modelAccountTransaction.getId());
+      firstDistributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_AMOUNT,
+          firstDistributionAmount);
+      store.insertInstantRecord(account, ModelDistributionTransaction.TYPE,
+          firstDistributionInstant, firstDistributionAttributes);
+    }
+
     // Add the anti-distribution that cancels out the others when the transaction is executed.
-    Map<String, Object> distributionAttributes = new HashMap<>();
-    distributionAttributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
-    distributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_ACCOUNT_TRANSACTION_ID, modelAccountTransaction.getId());
-    distributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_AMOUNT,
+    Map<String, Object> antiDistributionAttributes = new HashMap<>();
+    antiDistributionAttributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
+    antiDistributionAttributes.put(
+        ModelDistributionTransaction.ATTRIBUTE_ACCOUNT_TRANSACTION_ID,
+        modelAccountTransaction.getId());
+    antiDistributionAttributes.put(ModelDistributionTransaction.ATTRIBUTE_AMOUNT,
         amountPerDistribution.negate().multiply(BigDecimal.valueOf(distributionMonths - 1)));
     store.insertInstantRecord(account, ModelDistributionTransaction.TYPE,
-        mutableDateTime.toInstant(), distributionAttributes);
+        mutableDateTime.toInstant(), antiDistributionAttributes);
   }
 
   private void deleteDistributionTransactions(ModelAccount account, ModelAccountTransaction modelAccountTransaction)
