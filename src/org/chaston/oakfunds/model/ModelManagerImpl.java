@@ -57,19 +57,6 @@ class ModelManagerImpl implements ModelManager {
     this.systemPropertiesManager = systemPropertiesManager;
     this.store = store;
 
-    store.registerType(Model.TYPE);
-
-    store.registerType(RecurringEvent.TYPE);
-    store.registerType(AnnualRecurringEvent.TYPE);
-    store.registerType(MonthlyRecurringEvent.TYPE);
-
-    store.registerType(ModelAccount.TYPE);
-    store.registerType(ModelExpenseAccount.TYPE);
-    store.registerType(ModelRevenueAccount.TYPE);
-
-    store.registerType(ModelAccountTransaction.TYPE);
-    store.registerType(ModelDistributionTransaction.TYPE);
-
     List<? extends SearchTerm> searchTerms =
         ImmutableList.of(AttributeSearchTerm.of(Model.ATTRIBUTE_BASE_MODEL, SearchOperator.EQUALS, true));
     Iterable<Model> baseModels = store.findRecords(Model.TYPE, searchTerms);

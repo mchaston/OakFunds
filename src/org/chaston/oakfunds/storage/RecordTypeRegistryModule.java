@@ -21,11 +21,10 @@ import com.google.inject.Singleton;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class TestStorageModule extends AbstractModule {
+public class RecordTypeRegistryModule extends AbstractModule {
   @Override
   protected void configure() {
-    install(new RecordTypeRegistryModule());
-    bind(InMemoryStore.class).in(Singleton.class);
-    bind(Store.class).to(InMemoryStore.class);
+    bind(RecordTypeRegistry.class).to(RecordTypeRegistryImpl.class);
+    bind(RecordTypeRegistryImpl.class).in(Singleton.class);
   }
 }

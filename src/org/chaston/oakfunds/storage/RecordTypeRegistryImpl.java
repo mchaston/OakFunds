@@ -16,33 +16,38 @@
 package org.chaston.oakfunds.storage;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-abstract class AbstractStore implements Store {
+public class RecordTypeRegistryImpl implements RecordTypeRegistry {
 
   private final Map<String, RecordValidator> recordValidators = new HashMap<>();
 
-  @Override
-  public void registerType(RecordType<?> recordType) {
-    if (recordValidators.containsKey(recordType.getName())) {
-      throw new IllegalStateException(
-          "RecordType " + recordType.getName() + " has already been registered.");
+  @Inject
+  RecordTypeRegistryImpl(Set<RecordType> recordTypes) {
+    for (RecordType recordType : recordTypes) {
+      if (recordValidators.containsKey(recordType.getName())) {
+        throw new IllegalStateException(
+            "RecordType " + recordType.getName() + " was bound more than once.");
+      }
+      recordValidators.put(recordType.getName(), new RecordValidator(recordType));
     }
-    recordValidators.put(recordType.getName(), new RecordValidator(recordType));
   }
 
-  protected void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes)
+  @Override
+  public void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes)
       throws StorageException {
     RecordValidator recordValidator = recordValidators.get(recordType.getName());
     if (recordValidator == null) {
       throw new IllegalStateException(
-          "RecordType " + recordType.getName() + " has not ben registered.");
+          "RecordType " + recordType.getName() + " was not bound.");
     }
     recordValidator.validateAttributes(attributes);
   }

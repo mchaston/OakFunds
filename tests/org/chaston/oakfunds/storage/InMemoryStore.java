@@ -19,6 +19,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
 import org.chaston.oakfunds.util.DateUtil;
 import org.chaston.oakfunds.util.Pair;
 import org.joda.time.Instant;
@@ -32,16 +33,16 @@ import java.util.Map;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class InMemoryStore extends AbstractStore {
+public class InMemoryStore implements Store {
 
   public static final ThreadLocal<InMemoryTransaction> CURRENT_TRANSACTION = new ThreadLocal<>();
 
   private final Map<RecordType, Map<Integer, InMemoryRecord>> tables = new HashMap<>();
+  private final RecordTypeRegistry recordTypeRegistry;
 
-  /**
-   * Stops being externally instantiated.
-   */
-  InMemoryStore() {
+  @Inject
+  InMemoryStore(RecordTypeRegistry recordTypeRegistry) {
+    this.recordTypeRegistry = recordTypeRegistry;
   }
 
   @Override
@@ -61,7 +62,7 @@ public class InMemoryStore extends AbstractStore {
   @Override
   public <T extends Record> T createRecord(RecordType<T> recordType, int id,
       Map<String, Object> attributes) throws StorageException {
-    validateRecordAttributes(recordType, attributes);
+    recordTypeRegistry.validateRecordAttributes(recordType, attributes);
     InMemoryTransaction currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
@@ -73,7 +74,7 @@ public class InMemoryStore extends AbstractStore {
   @Override
   public <T extends Record> T createRecord(RecordType<T> recordType,
       Map<String, Object> attributes) throws StorageException {
-    validateRecordAttributes(recordType, attributes);
+    recordTypeRegistry.validateRecordAttributes(recordType, attributes);
     InMemoryTransaction currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
@@ -104,7 +105,7 @@ public class InMemoryStore extends AbstractStore {
   @Override
   public <T extends Record> T updateRecord(T record, Map<String, Object> attributes)
       throws StorageException {
-    validateRecordAttributes(record.getRecordType(), attributes);
+    recordTypeRegistry.validateRecordAttributes(record.getRecordType(), attributes);
     InMemoryTransaction currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
@@ -162,7 +163,7 @@ public class InMemoryStore extends AbstractStore {
   public <T extends IntervalRecord> T updateIntervalRecord(Record containingRecord,
       RecordType<T> recordType, Instant start, Instant end, Map<String, Object> attributes)
       throws StorageException {
-    validateRecordAttributes(recordType, attributes);
+    recordTypeRegistry.validateRecordAttributes(recordType, attributes);
     InMemoryTransaction currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
@@ -253,7 +254,7 @@ public class InMemoryStore extends AbstractStore {
   public <T extends InstantRecord> T insertInstantRecord(Record containingRecord,
       RecordType<T> recordType, Instant instant, Map<String, Object> attributes)
       throws StorageException {
-    validateRecordAttributes(recordType, attributes);
+    recordTypeRegistry.validateRecordAttributes(recordType, attributes);
     InMemoryTransaction currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
@@ -282,7 +283,7 @@ public class InMemoryStore extends AbstractStore {
   public <T extends InstantRecord> T updateInstantRecord(Record containingRecord,
       RecordType<T> recordType, int id, Instant instant, Map<String, Object> attributes)
       throws StorageException {
-    validateRecordAttributes(recordType, attributes);
+    recordTypeRegistry.validateRecordAttributes(recordType, attributes);
     InMemoryTransaction currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");

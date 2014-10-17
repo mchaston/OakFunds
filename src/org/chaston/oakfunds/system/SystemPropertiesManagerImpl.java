@@ -42,8 +42,6 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
   SystemPropertiesManagerImpl(Store store,
       @Nullable Iterable<SystemPropertyLoader> bootstrappingSystemPropertyLoaders) throws StorageException {
     this.store = store;
-    store.registerType(SystemProperty.TYPE
-    );
 
     if (bootstrappingSystemPropertyLoaders != null) {
       Transaction transaction = store.startTransaction();

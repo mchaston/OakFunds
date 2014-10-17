@@ -32,7 +32,6 @@ class AccountCodeManagerImpl implements AccountCodeManager {
   @Inject
   AccountCodeManagerImpl(Store store) {
     this.store = store;
-    store.registerType(AccountCode.TYPE);
   }
 
   @Override

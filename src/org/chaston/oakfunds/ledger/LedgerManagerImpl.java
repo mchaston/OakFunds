@@ -42,18 +42,6 @@ class LedgerManagerImpl implements LedgerManager {
   @Inject
   LedgerManagerImpl(Store store) {
     this.store = store;
-    store.registerType(Account.TYPE
-    );
-    store.registerType(AccountTransaction.TYPE
-    );
-    store.registerType(BankAccount.TYPE
-    );
-    store.registerType(BankAccountInterest.TYPE
-    );
-    store.registerType(ExpenseAccount.TYPE
-    );
-    store.registerType(RevenueAccount.TYPE
-    );
   }
 
   @Override

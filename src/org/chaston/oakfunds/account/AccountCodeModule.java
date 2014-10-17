@@ -17,6 +17,8 @@ package org.chaston.oakfunds.account;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
+import org.chaston.oakfunds.storage.RecordType;
 import org.chaston.oakfunds.storage.Store;
 
 /**
@@ -28,5 +30,10 @@ public class AccountCodeModule extends AbstractModule {
     requireBinding(Store.class);
     bind(AccountCodeManagerImpl.class).in(Singleton.class);
     bind(AccountCodeManager.class).to(AccountCodeManagerImpl.class);
+
+    Multibinder<RecordType> recordTypeMultibinder
+        = Multibinder.newSetBinder(binder(), RecordType.class);
+
+    recordTypeMultibinder.addBinding().toInstance(AccountCode.TYPE);
   }
 }

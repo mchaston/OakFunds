@@ -27,8 +27,6 @@ import java.util.Map;
  */
 public interface Store {
 
-  void registerType(RecordType<?> recordType);
-
   Transaction startTransaction() throws StorageException;
 
   <T extends Record> T createRecord(RecordType<T> recordType, int id,
