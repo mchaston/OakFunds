@@ -96,7 +96,7 @@ public class SchemaUpdater {
         createTableStatement.append(",\n");
       }
       createTableStatement.append("PRIMARY KEY ( ")
-          .append(SystemColumnDefs.ID.getName()).append(" )\n");
+          .append(SystemColumnDefs.ID_COLUMN_NAME).append(" )\n");
       createTableStatement.append(");");
       try (Statement stmt = connection.createStatement()) {
         stmt.execute(createTableStatement.toString());
@@ -113,7 +113,9 @@ public class SchemaUpdater {
     if (columnDef.isRequired()) {
       statement.append(" NOT NULL");
     }
-    // TODO: account for auto incrementing IDs
+    if (columnDef.isAutoNumbered()) {
+      statement.append(" AUTO_INCREMENT");
+    }
   }
 
   private String toSqlTypeString(ColumnDef columnDef) {

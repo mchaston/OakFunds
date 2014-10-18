@@ -24,8 +24,9 @@ import org.chaston.oakfunds.storage.RecordType;
 public interface BankAccount extends Account<BankAccount> {
 
   static final RecordType<BankAccount> TYPE =
-      new RecordType<>("bank_account", BankAccount.class,
-          Account.TYPE, true);
+      RecordType.builder("bank_account", BankAccount.class)
+          .extensionOf(Account.TYPE)
+          .build();
 
   String ATTRIBUTE_BANK_ACCOUNT_TYPE = "bank_account_type";
 

@@ -18,7 +18,6 @@ package org.chaston.oakfunds.ledger;
 import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.InstantRecord;
 import org.chaston.oakfunds.storage.ParentIdMethod;
-import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 
 import java.math.BigDecimal;
@@ -29,8 +28,9 @@ import java.math.BigDecimal;
 public interface AccountTransaction extends InstantRecord<AccountTransaction> {
 
   public static final RecordType<AccountTransaction> TYPE =
-      new RecordType<>("account_transaction", AccountTransaction.class,
-          Account.TYPE, RecordTemporalType.INSTANT, true);
+      RecordType.builder("account_transaction", AccountTransaction.class)
+          .containedBy(Account.TYPE)
+          .build();
 
   String ATTRIBUTE_AMOUNT = "amount";
   String ATTRIBUTE_COMMENT = "comment";

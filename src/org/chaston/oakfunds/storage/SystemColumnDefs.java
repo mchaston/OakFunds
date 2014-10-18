@@ -23,7 +23,9 @@ import java.sql.Types;
  * TODO(mchaston): write JavaDocs
  */
 public class SystemColumnDefs {
-  public static final ColumnDef ID = new ColumnDef("sys_id", Types.INTEGER, true, true);
+  public static final String ID_COLUMN_NAME = "sys_id";
+  public static final ColumnDef MANUAL_ID = new ColumnDef(ID_COLUMN_NAME, Types.INTEGER, true, false);
+  public static final ColumnDef AUTO_NUMBERED_ID = new ColumnDef(ID_COLUMN_NAME, Types.INTEGER, true, true);
   public static final ColumnDef TYPE = new ColumnDef("sys_type", Types.VARCHAR, true);
   public static final ColumnDef PARENT_ID = new ColumnDef("sys_parent_id", Types.INTEGER, true);
   public static final ColumnDef INSTANT = new ColumnDef("sys_instant", Types.TIMESTAMP, true);

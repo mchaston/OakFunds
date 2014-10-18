@@ -17,7 +17,6 @@ package org.chaston.oakfunds.ledger;
 
 import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.Record;
-import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
@@ -26,8 +25,8 @@ import org.chaston.oakfunds.storage.RecordType;
 public interface Account<T extends Account<T>> extends Record<T> {
 
   static final RecordType<Account> TYPE =
-      new RecordType<>("account", Account.class,
-          null, RecordTemporalType.NONE, false);
+      RecordType.builder("account", Account.class)
+          .build();
 
   String ATTRIBUTE_TITLE = "title";
 

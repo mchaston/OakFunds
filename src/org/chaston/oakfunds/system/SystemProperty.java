@@ -17,7 +17,6 @@ package org.chaston.oakfunds.system;
 
 import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.Record;
-import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
@@ -26,8 +25,8 @@ import org.chaston.oakfunds.storage.RecordType;
 public interface SystemProperty extends Record<SystemProperty> {
 
   static final RecordType<SystemProperty> TYPE =
-      new RecordType<>("system_property", SystemProperty.class,
-          null, RecordTemporalType.NONE, true);
+      RecordType.builder("system_property", SystemProperty.class)
+          .build();
 
   String ATTRIBUTE_NAME = "name";
   String ATTRIBUTE_INTEGER_VALUE = "integer_value";

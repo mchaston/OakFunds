@@ -70,7 +70,9 @@ public class SchemaBuilder {
         : typesBySuperType.asMap().entrySet()) {
       RecordType rootType = entry.getKey();
       TableDef.Builder tableDefBuilder = TableDef.builder(rootType.getName());
-      tableDefBuilder.addColumnDef(SystemColumnDefs.ID);
+      tableDefBuilder.addColumnDef(rootType.isAutoIncrementId() ?
+          SystemColumnDefs.AUTO_NUMBERED_ID :
+          SystemColumnDefs.MANUAL_ID);
       tableDefBuilder.addColumnDef(SystemColumnDefs.TYPE);
 
       switch (rootType.getTemporalType()) {

@@ -22,13 +22,13 @@ public class ColumnDef {
   private final String name;
   private final int type;
   private final boolean required;
-  private final boolean unique;
+  private final boolean autoNumbered;
 
-  public ColumnDef(String name, int type, boolean required, boolean unique) {
+  public ColumnDef(String name, int type, boolean required, boolean autoNumbered) {
     this.name = name;
     this.type = type;
     this.required = required;
-    this.unique = unique;
+    this.autoNumbered = autoNumbered;
   }
 
   public ColumnDef(String name, int type, boolean required) {
@@ -47,7 +47,7 @@ public class ColumnDef {
     return required;
   }
 
-  public boolean isUnique() {
-    return unique;
+  public boolean isAutoNumbered() {
+    return autoNumbered;
   }
 }

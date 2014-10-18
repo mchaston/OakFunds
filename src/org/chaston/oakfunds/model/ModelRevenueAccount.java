@@ -25,8 +25,9 @@ import org.chaston.oakfunds.storage.RecordType;
 public interface ModelRevenueAccount extends ModelAccount<ModelRevenueAccount> {
 
   static final RecordType<ModelRevenueAccount> TYPE =
-      new RecordType<>("model_revenue_account", ModelRevenueAccount.class,
-          ModelAccount.TYPE, true);
+      RecordType.builder("model_revenue_account", ModelRevenueAccount.class)
+          .extensionOf(ModelAccount.TYPE)
+          .build();
 
   String ATTRIBUTE_DEPOSIT_BANK_ACCOUNT_TYPE = "deposit_bank_account_type";
 

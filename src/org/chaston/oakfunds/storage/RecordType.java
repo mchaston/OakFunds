@@ -30,53 +30,53 @@ public class RecordType<T extends Record> {
 
   private final String name;
   private final Class<T> recordTypeClass;
+  private final boolean autoIncrementId;
   @Nullable
   private final RecordType<?> containingType;
   private final RecordTemporalType temporalType;
   private final RecordType parentType;
-  private final boolean isFinalType;
   private final ImmutableMap<String, AttributeType> attributes;
 
-  public RecordType(String name, Class<T> recordTypeClass, RecordType<? super T> parentType, boolean isFinalType) {
+  private RecordType(String name, Class<T> recordTypeClass,
+      boolean autoIncrementId,
+      @Nullable RecordType<? super T> parentType,
+      @Nullable RecordType<?> containingType) {
     this.name = name;
     this.recordTypeClass = recordTypeClass;
-    this.containingType = parentType.getRootType().getContainingType();
-    this.temporalType = parentType.getRootType().getTemporalType();
-    this.parentType = parentType;
-    this.isFinalType = isFinalType;
-    this.attributes = buildAttributes(recordTypeClass, parentType.getRecordTypeClass());
-  }
-
-  public RecordType(String name, Class<T> recordTypeClass,
-      @Nullable RecordType<?> containingType, RecordTemporalType temporalType, boolean isFinalType) {
-    this.name = name;
-    this.recordTypeClass = recordTypeClass;
-    this.containingType = containingType;
-    this.temporalType = temporalType;
-    switch (temporalType) {
-      case NONE:
-        Preconditions.checkArgument(interfacesContain(recordTypeClass, Record.class),
-            "None temporal types must extend Record.");
-        break;
-      case INSTANT:
+    this.autoIncrementId = autoIncrementId;
+    if (parentType != null && containingType != null) {
+      throw new IllegalStateException(
+          "A type cannot have a parent type and an explicitly declared containing type.");
+    }
+    if (parentType != null) {
+      Preconditions.checkArgument(
+          interfacesContain(recordTypeClass, parentType.getRecordTypeClass()),
+          "Type " + recordTypeClass.getName() + " does not directly extend from "
+              + parentType.getRecordTypeClass().getName() + ".");
+      this.parentType = parentType;
+      this.containingType = parentType.getContainingType();
+      this.temporalType = parentType.getTemporalType();
+    } else {
+      this.parentType = null;
+      this.containingType = containingType;
+      if (interfacesContain(recordTypeClass, InstantRecord.class)) {
+        this.temporalType = RecordTemporalType.INSTANT;
         Preconditions.checkArgument(containingType != null,
             "Instant types must have a containing type.");
-        Preconditions.checkArgument(interfacesContain(recordTypeClass, InstantRecord.class),
-            "Instant temporal types must extend InstantRecord.");
-        break;
-      case INTERVAL:
+      } else if (interfacesContain(recordTypeClass, IntervalRecord.class)) {
+        this.temporalType = RecordTemporalType.INTERVAL;
         Preconditions.checkArgument(containingType != null,
             "Interval types must have a containing type.");
-        Preconditions.checkArgument(interfacesContain(recordTypeClass, IntervalRecord.class),
-            "Interval temporal types must extend IntervalRecord.");
-        break;
-      default:
-        throw new UnsupportedOperationException(
-            "Temporal type " + temporalType + " is not supported.");
+      } else if (interfacesContain(recordTypeClass, Record.class)) {
+        this.temporalType = RecordTemporalType.NONE;
+      } else {
+        throw new IllegalArgumentException(
+            "Type " + recordTypeClass.getName()
+                + " must extend from one of the base record types.");
+      }
     }
-    this.parentType = null;
-    this.isFinalType = isFinalType;
-    this.attributes = buildAttributes(recordTypeClass, null);
+    this.attributes = buildAttributes(recordTypeClass,
+        parentType == null ? null : parentType.getRecordTypeClass());
   }
 
   private static boolean interfacesContain(Class<?> superInterface,
@@ -149,16 +149,16 @@ public class RecordType<T extends Record> {
     return this;
   }
 
-  public boolean isFinalType() {
-    return isFinalType;
-  }
-
   public Class<T> getRecordTypeClass() {
     return recordTypeClass;
   }
 
   public String getName() {
     return name;
+  }
+
+  public boolean isAutoIncrementId() {
+    return autoIncrementId;
   }
 
   @Override
@@ -177,5 +177,42 @@ public class RecordType<T extends Record> {
 
   public ImmutableMap<String, AttributeType> getAttributes() {
     return attributes;
+  }
+
+  public static <T extends Record<T>> RecordTypeBuilder<T> builder(
+      String name, Class<T> recordTypeClass) {
+    return new RecordTypeBuilder<>(name, recordTypeClass);
+  }
+
+  public static class RecordTypeBuilder<T extends Record<T>> {
+    private final String name;
+    private final Class<T> recordTypeClass;
+    private boolean autoIncrementId = true;
+    private RecordType<?> containingType;
+    private RecordType<? super T> parentType;
+
+    private RecordTypeBuilder(String name, Class<T> recordTypeClass) {
+      this.name = name;
+      this.recordTypeClass = recordTypeClass;
+    }
+
+    public RecordTypeBuilder<T> withManualNumbering() {
+      this.autoIncrementId = false;
+      return this;
+    }
+
+    public RecordTypeBuilder<T> containedBy(RecordType<?> containingType) {
+      this.containingType = containingType;
+      return this;
+    }
+
+    public RecordTypeBuilder<T> extensionOf(RecordType<? super T> parentType) {
+      this.parentType = parentType;
+      return this;
+    }
+
+    public RecordType<T> build() {
+      return new RecordType<T>(name, recordTypeClass, autoIncrementId, parentType, containingType);
+    }
   }
 }

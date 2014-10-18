@@ -17,7 +17,6 @@ package org.chaston.oakfunds.ledger;
 
 import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.IntervalRecord;
-import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 
 import java.math.BigDecimal;
@@ -28,8 +27,9 @@ import java.math.BigDecimal;
 public interface BankAccountInterest extends IntervalRecord<BankAccountInterest> {
 
   public static final RecordType<BankAccountInterest> TYPE =
-      new RecordType<>("bank_account_interest", BankAccountInterest.class,
-          BankAccount.TYPE, RecordTemporalType.INTERVAL, true);
+      RecordType.builder("bank_account_interest", BankAccountInterest.class)
+          .containedBy(BankAccount.TYPE)
+          .build();
 
   String ATTRIBUTE_INTEREST_RATE = "interest_rate";
 

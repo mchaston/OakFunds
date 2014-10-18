@@ -17,7 +17,6 @@ package org.chaston.oakfunds.model;
 
 import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.Record;
-import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
@@ -26,8 +25,8 @@ import org.chaston.oakfunds.storage.RecordType;
 public interface ModelAccount<T extends ModelAccount<T>> extends Record<T> {
 
   public static final RecordType<ModelAccount> TYPE =
-      new RecordType<>("model_account", ModelAccount.class,
-          null, RecordTemporalType.NONE, false);
+      RecordType.builder("model_account", ModelAccount.class)
+          .build();
 
   String ATTRIBUTE_TITLE = "title";
 

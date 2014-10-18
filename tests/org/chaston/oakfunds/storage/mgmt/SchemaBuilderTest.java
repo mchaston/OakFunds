@@ -25,7 +25,6 @@ import org.chaston.oakfunds.storage.InstantRecord;
 import org.chaston.oakfunds.storage.IntervalRecord;
 import org.chaston.oakfunds.storage.ParentIdMethod;
 import org.chaston.oakfunds.storage.Record;
-import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 import org.chaston.oakfunds.storage.SystemColumnDefs;
 import org.joda.time.Instant;
@@ -58,7 +57,7 @@ public class SchemaBuilderTest {
     ImmutableMap<String, ColumnDef> columnDefs = tableDef.getColumnDefs();
     assertEquals(9, columnDefs.size());
 
-    assertSame(SystemColumnDefs.ID, columnDefs.get("sys_id"));
+    assertSame(SystemColumnDefs.MANUAL_ID, columnDefs.get("sys_id"));
     assertSame(SystemColumnDefs.TYPE, columnDefs.get("sys_type"));
 
     assertContainsColumn(columnDefs, "name", Types.VARCHAR, true);
@@ -87,7 +86,7 @@ public class SchemaBuilderTest {
     ImmutableMap<String, ColumnDef> columnDefs = tableDef.getColumnDefs();
     assertEquals(6, columnDefs.size());
 
-    assertSame(SystemColumnDefs.ID, columnDefs.get("sys_id"));
+    assertSame(SystemColumnDefs.AUTO_NUMBERED_ID, columnDefs.get("sys_id"));
     assertSame(SystemColumnDefs.TYPE, columnDefs.get("sys_type"));
 
     assertContainsColumn(columnDefs, "name", Types.VARCHAR, true);
@@ -111,7 +110,7 @@ public class SchemaBuilderTest {
     ImmutableMap<String, ColumnDef> columnDefs = tableDef.getColumnDefs();
     assertEquals(5, columnDefs.size());
 
-    assertSame(SystemColumnDefs.ID, columnDefs.get("sys_id"));
+    assertSame(SystemColumnDefs.AUTO_NUMBERED_ID, columnDefs.get("sys_id"));
     assertSame(SystemColumnDefs.TYPE, columnDefs.get("sys_type"));
     assertSame(SystemColumnDefs.INSTANT, columnDefs.get("sys_instant"));
     assertSame(SystemColumnDefs.PARENT_ID, columnDefs.get("sys_parent_id"));
@@ -134,7 +133,7 @@ public class SchemaBuilderTest {
     ImmutableMap<String, ColumnDef> columnDefs = tableDef.getColumnDefs();
     assertEquals(6, columnDefs.size());
 
-    assertSame(SystemColumnDefs.ID, columnDefs.get("sys_id"));
+    assertSame(SystemColumnDefs.AUTO_NUMBERED_ID, columnDefs.get("sys_id"));
     assertSame(SystemColumnDefs.TYPE, columnDefs.get("sys_type"));
     assertSame(SystemColumnDefs.START_TIME, columnDefs.get("sys_start_time"));
     assertSame(SystemColumnDefs.END_TIME, columnDefs.get("sys_end_time"));
@@ -153,8 +152,9 @@ public class SchemaBuilderTest {
 
   private interface TestSimpleRecord extends Record<TestSimpleRecord> {
     final RecordType<TestSimpleRecord> TYPE =
-        new RecordType<>("simple_record", TestSimpleRecord.class,
-            null, RecordTemporalType.NONE, true);
+        RecordType.builder("simple_record", TestSimpleRecord.class)
+            .withManualNumbering()
+            .build();
 
     @AttributeMethod(attribute = "name", required = true)
     String getName();
@@ -199,8 +199,8 @@ public class SchemaBuilderTest {
 
   private interface TestRootRecord<T extends TestRootRecord> extends Record<T> {
     final RecordType<TestRootRecord> TYPE =
-        new RecordType<>("complex_record", TestRootRecord.class,
-            null, RecordTemporalType.NONE, false);
+        RecordType.builder("complex_record", TestRootRecord.class)
+            .build();
 
     @AttributeMethod(attribute = "name", required = true)
     String getName();
@@ -208,8 +208,9 @@ public class SchemaBuilderTest {
 
   private interface TestSubRecord1 extends TestRootRecord<TestSubRecord1> {
     final RecordType<TestSubRecord1> TYPE =
-        new RecordType<>("sub1", TestSubRecord1.class,
-            TestRootRecord.TYPE, true);
+        RecordType.builder("sub1", TestSubRecord1.class)
+            .extensionOf(TestRootRecord.TYPE)
+            .build();
 
     @AttributeMethod(attribute = "string")
     String getString();
@@ -217,8 +218,9 @@ public class SchemaBuilderTest {
 
   private interface TestSubRecord2<T extends TestSubRecord2> extends TestRootRecord<T> {
     final RecordType<TestSubRecord2> TYPE =
-        new RecordType<>("sub2", TestSubRecord2.class,
-            TestRootRecord.TYPE, false);
+        RecordType.builder("sub2", TestSubRecord2.class)
+            .extensionOf(TestRootRecord.TYPE)
+            .build();
 
     @AttributeMethod(attribute = "string")
     String getString();
@@ -226,8 +228,9 @@ public class SchemaBuilderTest {
 
   private interface TestSubRecord21 extends TestSubRecord2<TestSubRecord21> {
     final RecordType<TestSubRecord21> TYPE =
-        new RecordType<>("sub21", TestSubRecord21.class,
-            TestSubRecord2.TYPE, true);
+        RecordType.builder("sub21", TestSubRecord21.class)
+            .extensionOf(TestSubRecord2.TYPE)
+            .build();
 
     @AttributeMethod(attribute = "other_string")
     String getOtherString();
@@ -235,8 +238,9 @@ public class SchemaBuilderTest {
 
   private interface TestInstantRecord extends InstantRecord<TestInstantRecord> {
     final RecordType<TestInstantRecord> TYPE =
-        new RecordType<>("instant_record", TestInstantRecord.class,
-            TestSimpleRecord.TYPE, RecordTemporalType.INSTANT, true);
+        RecordType.builder("instant_record", TestInstantRecord.class)
+            .containedBy(TestSimpleRecord.TYPE)
+            .build();
 
     @ParentIdMethod
     int getSimpleRecordId();
@@ -247,8 +251,9 @@ public class SchemaBuilderTest {
 
   private interface TestIntervalRecord extends IntervalRecord<TestIntervalRecord> {
     final RecordType<TestIntervalRecord> TYPE =
-        new RecordType<>("interval_record", TestIntervalRecord.class,
-            TestSimpleRecord.TYPE, RecordTemporalType.INTERVAL, true);
+        RecordType.builder("interval_record", TestIntervalRecord.class)
+            .containedBy(TestSimpleRecord.TYPE)
+            .build();
 
     @ParentIdMethod
     int getSimpleRecordId();

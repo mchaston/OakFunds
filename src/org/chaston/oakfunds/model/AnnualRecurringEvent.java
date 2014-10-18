@@ -24,8 +24,9 @@ import org.chaston.oakfunds.storage.RecordType;
 public interface AnnualRecurringEvent extends RecurringEvent<AnnualRecurringEvent> {
 
   static final RecordType<AnnualRecurringEvent> TYPE =
-      new RecordType<>("annual_recurring_event",
-          AnnualRecurringEvent.class, RecurringEvent.TYPE, true);
+      RecordType.builder("annual_recurring_event", AnnualRecurringEvent.class)
+          .extensionOf(RecurringEvent.TYPE)
+          .build();
 
   String ATTRIBUTE_PAYMENT_MONTH = "payment_month";
 

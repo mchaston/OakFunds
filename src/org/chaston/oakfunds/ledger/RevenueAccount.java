@@ -24,8 +24,9 @@ import org.chaston.oakfunds.storage.RecordType;
 public interface RevenueAccount extends Account<RevenueAccount> {
 
   static final RecordType<RevenueAccount> TYPE =
-      new RecordType<>("revenue_account", RevenueAccount.class,
-          Account.TYPE, true);
+      RecordType.builder("revenue_account", RevenueAccount.class)
+          .extensionOf(Account.TYPE)
+          .build();
 
   String ATTRIBUTE_DEFAULT_DEPOSIT_ACCOUNT_ID = "default_deposit_account_id";
 

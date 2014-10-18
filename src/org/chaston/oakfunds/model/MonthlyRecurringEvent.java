@@ -23,6 +23,7 @@ import org.chaston.oakfunds.storage.RecordType;
 public interface MonthlyRecurringEvent extends RecurringEvent<MonthlyRecurringEvent> {
 
   static final RecordType<MonthlyRecurringEvent> TYPE =
-      new RecordType<>("monthly_recurring_event", MonthlyRecurringEvent.class,
-          RecurringEvent.TYPE, true);
+      RecordType.builder("monthly_recurring_event", MonthlyRecurringEvent.class)
+          .extensionOf(RecurringEvent.TYPE)
+          .build();
 }

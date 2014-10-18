@@ -298,13 +298,14 @@ public class IntervalRecordSetTest {
 
   private static interface TestRecord extends Record<TestRecord> {
     static final RecordType<TestRecord> TYPE =
-        new RecordType<>("test_type", TestRecord.class,
-            null, RecordTemporalType.NONE, true);
+        RecordType.builder("test_type", TestRecord.class)
+            .build();
   }
 
   private static interface TestIntervalRecord extends IntervalRecord<TestIntervalRecord> {
     static final RecordType<TestIntervalRecord> TYPE =
-        new RecordType<>("test_interval_type", TestIntervalRecord.class,
-            TestRecord.TYPE, RecordTemporalType.INTERVAL, true);
+        RecordType.builder("test_interval_type", TestIntervalRecord.class)
+            .containedBy(TestRecord.TYPE)
+            .build();
   }
 }

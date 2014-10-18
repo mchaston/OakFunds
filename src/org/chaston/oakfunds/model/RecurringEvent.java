@@ -17,7 +17,6 @@ package org.chaston.oakfunds.model;
 
 import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.IntervalRecord;
-import org.chaston.oakfunds.storage.RecordTemporalType;
 import org.chaston.oakfunds.storage.RecordType;
 
 import java.math.BigDecimal;
@@ -28,8 +27,9 @@ import java.math.BigDecimal;
 public interface RecurringEvent<T extends RecurringEvent> extends IntervalRecord<T>, ModelBound, AccountChild {
 
   static final RecordType<RecurringEvent> TYPE =
-      new RecordType<>("record_type", RecurringEvent.class,
-          ModelAccount.TYPE, RecordTemporalType.INTERVAL, false);
+      RecordType.builder("record_type", RecurringEvent.class)
+          .containedBy(ModelAccount.TYPE)
+          .build();
 
   String ATTRIBUTE_AMOUNT = "amount";
 

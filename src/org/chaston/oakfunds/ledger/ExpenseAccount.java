@@ -24,8 +24,9 @@ import org.chaston.oakfunds.storage.RecordType;
 public interface ExpenseAccount extends Account<ExpenseAccount> {
 
   static final RecordType<ExpenseAccount> TYPE =
-      new RecordType<>("expense_account", ExpenseAccount.class,
-          Account.TYPE, true);
+      RecordType.builder("expense_account", ExpenseAccount.class)
+          .extensionOf(Account.TYPE)
+          .build();
 
   String ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID = "default_source_account_id";
 
