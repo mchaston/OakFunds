@@ -68,19 +68,27 @@ public class RecordType<T extends Record> {
       @Nullable Class<?> parentClass) {
     Map<String, AttributeType> attributes = new HashMap<>();
     extractAttributesFromMethods(attributes, recordTypeClass);
+    boolean seenParentClass = false;
     for (Class<?> interfaceClass : recordTypeClass.getInterfaces()) {
-      if (!interfaceClass.equals(parentClass)) {
-        ImmutableMap<String, AttributeType> superInterfaceAttributes =
-            buildAttributes(interfaceClass, null);
-        for (String otherAttribute : superInterfaceAttributes.keySet()) {
-          if (attributes.containsKey(otherAttribute)) {
-            throw new IllegalStateException("Attribute " + otherAttribute
-                + " is declared more than once for type " + recordTypeClass.getName()
-                + " via super types.");
-          }
-        }
-        attributes.putAll(superInterfaceAttributes);
+      if (interfaceClass.equals(parentClass)) {
+        seenParentClass = true;
+        continue;
       }
+      ImmutableMap<String, AttributeType> superInterfaceAttributes =
+          buildAttributes(interfaceClass, null);
+      for (String otherAttribute : superInterfaceAttributes.keySet()) {
+        if (attributes.containsKey(otherAttribute)) {
+          throw new IllegalStateException("Attribute " + otherAttribute
+              + " is declared more than once for type " + recordTypeClass.getName()
+              + " via super types.");
+        }
+      }
+      attributes.putAll(superInterfaceAttributes);
+    }
+    if (parentClass != null && !seenParentClass) {
+      throw new IllegalStateException("Parent class " + parentClass.getName()
+          + " was not seen while extracting attributes for " + recordTypeClass.getName()
+          + ".  Was the parent type set correctly?");
     }
     return ImmutableMap.copyOf(attributes);
   }
