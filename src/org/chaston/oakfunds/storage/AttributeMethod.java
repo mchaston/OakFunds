@@ -33,7 +33,8 @@ public @interface AttributeMethod {
    * <ul>
    *   <li>It must have at least one character.</li>
    *   <li>It must only use lower case characters and the '_' character.</li>
-   *   <li>It cannot start with a '_' character as that is used by system columns.</li>
+   *   <li>It cannot start with "sys_" as that is used by system columns.</li>
+   *   <li>It cannot start with a '_' character as databases do not support that.</li>
    *   <li>It cannot end with a '_' character as that is considered bad form.</li>
    *   <li>It cannot contain two adjacent '_' characters as that is considered bad form due
    *       to its use for subtype namespacing by the system.</li>
