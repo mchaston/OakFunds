@@ -21,5 +21,5 @@ package org.chaston.oakfunds.storage;
 public enum RecordTemporalType {
   NONE,
   INSTANT,
-  TYPE, INTERVAL
+  INTERVAL
 }

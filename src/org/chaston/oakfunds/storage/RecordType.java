@@ -53,15 +53,40 @@ public class RecordType<T extends Record> {
     this.recordTypeClass = recordTypeClass;
     this.containingType = containingType;
     this.temporalType = temporalType;
-    if (temporalType == RecordTemporalType.INSTANT) {
-      Preconditions.checkArgument(containingType != null, "Instant types must have a containing type.");
-    }
-    if (temporalType == RecordTemporalType.INTERVAL) {
-      Preconditions.checkArgument(containingType != null, "Interval types must have a containing type.");
+    switch (temporalType) {
+      case NONE:
+        Preconditions.checkArgument(interfacesContain(recordTypeClass, Record.class),
+            "None temporal types must extend Record.");
+        break;
+      case INSTANT:
+        Preconditions.checkArgument(containingType != null,
+            "Instant types must have a containing type.");
+        Preconditions.checkArgument(interfacesContain(recordTypeClass, InstantRecord.class),
+            "Instant temporal types must extend InstantRecord.");
+        break;
+      case INTERVAL:
+        Preconditions.checkArgument(containingType != null,
+            "Interval types must have a containing type.");
+        Preconditions.checkArgument(interfacesContain(recordTypeClass, IntervalRecord.class),
+            "Interval temporal types must extend IntervalRecord.");
+        break;
+      default:
+        throw new UnsupportedOperationException(
+            "Temporal type " + temporalType + " is not supported.");
     }
     this.parentType = null;
     this.isFinalType = isFinalType;
     this.attributes = buildAttributes(recordTypeClass, null);
+  }
+
+  private static boolean interfacesContain(Class<?> superInterface,
+      Class<?> expectedSubInterface) {
+    for (Class<?> interfaceClass : superInterface.getInterfaces()) {
+      if (interfaceClass.equals(expectedSubInterface)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static ImmutableMap<String, AttributeType> buildAttributes(Class<?> recordTypeClass,
