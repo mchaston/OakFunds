@@ -13,24 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.model;
-
-import org.chaston.oakfunds.storage.Identifiable;
+package org.chaston.oakfunds.storage;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public enum DistributionTimeUnit implements Identifiable {
-  MONTHS {
-    @Override
-    public byte identifier() {
-      return 1;
-    }
-  },
-  YEARS {
-    @Override
-    public byte identifier() {
-      return 2;
-    }
-  }
+public interface Identifiable {
+  byte identifier();
 }

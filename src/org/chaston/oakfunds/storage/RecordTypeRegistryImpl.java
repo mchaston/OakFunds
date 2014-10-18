@@ -123,7 +123,7 @@ public class RecordTypeRegistryImpl implements RecordTypeRegistry {
                 "Attribute " + attribute + " on RecordType " + recordType + " is required.");
           }
         } else {
-          if (!type.equals(value.getClass())) {
+          if (!type.isAssignableFrom(value.getClass())) {
             throw new StorageException(
                 "Attribute " + attribute + " on RecordType " + recordType + " is of type "
                     + type + ", but an object of type " + value.getClass() + " was provided.");

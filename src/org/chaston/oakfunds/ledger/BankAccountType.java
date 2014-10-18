@@ -15,10 +15,22 @@
  */
 package org.chaston.oakfunds.ledger;
 
+import org.chaston.oakfunds.storage.Identifiable;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
-public enum BankAccountType {
-  OPERATING,
-  RESERVE
+public enum BankAccountType implements Identifiable {
+  OPERATING {
+    @Override
+    public byte identifier() {
+      return 1;
+    }
+  },
+  RESERVE {
+    @Override
+    public byte identifier() {
+      return 2;
+    }
+  }
 }
