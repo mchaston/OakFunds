@@ -17,8 +17,6 @@ package org.chaston.oakfunds.model;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
-import org.chaston.oakfunds.storage.RecordType;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.system.SystemPropertiesManager;
 
@@ -28,25 +26,10 @@ import org.chaston.oakfunds.system.SystemPropertiesManager;
 public class ModelModule extends AbstractModule {
   @Override
   protected void configure() {
+    install(new ModelTypesModule());
     requireBinding(SystemPropertiesManager.class);
     requireBinding(Store.class);
     bind(ModelManagerImpl.class).in(Singleton.class);
     bind(ModelManager.class).to(ModelManagerImpl.class);
-
-    Multibinder<RecordType> recordTypeMultibinder
-        = Multibinder.newSetBinder(binder(), RecordType.class);
-
-    recordTypeMultibinder.addBinding().toInstance(Model.TYPE);
-
-    recordTypeMultibinder.addBinding().toInstance(RecurringEvent.TYPE);
-    recordTypeMultibinder.addBinding().toInstance(AnnualRecurringEvent.TYPE);
-    recordTypeMultibinder.addBinding().toInstance(MonthlyRecurringEvent.TYPE);
-
-    recordTypeMultibinder.addBinding().toInstance(ModelAccount.TYPE);
-    recordTypeMultibinder.addBinding().toInstance(ModelExpenseAccount.TYPE);
-    recordTypeMultibinder.addBinding().toInstance(ModelRevenueAccount.TYPE);
-
-    recordTypeMultibinder.addBinding().toInstance(ModelAccountTransaction.TYPE);
-    recordTypeMultibinder.addBinding().toInstance(ModelDistributionTransaction.TYPE);
   }
 }

@@ -13,24 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.system;
+package org.chaston.oakfunds.account;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Key;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import org.chaston.oakfunds.storage.Store;
+import com.google.inject.multibindings.Multibinder;
+import org.chaston.oakfunds.storage.RecordType;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-class BaseSystemModule extends AbstractModule {
+public class AccountTypesModule extends AbstractModule {
   @Override
   protected void configure() {
-    install(new SystemTypesModule());
-    requireBinding(Store.class);
-    requireBinding(Key.get(new TypeLiteral<Iterable<SystemPropertyLoader>>() {}));
-    bind(SystemPropertiesManagerImpl.class).in(Singleton.class);
-    bind(SystemPropertiesManager.class).to(SystemPropertiesManagerImpl.class);
+    Multibinder<RecordType> recordTypeMultibinder
+        = Multibinder.newSetBinder(binder(), RecordType.class);
+
+    recordTypeMultibinder.addBinding().toInstance(AccountCode.TYPE);
   }
 }

@@ -16,21 +16,18 @@
 package org.chaston.oakfunds.system;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Key;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import org.chaston.oakfunds.storage.Store;
+import com.google.inject.multibindings.Multibinder;
+import org.chaston.oakfunds.storage.RecordType;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-class BaseSystemModule extends AbstractModule {
+public class SystemTypesModule extends AbstractModule {
   @Override
   protected void configure() {
-    install(new SystemTypesModule());
-    requireBinding(Store.class);
-    requireBinding(Key.get(new TypeLiteral<Iterable<SystemPropertyLoader>>() {}));
-    bind(SystemPropertiesManagerImpl.class).in(Singleton.class);
-    bind(SystemPropertiesManager.class).to(SystemPropertiesManagerImpl.class);
+    Multibinder<RecordType> recordTypeMultibinder
+        = Multibinder.newSetBinder(binder(), RecordType.class);
+
+    recordTypeMultibinder.addBinding().toInstance(SystemProperty.TYPE);
   }
 }

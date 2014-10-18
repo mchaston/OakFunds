@@ -16,18 +16,23 @@
 package org.chaston.oakfunds.ledger;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
-import org.chaston.oakfunds.storage.Store;
+import com.google.inject.multibindings.Multibinder;
+import org.chaston.oakfunds.storage.RecordType;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class LedgerModule extends AbstractModule {
+public class LedgerTypesModule extends AbstractModule {
   @Override
   protected void configure() {
-    install(new LedgerTypesModule());
-    requireBinding(Store.class);
-    bind(LedgerManagerImpl.class).in(Singleton.class);
-    bind(LedgerManager.class).to(LedgerManagerImpl.class);
+    Multibinder<RecordType> recordTypeMultibinder
+        = Multibinder.newSetBinder(binder(), RecordType.class);
+
+    recordTypeMultibinder.addBinding().toInstance(Account.TYPE);
+    recordTypeMultibinder.addBinding().toInstance(AccountTransaction.TYPE);
+    recordTypeMultibinder.addBinding().toInstance(BankAccount.TYPE);
+    recordTypeMultibinder.addBinding().toInstance(BankAccountInterest.TYPE);
+    recordTypeMultibinder.addBinding().toInstance(ExpenseAccount.TYPE);
+    recordTypeMultibinder.addBinding().toInstance(RevenueAccount.TYPE);
   }
 }
