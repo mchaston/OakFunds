@@ -18,7 +18,6 @@ package org.chaston.oakfunds.storage;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -71,20 +70,17 @@ public class RecordTypeRegistryImpl implements RecordTypeRegistry {
 
     public RecordValidator(RecordType<?> recordType) {
       this.recordType = recordType;
-      extractAttributes(recordType.getRecordTypeClass());
+      extractAttributes(recordType);
     }
 
-    private void extractAttributes(Class<?> clazz) {
-      for (Method method : clazz.getMethods()) {
-        AttributeMethod attributeMethod = method.getAnnotation(AttributeMethod.class);
-        if (attributeMethod != null) {
-          attributeValidators.put(attributeMethod.attribute(),
-              new AttributeValidator(attributeMethod.attribute(), method.getReturnType(),
-                  attributeMethod.required()));
-        }
+    private void extractAttributes(RecordType<?> recordType) {
+      for (AttributeType attributeType : recordType.getAttributes().values()) {
+        attributeValidators.put(attributeType.getName(),
+            new AttributeValidator(attributeType.getName(), attributeType.getType(),
+                attributeType.isRequired()));
       }
-      for (Class<?> superInterface : clazz.getInterfaces()) {
-        extractAttributes(superInterface);
+      if (recordType.getParentType() != null) {
+        extractAttributes(recordType.getParentType());
       }
     }
 

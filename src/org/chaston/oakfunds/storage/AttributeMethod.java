@@ -26,6 +26,23 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface AttributeMethod {
+  /**
+   * The name of the attribute that this method binds to.
+   *
+   * <p>The rules for this are:
+   * <ul>
+   *   <li>It must have at least one character.</li>
+   *   <li>It must only use lower case characters and the '_' character.</li>
+   *   <li>It cannot start with a '_' character as that is used by system columns.</li>
+   *   <li>It cannot end with a '_' character as that is considered bad form.</li>
+   *   <li>It cannot contain two adjacent '_' characters as that is considered bad form due
+   *       to its use for subtype namespacing by the system.</li>
+   *   <li>It cannot be the same as any other attribute in the same type.</li>
+   *   <li>If the type is in an inheritance hierarchy, it cannot have the same name as
+   *       any attributes in its parent types (but it can be the same as its sibling types, but
+   *       this should be implemented as a common interface).</li>
+   * </ul>
+   */
   String attribute();
 
   boolean required() default false;

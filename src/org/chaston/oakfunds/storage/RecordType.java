@@ -16,8 +16,12 @@
 package org.chaston.oakfunds.storage;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -31,6 +35,7 @@ public class RecordType<T extends Record> {
   private final RecordTemporalType temporalType;
   private final RecordType parentType;
   private final boolean isFinalType;
+  private final ImmutableMap<String, AttributeType> attributes;
 
   public RecordType(String name, Class<T> recordTypeClass, RecordType<? super T> parentType, boolean isFinalType) {
     this.name = name;
@@ -39,6 +44,7 @@ public class RecordType<T extends Record> {
     this.temporalType = parentType.getRootType().getTemporalType();
     this.parentType = parentType;
     this.isFinalType = isFinalType;
+    this.attributes = buildAttributes(recordTypeClass, parentType.getRecordTypeClass());
   }
 
   public RecordType(String name, Class<T> recordTypeClass,
@@ -55,10 +61,52 @@ public class RecordType<T extends Record> {
     }
     this.parentType = null;
     this.isFinalType = isFinalType;
+    this.attributes = buildAttributes(recordTypeClass, null);
+  }
+
+  private static ImmutableMap<String, AttributeType> buildAttributes(Class<?> recordTypeClass,
+      @Nullable Class<?> parentClass) {
+    Map<String, AttributeType> attributes = new HashMap<>();
+    extractAttributesFromMethods(attributes, recordTypeClass);
+    for (Class<?> interfaceClass : recordTypeClass.getInterfaces()) {
+      if (!interfaceClass.equals(parentClass)) {
+        ImmutableMap<String, AttributeType> superInterfaceAttributes =
+            buildAttributes(interfaceClass, null);
+        for (String otherAttribute : superInterfaceAttributes.keySet()) {
+          if (attributes.containsKey(otherAttribute)) {
+            throw new IllegalStateException("Attribute " + otherAttribute
+                + " is declared more than once for type " + recordTypeClass.getName()
+                + " via super types.");
+          }
+        }
+        attributes.putAll(superInterfaceAttributes);
+      }
+    }
+    return ImmutableMap.copyOf(attributes);
+  }
+
+  private static void extractAttributesFromMethods(Map<String, AttributeType> attributes,
+      Class<?> clazz) {
+    for (Method method : clazz.getDeclaredMethods()) {
+      AttributeMethod attributeMethod = method.getAnnotation(AttributeMethod.class);
+      if (attributeMethod != null) {
+        if (attributes.containsKey(attributeMethod.attribute())) {
+          throw new IllegalStateException("Attribute " + attributeMethod.attribute()
+              + " is declared more than once for type " + clazz.getName() + ".");
+        }
+        attributes.put(attributeMethod.attribute(),
+            new AttributeType(attributeMethod.attribute(),
+                method.getReturnType(), attributeMethod.required()));
+      }
+    }
   }
 
   public RecordTemporalType getTemporalType() {
     return temporalType;
+  }
+
+  public RecordType getParentType() {
+    return parentType;
   }
 
   public RecordType getRootType() {
@@ -92,5 +140,9 @@ public class RecordType<T extends Record> {
   @Nullable
   public RecordType<?> getContainingType() {
     return containingType;
+  }
+
+  public ImmutableMap<String, AttributeType> getAttributes() {
+    return attributes;
   }
 }
