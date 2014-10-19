@@ -733,10 +733,9 @@ class StoreImpl implements Store {
       // Get all records that would match.
       StringBuilder stringBuilder = new StringBuilder();
       stringBuilder.append("SELECT ");
-      // Include the date, type and container ID.
+      // Include the date and container ID.
       stringBuilder.append(getInstantFunction(granularity))
           .append(" AS ").append(SystemColumnDefs.INSTANT.getName());
-      stringBuilder.append(", ").append(SystemColumnDefs.TYPE.getName());
       stringBuilder.append(", ").append(SystemColumnDefs.CONTAINER_ID.getName());
       // Include the dimensions.
       for (String dimension : dimensions) {
@@ -760,9 +759,8 @@ class StoreImpl implements Store {
           .build();
       SearchTermHandler searchTermHandler = new SearchTermHandler(searchTerms);
       searchTermHandler.appendWhereClause(stringBuilder);
-      // Group by the date, type and container ID.
+      // Group by the date  and container ID.
       stringBuilder.append(" GROUP BY ").append(SystemColumnDefs.INSTANT.getName());
-      stringBuilder.append(", ").append(SystemColumnDefs.TYPE.getName());
       stringBuilder.append(", ").append(SystemColumnDefs.CONTAINER_ID.getName());
       // Include the dimensions.
       for (String dimension : dimensions) {
@@ -787,7 +785,6 @@ class StoreImpl implements Store {
           try (ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
               // Group and sum to create the results.
-              RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
               reportBuilder.aggregateEntry(
                   getInstant(rs, SystemColumnDefs.INSTANT),
                   rs.getInt(SystemColumnDefs.CONTAINER_ID.getName()),
