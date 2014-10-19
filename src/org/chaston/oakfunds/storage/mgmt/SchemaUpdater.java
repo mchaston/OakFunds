@@ -73,7 +73,7 @@ public class SchemaUpdater {
     try (Connection connection = dataSource.getConnection()) {
       createMissingTables(connection,
           Iterables.filter(discrepancies, MissingTable.class));
-      alterTableDefDiscrepancies(connection,
+      handleTableDefDiscrepancies(connection,
           Iterables.filter(discrepancies, TableDefDiscrepancy.class));
       createMissingFunctions(connection,
           Iterables.filter(discrepancies, MissingFunction.class));
@@ -137,7 +137,7 @@ public class SchemaUpdater {
     }
   }
 
-  private void alterTableDefDiscrepancies(Connection connection,
+  private void handleTableDefDiscrepancies(Connection connection,
       Iterable<TableDefDiscrepancy> discrepancies) throws SQLException {
     Map<String, Collection<TableDefDiscrepancy>> discrepanciesByTable = groupByTable(discrepancies);
     for (Map.Entry<String, Collection<TableDefDiscrepancy>> entry
@@ -153,8 +153,8 @@ public class SchemaUpdater {
           alterTableStatement.append("ADD COLUMN ");
           appendColumnDeclaration(alterTableStatement, missingColumn.getColumnDef());
         } else if (tableDefDiscrepancy instanceof ExtraColumn) {
-          ExtraColumn extraColumn = (ExtraColumn) tableDefDiscrepancy;
-          alterTableStatement.append("DROP COLUMN ").append(extraColumn.getColumnName());
+          // Columns are not automatically dropped as this is dangerous.
+          continue;
         } else {
           throw new UnsupportedOperationException(
               "Discrepancies of type " + tableDefDiscrepancy.getClass().getName()
