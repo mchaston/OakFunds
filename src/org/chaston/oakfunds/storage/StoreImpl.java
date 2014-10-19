@@ -105,13 +105,11 @@ class StoreImpl implements Store {
     appendQuestionMarks(stringBuilder, attributes.size() + 2);
     stringBuilder.append(");");
 
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        stmt.setInt(1, id);
-        stmt.setString(2, recordType.getName());
-        setParameters(recordType, stmt, 3, attributes);
-        stmt.executeUpdate();
-      }
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
+      stmt.setInt(1, id);
+      stmt.setString(2, recordType.getName());
+      setParameters(recordType, stmt, 3, attributes);
+      stmt.executeUpdate();
     } catch (SQLException e) {
       logger.log(Level.WARNING, "Failed to insert record of type " + recordType.getName(), e);
       throw new StorageException("Failed to insert record of type " + recordType.getName(), e);
@@ -143,22 +141,20 @@ class StoreImpl implements Store {
     appendQuestionMarks(stringBuilder, attributes.size() + 1);
     stringBuilder.append(");");
 
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString(),
-          Statement.RETURN_GENERATED_KEYS)) {
-        stmt.setString(1, recordType.getName());
-        setParameters(recordType, stmt, 2, attributes);
-        stmt.executeUpdate();
-        // Get the generated ID back.
-        ResultSet tableKeys = stmt.getGeneratedKeys();
-        if (!tableKeys.next()) {
-          logger.log(Level.WARNING,
-              "Failed to get ID back after insert for type " + recordType.getName());
-          throw new StorageException(
-              "Failed to get ID back after insert for type " + recordType.getName());
-        }
-        return tableKeys.getInt(1);
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString(),
+        Statement.RETURN_GENERATED_KEYS)) {
+      stmt.setString(1, recordType.getName());
+      setParameters(recordType, stmt, 2, attributes);
+      stmt.executeUpdate();
+      // Get the generated ID back.
+      ResultSet tableKeys = stmt.getGeneratedKeys();
+      if (!tableKeys.next()) {
+        logger.log(Level.WARNING,
+            "Failed to get ID back after insert for type " + recordType.getName());
+        throw new StorageException(
+            "Failed to get ID back after insert for type " + recordType.getName());
       }
+      return tableKeys.getInt(1);
     } catch (SQLException e) {
       logger.log(Level.WARNING, "Failed to insert record of type " + recordType.getName(), e);
       throw new StorageException("Failed to insert record of type " + recordType.getName(), e);
@@ -179,19 +175,18 @@ class StoreImpl implements Store {
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("SELECT * FROM ").append(recordType.getTableName());
     stringBuilder.append(" WHERE ").append(SystemColumnDefs.ID_COLUMN_NAME).append(" = ?;");
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        stmt.setInt(1, id);
-        try (ResultSet rs = stmt.executeQuery()) {
-          if (!rs.next()) {
-            logger.log(Level.WARNING,
-                "Failed to read record " + id + " for type " + recordType.getName());
-            throw new StorageException(
-                "Failed to read record " + id + " for type " + recordType.getName());
-          }
-          RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
-          return new RawRecord<>(loadedRecordType, id, readAttributes(loadedRecordType, rs));
+
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
+      stmt.setInt(1, id);
+      try (ResultSet rs = stmt.executeQuery()) {
+        if (!rs.next()) {
+          logger.log(Level.WARNING,
+              "Failed to read record " + id + " for type " + recordType.getName());
+          throw new StorageException(
+              "Failed to read record " + id + " for type " + recordType.getName());
         }
+        RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
+        return new RawRecord<>(loadedRecordType, id, readAttributes(loadedRecordType, rs));
       }
     } catch (SQLException e) {
       logger.log(Level.WARNING,
@@ -227,12 +222,10 @@ class StoreImpl implements Store {
     stringBuilder.append(" = ?");
     stringBuilder.append(" WHERE ").append(SystemColumnDefs.ID_COLUMN_NAME).append(" = ?;");
 
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        int nextIndex = setParameters(recordType, stmt, 1, attributes);
-        stmt.setInt(nextIndex, id);
-        stmt.executeUpdate();
-      }
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
+      int nextIndex = setParameters(recordType, stmt, 1, attributes);
+      stmt.setInt(nextIndex, id);
+      stmt.executeUpdate();
     } catch (SQLException e) {
       logger.log(Level.WARNING, "Failed to insert record of type " + recordType.getName(), e);
       throw new StorageException("Failed to insert record of type " + recordType.getName(), e);
@@ -291,13 +284,11 @@ class StoreImpl implements Store {
     stringBuilder.append(SystemColumnDefs.START_TIME.getName()).append(" >= ? AND ");
     stringBuilder.append(SystemColumnDefs.END_TIME.getName()).append(" < ?;");
 
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        stmt.setInt(1, containingRecord.getId());
-        stmt.setTimestamp(2, getTimestamp(start));
-        stmt.setTimestamp(3, getTimestamp(end));
-        stmt.executeUpdate();
-      }
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
+      stmt.setInt(1, containingRecord.getId());
+      stmt.setTimestamp(2, getTimestamp(start));
+      stmt.setTimestamp(3, getTimestamp(end));
+      stmt.executeUpdate();
     } catch (SQLException e) {
       logger.log(Level.WARNING, "Failed to delete records of type " + recordType.getName(), e);
       throw new StorageException("Failed to update records of type " + recordType.getName(), e);
@@ -312,12 +303,10 @@ class StoreImpl implements Store {
     stringBuilder.append(" SET ").append(columnDef.getName()).append(" = ?");
     stringBuilder.append(" WHERE ").append(SystemColumnDefs.ID_COLUMN_NAME).append(" = ?;");
 
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        stmt.setTimestamp(1, getTimestamp(instant));
-        stmt.setInt(2, record.getId());
-        stmt.executeUpdate();
-      }
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
+      stmt.setTimestamp(1, getTimestamp(instant));
+      stmt.setInt(2, record.getId());
+      stmt.executeUpdate();
     } catch (SQLException e) {
       logger.log(Level.WARNING,
           "Failed to update record " + record.getId() + " of type "
@@ -342,25 +331,23 @@ class StoreImpl implements Store {
     appendQuestionMarks(stringBuilder, attributes.size() + 4);
     stringBuilder.append(");");
 
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString(),
-          Statement.RETURN_GENERATED_KEYS)) {
-        stmt.setString(1, recordType.getName());
-        stmt.setInt(2, containingId);
-        stmt.setTimestamp(3, getTimestamp(start));
-        stmt.setTimestamp(4, getTimestamp(end));
-        setParameters(recordType, stmt, 5, attributes);
-        stmt.executeUpdate();
-        // Get the generated ID back.
-        ResultSet tableKeys = stmt.getGeneratedKeys();
-        if (!tableKeys.next()) {
-          logger.log(Level.WARNING,
-              "Failed to get ID back after insert for type " + recordType.getName());
-          throw new StorageException(
-              "Failed to get ID back after insert for type " + recordType.getName());
-        }
-        return tableKeys.getInt(1);
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString(),
+        Statement.RETURN_GENERATED_KEYS)) {
+      stmt.setString(1, recordType.getName());
+      stmt.setInt(2, containingId);
+      stmt.setTimestamp(3, getTimestamp(start));
+      stmt.setTimestamp(4, getTimestamp(end));
+      setParameters(recordType, stmt, 5, attributes);
+      stmt.executeUpdate();
+      // Get the generated ID back.
+      ResultSet tableKeys = stmt.getGeneratedKeys();
+      if (!tableKeys.next()) {
+        logger.log(Level.WARNING,
+            "Failed to get ID back after insert for type " + recordType.getName());
+        throw new StorageException(
+            "Failed to get ID back after insert for type " + recordType.getName());
       }
+      return tableKeys.getInt(1);
     } catch (SQLException e) {
       logger.log(Level.WARNING, "Failed to insert record of type " + recordType.getName(), e);
       throw new StorageException("Failed to insert record of type " + recordType.getName(), e);
@@ -398,24 +385,22 @@ class StoreImpl implements Store {
     appendQuestionMarks(stringBuilder, attributes.size() + 3);
     stringBuilder.append(");");
 
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString(),
-          Statement.RETURN_GENERATED_KEYS)) {
-        stmt.setString(1, recordType.getName());
-        stmt.setInt(2, containingId);
-        stmt.setTimestamp(3, getTimestamp(instant));
-        setParameters(recordType, stmt, 4, attributes);
-        stmt.executeUpdate();
-        // Get the generated ID back.
-        ResultSet tableKeys = stmt.getGeneratedKeys();
-        if (!tableKeys.next()) {
-          logger.log(Level.WARNING,
-              "Failed to get ID back after insert for type " + recordType.getName());
-          throw new StorageException(
-              "Failed to get ID back after insert for type " + recordType.getName());
-        }
-        return tableKeys.getInt(1);
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString(),
+        Statement.RETURN_GENERATED_KEYS)) {
+      stmt.setString(1, recordType.getName());
+      stmt.setInt(2, containingId);
+      stmt.setTimestamp(3, getTimestamp(instant));
+      setParameters(recordType, stmt, 4, attributes);
+      stmt.executeUpdate();
+      // Get the generated ID back.
+      ResultSet tableKeys = stmt.getGeneratedKeys();
+      if (!tableKeys.next()) {
+        logger.log(Level.WARNING,
+            "Failed to get ID back after insert for type " + recordType.getName());
+        throw new StorageException(
+            "Failed to get ID back after insert for type " + recordType.getName());
       }
+      return tableKeys.getInt(1);
     } catch (SQLException e) {
       logger.log(Level.WARNING, "Failed to insert record of type " + recordType.getName(), e);
       throw new StorageException("Failed to insert record of type " + recordType.getName(), e);
@@ -448,13 +433,11 @@ class StoreImpl implements Store {
     stringBuilder.append(SystemColumnDefs.INSTANT.getName()).append(" = ?");
     stringBuilder.append(" WHERE ").append(SystemColumnDefs.ID_COLUMN_NAME).append(" = ?;");
 
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        int nextIndex = setParameters(recordType, stmt, 1, attributes);
-        stmt.setTimestamp(nextIndex++, getTimestamp(instant));
-        stmt.setInt(nextIndex, id);
-        stmt.executeUpdate();
-      }
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
+      int nextIndex = setParameters(recordType, stmt, 1, attributes);
+      stmt.setTimestamp(nextIndex++, getTimestamp(instant));
+      stmt.setInt(nextIndex, id);
+      stmt.executeUpdate();
     } catch (SQLException e) {
       logger.log(Level.WARNING, "Failed to insert record of type " + recordType.getName(), e);
       throw new StorageException("Failed to insert record of type " + recordType.getName(), e);
@@ -476,12 +459,10 @@ class StoreImpl implements Store {
     searchTermHandler.appendWhereClause(stringBuilder);
     stringBuilder.append(";");
 
-    try {
-      try (PreparedStatement stmt = currentTransaction.getConnection().prepareStatement(
-          stringBuilder.toString())) {
-        searchTermHandler.setParameters(stmt, recordType, 1);
-        stmt.executeUpdate();
-      }
+    try (PreparedStatement stmt = currentTransaction.getConnection().prepareStatement(
+        stringBuilder.toString())) {
+      searchTermHandler.setParameters(stmt, recordType, 1);
+      stmt.executeUpdate();
     } catch (SQLException e) {
       logger.log(Level.WARNING, "Failed to delete records for type " + recordType.getName(), e);
       throw new StorageException("Failed to delete records for type " + recordType.getName(), e);
@@ -534,19 +515,17 @@ class StoreImpl implements Store {
     stringBuilder.append(" ORDER BY ").append(SystemColumnDefs.INSTANT.getName()).append(" ASC ;");
 
     ImmutableList.Builder<RawInstantRecord<T>> records = ImmutableList.builder();
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        searchTermHandler.setParameters(stmt, recordType, 1);
-        try (ResultSet rs = stmt.executeQuery()) {
-          while (rs.next()) {
-            RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
-            records.add(new RawInstantRecord<>(
-                rs.getInt(SystemColumnDefs.CONTAINER_ID.getName()),
-                loadedRecordType,
-                rs.getInt(SystemColumnDefs.ID_COLUMN_NAME),
-                getInstant(rs, SystemColumnDefs.INSTANT),
-                readAttributes(loadedRecordType, rs)));
-          }
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
+      searchTermHandler.setParameters(stmt, recordType, 1);
+      try (ResultSet rs = stmt.executeQuery()) {
+        while (rs.next()) {
+          RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
+          records.add(new RawInstantRecord<>(
+              rs.getInt(SystemColumnDefs.CONTAINER_ID.getName()),
+              loadedRecordType,
+              rs.getInt(SystemColumnDefs.ID_COLUMN_NAME),
+              getInstant(rs, SystemColumnDefs.INSTANT),
+              readAttributes(loadedRecordType, rs)));
         }
       }
     } catch (SQLException e) {
@@ -581,25 +560,24 @@ class StoreImpl implements Store {
     stringBuilder.append(SystemColumnDefs.CONTAINER_ID.getName()).append(" = ? AND ");
     stringBuilder.append(SystemColumnDefs.START_TIME.getName()).append(" <= ? AND ");
     stringBuilder.append(SystemColumnDefs.END_TIME.getName()).append(" > ?;");
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        stmt.setInt(1, containingRecord.getId());
-        stmt.setTimestamp(2, getTimestamp(date));
-        stmt.setTimestamp(3, getTimestamp(date));
-        try (ResultSet rs = stmt.executeQuery()) {
-          if (!rs.next()) {
-            return null;
-          }
 
-          RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
-          return new RawIntervalRecord<>(
-              rs.getInt(SystemColumnDefs.CONTAINER_ID.getName()),
-              loadedRecordType,
-              rs.getInt(SystemColumnDefs.ID_COLUMN_NAME),
-              getInstant(rs, SystemColumnDefs.START_TIME),
-              getInstant(rs, SystemColumnDefs.END_TIME),
-              readAttributes(loadedRecordType, rs));
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
+      stmt.setInt(1, containingRecord.getId());
+      stmt.setTimestamp(2, getTimestamp(date));
+      stmt.setTimestamp(3, getTimestamp(date));
+      try (ResultSet rs = stmt.executeQuery()) {
+        if (!rs.next()) {
+          return null;
         }
+
+        RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
+        return new RawIntervalRecord<>(
+            rs.getInt(SystemColumnDefs.CONTAINER_ID.getName()),
+            loadedRecordType,
+            rs.getInt(SystemColumnDefs.ID_COLUMN_NAME),
+            getInstant(rs, SystemColumnDefs.START_TIME),
+            getInstant(rs, SystemColumnDefs.END_TIME),
+            readAttributes(loadedRecordType, rs));
       }
     } catch (SQLException e) {
       logger.log(Level.WARNING,
@@ -634,17 +612,16 @@ class StoreImpl implements Store {
     SearchTermHandler searchTermHandler = new SearchTermHandler(searchTerms);
     searchTermHandler.appendWhereClause(stringBuilder);
     stringBuilder.append(";");
+
     ImmutableList.Builder<RawRecord<T>> records = ImmutableList.builder();
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        searchTermHandler.setParameters(stmt, recordType, 1);
-        try (ResultSet rs = stmt.executeQuery()) {
-          while (rs.next()) {
-            int id = rs.getInt(SystemColumnDefs.ID_COLUMN_NAME);
-            RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
-            records.add(new RawRecord<>(loadedRecordType, id,
-                readAttributes(loadedRecordType, rs)));
-          }
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
+      searchTermHandler.setParameters(stmt, recordType, 1);
+      try (ResultSet rs = stmt.executeQuery()) {
+        while (rs.next()) {
+          int id = rs.getInt(SystemColumnDefs.ID_COLUMN_NAME);
+          RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
+          records.add(new RawRecord<>(loadedRecordType, id,
+              readAttributes(loadedRecordType, rs)));
         }
       }
     } catch (SQLException e) {
@@ -696,24 +673,23 @@ class StoreImpl implements Store {
     searchTermHandler.appendWhereClause(stringBuilder);
     stringBuilder.append(" ORDER BY ")
         .append(SystemColumnDefs.START_TIME.getName()).append(" ASC ;");
-    try {
-      try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        searchTermHandler.setParameters(stmt, recordType, 1);
-        ImmutableList.Builder<RawIntervalRecord<T>> results = ImmutableList.builder();
-        try (ResultSet rs = stmt.executeQuery()) {
-          while (rs.next()) {
-            RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
-            results.add(new RawIntervalRecord<>(
-                rs.getInt(SystemColumnDefs.CONTAINER_ID.getName()),
-                loadedRecordType,
-                rs.getInt(SystemColumnDefs.ID_COLUMN_NAME),
-                getInstant(rs, SystemColumnDefs.START_TIME),
-                getInstant(rs, SystemColumnDefs.END_TIME),
-                readAttributes(loadedRecordType, rs)));
-          }
+
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
+      searchTermHandler.setParameters(stmt, recordType, 1);
+      ImmutableList.Builder<RawIntervalRecord<T>> results = ImmutableList.builder();
+      try (ResultSet rs = stmt.executeQuery()) {
+        while (rs.next()) {
+          RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
+          results.add(new RawIntervalRecord<>(
+              rs.getInt(SystemColumnDefs.CONTAINER_ID.getName()),
+              loadedRecordType,
+              rs.getInt(SystemColumnDefs.ID_COLUMN_NAME),
+              getInstant(rs, SystemColumnDefs.START_TIME),
+              getInstant(rs, SystemColumnDefs.END_TIME),
+              readAttributes(loadedRecordType, rs)));
         }
-        return results.build();
       }
+      return results.build();
     } catch (SQLException e) {
       logger.log(Level.WARNING,
           "Failed to read interval records for type " + recordType.getName(), e);
@@ -781,19 +757,17 @@ class StoreImpl implements Store {
       }
       ImmutableMap<String, JdbcTypeHandler> jdbcTypeHandlers = jdbcTypeHandlersBuilder.build();
 
-      try {
-        try (PreparedStatement stmt =
-                 readingDataSource.getConnection().prepareStatement(stringBuilder.toString())) {
-          stmt.setTimestamp(1, getTimestamp(DateUtil.endOfYear(startYear - 1)));
-          searchTermHandler.setParameters(stmt, recordType, 2);
-          try (ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-              // Group and sum to create the results.
-              reportBuilder.aggregateEntry(
-                  getInstant(rs, SystemColumnDefs.INSTANT),
-                  rs.getInt(SystemColumnDefs.CONTAINER_ID.getName()),
-                  readAttributes(jdbcTypeHandlers, rs));
-            }
+      try (PreparedStatement stmt =
+               readingDataSource.getConnection().prepareStatement(stringBuilder.toString())) {
+        stmt.setTimestamp(1, getTimestamp(DateUtil.endOfYear(startYear - 1)));
+        searchTermHandler.setParameters(stmt, recordType, 2);
+        try (ResultSet rs = stmt.executeQuery()) {
+          while (rs.next()) {
+            // Group and sum to create the results.
+            reportBuilder.aggregateEntry(
+                getInstant(rs, SystemColumnDefs.INSTANT),
+                rs.getInt(SystemColumnDefs.CONTAINER_ID.getName()),
+                readAttributes(jdbcTypeHandlers, rs));
           }
         }
       } catch (SQLException e) {
