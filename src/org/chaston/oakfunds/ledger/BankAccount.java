@@ -30,6 +30,6 @@ public interface BankAccount extends Account<BankAccount> {
 
   String ATTRIBUTE_BANK_ACCOUNT_TYPE = "bank_account_type";
 
-  @AttributeMethod(attribute = ATTRIBUTE_BANK_ACCOUNT_TYPE)
+  @AttributeMethod(attribute = ATTRIBUTE_BANK_ACCOUNT_TYPE, required = true)
   BankAccountType getBankAccountType();
 }

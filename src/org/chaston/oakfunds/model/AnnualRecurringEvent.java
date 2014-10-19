@@ -30,6 +30,6 @@ public interface AnnualRecurringEvent extends RecurringEvent<AnnualRecurringEven
 
   String ATTRIBUTE_PAYMENT_MONTH = "payment_month";
 
-  @AttributeMethod(attribute = ATTRIBUTE_PAYMENT_MONTH)
+  @AttributeMethod(attribute = ATTRIBUTE_PAYMENT_MONTH, required = true)
   int getPaymentMonth();
 }

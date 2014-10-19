@@ -108,7 +108,7 @@ public class SchemaBuilder {
           tableDefBuilder.addColumnDef(new ColumnDef(
               attributeType.getColumnName(),
               toSqlType(attributeType.getType()),
-              attributeType.isRequired()));
+              false)); // Never make user defined types required.
         }
       }
       baseTables.put(rootType.getTableName(), tableDefBuilder);

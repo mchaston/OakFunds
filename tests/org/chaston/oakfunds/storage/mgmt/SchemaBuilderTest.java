@@ -38,6 +38,7 @@ import java.math.BigDecimal;
 import java.sql.Types;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 
 /**
@@ -62,13 +63,13 @@ public class SchemaBuilderTest {
     assertSame(SystemColumnDefs.MANUAL_ID, columnDefs.get("sys_id"));
     assertSame(SystemColumnDefs.TYPE, columnDefs.get("sys_type"));
 
-    assertContainsColumn(columnDefs, "name", Types.VARCHAR, true);
-    assertContainsColumn(columnDefs, "string", Types.VARCHAR, false);
-    assertContainsColumn(columnDefs, "boolean", Types.BOOLEAN, false);
-    assertContainsColumn(columnDefs, "int", Types.INTEGER, false);
-    assertContainsColumn(columnDefs, "date", Types.TIMESTAMP, false);
-    assertContainsColumn(columnDefs, "big_decimal", Types.BIGINT, false);
-    assertContainsColumn(columnDefs, "identifiable", Types.SMALLINT, false);
+    assertContainsColumn(columnDefs, "name", Types.VARCHAR);
+    assertContainsColumn(columnDefs, "string", Types.VARCHAR);
+    assertContainsColumn(columnDefs, "boolean", Types.BOOLEAN);
+    assertContainsColumn(columnDefs, "int", Types.INTEGER);
+    assertContainsColumn(columnDefs, "date", Types.TIMESTAMP);
+    assertContainsColumn(columnDefs, "big_decimal", Types.BIGINT);
+    assertContainsColumn(columnDefs, "identifiable", Types.SMALLINT);
   }
 
   @Test
@@ -90,9 +91,9 @@ public class SchemaBuilderTest {
     assertSame(SystemColumnDefs.AUTO_NUMBERED_ID, columnDefs.get("sys_id"));
     assertSame(SystemColumnDefs.TYPE, columnDefs.get("sys_type"));
 
-    assertContainsColumn(columnDefs, "name", Types.VARCHAR, true);
-    assertContainsColumn(columnDefs, "string", Types.VARCHAR, false);
-    assertContainsColumn(columnDefs, "other_string", Types.VARCHAR, false);
+    assertContainsColumn(columnDefs, "name", Types.VARCHAR);
+    assertContainsColumn(columnDefs, "string", Types.VARCHAR);
+    assertContainsColumn(columnDefs, "other_string", Types.VARCHAR);
   }
 
   @Test
@@ -115,7 +116,7 @@ public class SchemaBuilderTest {
     assertSame(SystemColumnDefs.INSTANT, columnDefs.get("sys_instant"));
     assertSame(SystemColumnDefs.CONTAINER_ID, columnDefs.get("sys_container_id"));
 
-    assertContainsColumn(columnDefs, "big_decimal", Types.BIGINT, false);
+    assertContainsColumn(columnDefs, "big_decimal", Types.BIGINT);
   }
 
   @Test
@@ -139,15 +140,16 @@ public class SchemaBuilderTest {
     assertSame(SystemColumnDefs.END_TIME, columnDefs.get("sys_end_time"));
     assertSame(SystemColumnDefs.CONTAINER_ID, columnDefs.get("sys_container_id"));
 
-    assertContainsColumn(columnDefs, "big_decimal", Types.BIGINT, false);
+    assertContainsColumn(columnDefs, "big_decimal", Types.BIGINT);
   }
 
   private void assertContainsColumn(ImmutableMap<String, ColumnDef> columnDefs,
-      String name, int type, boolean required) {
+      String name, int type) {
     ColumnDef columnDef = columnDefs.get(SystemColumnDefs.USER_COLUMN_PREFIX + name);
     assertEquals(SystemColumnDefs.USER_COLUMN_PREFIX + name, columnDef.getName());
     assertEquals(type, columnDef.getType());
-    assertEquals(required, columnDef.isRequired());
+    // No user-defined columns are required at the database level.
+    assertFalse(columnDef.isRequired());
   }
 
   private interface TestSimpleRecord extends Record<TestSimpleRecord> {
