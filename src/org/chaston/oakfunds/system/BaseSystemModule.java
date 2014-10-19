@@ -16,9 +16,7 @@
 package org.chaston.oakfunds.system;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Key;
 import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
 import org.chaston.oakfunds.storage.Store;
 
 /**
@@ -29,7 +27,7 @@ class BaseSystemModule extends AbstractModule {
   protected void configure() {
     install(new SystemTypesModule());
     requireBinding(Store.class);
-    requireBinding(Key.get(new TypeLiteral<Iterable<SystemPropertyLoader>>() {}));
+    requireBinding(SystemPropertyBootstrapper.class);
     bind(SystemPropertiesManagerImpl.class).in(Singleton.class);
     bind(SystemPropertiesManager.class).to(SystemPropertiesManagerImpl.class);
   }

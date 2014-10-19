@@ -16,7 +16,8 @@
 package org.chaston.oakfunds.storage;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
+import org.chaston.oakfunds.jdbc.LocalDataSourceModule;
+import org.chaston.oakfunds.storage.mgmt.StorageManagementModule;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -25,7 +26,8 @@ public class TestStorageModule extends AbstractModule {
   @Override
   protected void configure() {
     install(new RecordTypeRegistryModule());
-    bind(InMemoryStore.class).in(Singleton.class);
-    bind(Store.class).to(InMemoryStore.class);
+    install(new LocalDataSourceModule());
+    install(new StorageModule());
+    install(new StorageManagementModule());
   }
 }

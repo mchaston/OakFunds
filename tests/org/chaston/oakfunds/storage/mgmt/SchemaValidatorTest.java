@@ -20,6 +20,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.chaston.oakfunds.jdbc.LocalDataSourceModule;
+import org.chaston.oakfunds.storage.RecordTypeRegistryModule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,8 +46,10 @@ public class SchemaValidatorTest {
   @Before
   public void setUp() throws SQLException {
     Injector injector = Guice.createInjector(
-        SchemaValidator.createSchemaValidatorModule(
-            new LocalDataSourceModule()));
+        new StorageManagementModule(),
+        new AllTypesModule(),
+        new RecordTypeRegistryModule(),
+        new LocalDataSourceModule());
     injector.injectMembers(this);
     connection = dataSource.getConnection();
   }

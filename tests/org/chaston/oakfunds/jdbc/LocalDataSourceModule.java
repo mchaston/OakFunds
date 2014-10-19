@@ -35,7 +35,7 @@ public class LocalDataSourceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    // Nothing to do here.
+    bind(DatabaseTearDown.class).in(Singleton.class);
   }
 
   @Provides
@@ -45,8 +45,8 @@ public class LocalDataSourceModule extends AbstractModule {
     dataSource.setUrl("jdbc:hsqldb:mem:test_" + instance);
     Properties props = new Properties();
 
-    // Shutdown when the last connection terminates.
-    props.put("shutdown", "true");
+    // Require explict shutdown.
+    props.put("shutdown", "false");
 
     // Make it look like MySQL
     props.put("sql.syntax_mys", "true");

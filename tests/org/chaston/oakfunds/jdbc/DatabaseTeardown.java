@@ -13,16 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
+package org.chaston.oakfunds.jdbc;
 
-import java.util.Map;
+import com.google.inject.Inject;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface RecordTypeRegistry {
-  void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes)
-      throws StorageException;
+public class DatabaseTearDown {
+  private final DataSource dataSource;
 
-  <T extends Record> RecordType<T> getType(String name, RecordType<T> recordType);
+  @Inject
+  DatabaseTearDown(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
+
+  public void teardown() throws SQLException {
+    try (Connection connection = dataSource.getConnection()) {
+      try(Statement stmt = connection.createStatement()) {
+        stmt.execute("shutdown;");
+      }
+    }
+  }
 }

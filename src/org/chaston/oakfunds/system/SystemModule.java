@@ -16,7 +16,6 @@
 package org.chaston.oakfunds.system;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
 import com.google.inject.util.Providers;
 
 /**
@@ -26,7 +25,7 @@ public class SystemModule extends AbstractModule {
   @Override
   protected void configure() {
     install(new BaseSystemModule());
-    bind(new TypeLiteral<Iterable<SystemPropertyLoader>>() {})
-        .toProvider(Providers.<Iterable<SystemPropertyLoader>>of(null));
+    bind(SystemPropertyBootstrapper.class)
+        .toProvider(Providers.<SystemPropertyBootstrapper>of(null));
   }
 }

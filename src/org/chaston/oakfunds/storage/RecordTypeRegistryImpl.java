@@ -27,17 +27,23 @@ import java.util.Set;
  */
 public class RecordTypeRegistryImpl implements RecordTypeRegistry {
 
-  private final Map<String, RecordValidator> recordValidators = new HashMap<>();
+  private final ImmutableMap<String, RecordType> recordTypes;
+  private final ImmutableMap<String, RecordValidator> recordValidators;
 
   @Inject
   RecordTypeRegistryImpl(Set<RecordType> recordTypes) {
+    Map<String, RecordType> recordTypesBuilder = new HashMap<>();
+    Map<String, RecordValidator> recordValidatorsBuilder = new HashMap<>();
     for (RecordType recordType : recordTypes) {
-      if (recordValidators.containsKey(recordType.getName())) {
+      if (recordTypesBuilder.containsKey(recordType.getName())) {
         throw new IllegalStateException(
             "RecordType " + recordType.getName() + " was bound more than once.");
       }
-      recordValidators.put(recordType.getName(), new RecordValidator(recordType));
+      recordTypesBuilder.put(recordType.getName(), recordType);
+      recordValidatorsBuilder.put(recordType.getName(), new RecordValidator(recordType));
     }
+    this.recordTypes = ImmutableMap.copyOf(recordTypesBuilder);
+    this.recordValidators = ImmutableMap.copyOf(recordValidatorsBuilder);
   }
 
   @Override
@@ -49,6 +55,16 @@ public class RecordTypeRegistryImpl implements RecordTypeRegistry {
           "RecordType " + recordType.getName() + " was not bound.");
     }
     recordValidator.validateAttributes(attributes);
+  }
+
+  @Override
+  public <T extends Record> RecordType<T> getType(String name, RecordType<T> parentRecordType) {
+    RecordType<?> recordType = recordTypes.get(name);
+    if (recordType.isTypeOf(parentRecordType)) {
+      return (RecordType<T>) recordType;
+    }
+    throw new IllegalArgumentException("RecordType " + name
+        + " is not a subtype of " + parentRecordType.getName() + ".");
   }
 
   private static class RecordValidator {

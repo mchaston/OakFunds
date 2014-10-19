@@ -15,18 +15,28 @@
  */
 package org.chaston.oakfunds.storage;
 
-import java.util.Objects;
-
 /**
  * TODO(mchaston): write JavaDocs
  */
 public enum SearchOperator {
   EQUALS {
     @Override
-    public boolean matches(Object lhs, Object rhs) {
-      return Objects.equals(lhs, rhs);
+    public String toSql() {
+      return "=";
+    }
+  },
+  GREATER_THAN_OR_EQUAL {
+    @Override
+    public String toSql() {
+      return ">=";
+    }
+  },
+  LESS_THAN {
+    @Override
+    public String toSql() {
+      return "<";
     }
   };
 
-  public abstract boolean matches(Object lhs, Object rhs);
+  public abstract String toSql();
 }

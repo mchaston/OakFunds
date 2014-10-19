@@ -92,18 +92,14 @@ public class SchemaBuilder {
       }
 
       if (rootType.getContainingType() != null) {
-        tableDefBuilder.addColumnDef(SystemColumnDefs.PARENT_ID);
+        tableDefBuilder.addColumnDef(SystemColumnDefs.CONTAINER_ID);
       }
 
       Collection<RecordType> subTypes = entry.getValue();
       for (RecordType<?> subType : subTypes) {
-        String columnPrefix = "";
-        if (!subType.equals(rootType)) {
-          columnPrefix = subType.getName() + "__";
-        }
         for (AttributeType attributeType : subType.getAttributes().values()) {
           tableDefBuilder.addColumnDef(new ColumnDef(
-              columnPrefix + attributeType.getName(),
+              attributeType.getName(),
               toSqlType(attributeType.getType()),
               attributeType.isRequired()));
         }

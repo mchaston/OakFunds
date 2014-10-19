@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.model.ModelAccount;
-import org.chaston.oakfunds.storage.ParentIdentifierSearchTerm;
+import org.chaston.oakfunds.storage.ContainerIdentifierSearchTerm;
 import org.chaston.oakfunds.storage.Report;
 import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.SearchTerm;
@@ -130,9 +130,10 @@ class LedgerManagerImpl implements LedgerManager {
 
   @Override
   public Report runReport(Account<?> account, int startYear, int endYear,
-      ReportDateGranularity granularity) {
+      ReportDateGranularity granularity) throws StorageException {
     ImmutableList<? extends SearchTerm> searchTerms =
-        ImmutableList.of(ParentIdentifierSearchTerm.of(account.getRecordType(), account.getId()));
+        ImmutableList.of(ContainerIdentifierSearchTerm.of(
+            account.getRecordType(), account.getId()));
     ImmutableList<String> dimensions = ImmutableList.of();
     ImmutableList<String> measures = ImmutableList.of(AccountTransaction.ATTRIBUTE_AMOUNT);
     return store.runReport(AccountTransaction.TYPE, startYear, endYear, granularity,

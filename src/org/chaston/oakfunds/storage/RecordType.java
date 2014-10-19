@@ -17,9 +17,11 @@ package org.chaston.oakfunds.storage;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import org.joda.time.Instant;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,11 +33,11 @@ public class RecordType<T extends Record> {
   private final String name;
   private final Class<T> recordTypeClass;
   private final boolean autoIncrementId;
-  @Nullable
   private final RecordType<?> containingType;
   private final RecordTemporalType temporalType;
   private final RecordType parentType;
   private final ImmutableMap<String, AttributeType> attributes;
+  private final ImmutableMap<String, JdbcTypeHandler> jdbcTypeHandlers;
 
   private RecordType(String name, Class<T> recordTypeClass,
       boolean autoIncrementId,
@@ -77,6 +79,7 @@ public class RecordType<T extends Record> {
     }
     this.attributes = buildAttributes(recordTypeClass,
         parentType == null ? null : parentType.getRecordTypeClass());
+    this.jdbcTypeHandlers = buildTypeHandlers(attributes, parentType);
   }
 
   private static boolean interfacesContain(Class<?> superInterface,
@@ -134,6 +137,45 @@ public class RecordType<T extends Record> {
     }
   }
 
+  private static ImmutableMap<String, JdbcTypeHandler> buildTypeHandlers(
+      ImmutableMap<String, AttributeType> attributes,
+      @Nullable RecordType<?> parentType) {
+    ImmutableMap.Builder<String, JdbcTypeHandler> jdbcTypeHandlers = ImmutableMap.builder();
+    if (parentType != null) {
+      jdbcTypeHandlers.putAll(parentType.jdbcTypeHandlers);
+    }
+    for (AttributeType attributeType : attributes.values()) {
+      jdbcTypeHandlers.put(attributeType.getName(), createJdbcTypeHandler(attributeType));
+    }
+    return jdbcTypeHandlers.build();
+  }
+
+  private static JdbcTypeHandler createJdbcTypeHandler(AttributeType attributeType) {
+    if (attributeType.getType().equals(String.class)) {
+      return new StringTypeHandler(attributeType.getName());
+    }
+    if (attributeType.getType().equals(Integer.class)
+        || attributeType.getType().equals(Integer.TYPE)) {
+      return new IntegerTypeHandler(attributeType.getName());
+    }
+    if (attributeType.getType().equals(Instant.class)) {
+      return new InstantTypeHandler(attributeType.getName());
+    }
+    if (attributeType.getType().equals(Boolean.class)
+        || attributeType.getType().equals(Boolean.TYPE)) {
+      return new BooleanTypeHandler(attributeType.getName());
+    }
+    if (attributeType.getType().equals(BigDecimal.class)) {
+      return new BigDecimalTypeHandler(attributeType.getName());
+    }
+    if (Identifiable.class.isAssignableFrom(attributeType.getType())) {
+      return new IdentifiableTypeHandler(attributeType.getName(),
+          (Class<? extends Identifiable>) attributeType.getType());
+    }
+    throw new UnsupportedOperationException(
+        "Type " + attributeType.getType().getName() + " is not supported.");
+  }
+
   public RecordTemporalType getTemporalType() {
     return temporalType;
   }
@@ -166,7 +208,7 @@ public class RecordType<T extends Record> {
     return name;
   }
 
-  public <T extends Record> boolean isTypeOf(RecordType<T> recordType) {
+  public <S extends Record> boolean isTypeOf(RecordType<S> recordType) {
     return recordType.getRecordTypeClass().isAssignableFrom(recordTypeClass);
   }
 
@@ -182,6 +224,14 @@ public class RecordType<T extends Record> {
   public static <T extends Record<T>> RecordTypeBuilder<T> builder(
       String name, Class<T> recordTypeClass) {
     return new RecordTypeBuilder<>(name, recordTypeClass);
+  }
+
+  JdbcTypeHandler getJdbcTypeHandler(String attribute) {
+    return jdbcTypeHandlers.get(attribute);
+  }
+
+  Iterable<JdbcTypeHandler> getJdbcTypeHandlers() {
+    return jdbcTypeHandlers.values();
   }
 
   public static class RecordTypeBuilder<T extends Record<T>> {

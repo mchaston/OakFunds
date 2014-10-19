@@ -72,6 +72,7 @@ public interface Store {
 
   <T extends InstantRecord> Report runReport(RecordType<T> type,
       int startYear, int endYear, ReportDateGranularity granularity,
-      List<? extends SearchTerm> searchTerms, @Nullable String parentIdDimension,
-      List<String> dimensions, List<String> measures);
+      List<? extends SearchTerm> searchTerms, @Nullable String containerIdDimension,
+      List<String> dimensions, List<String> measures)
+      throws StorageException;
 }

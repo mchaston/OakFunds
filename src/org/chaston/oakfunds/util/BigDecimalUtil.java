@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
+package org.chaston.oakfunds.util;
 
-import java.util.Map;
+import java.math.BigDecimal;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface RecordTypeRegistry {
-  void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes)
-      throws StorageException;
+public class BigDecimalUtil {
 
-  <T extends Record> RecordType<T> getType(String name, RecordType<T> recordType);
+  public static final int STANDARD_SCALE = 5;
+
+  public static BigDecimal valueOf(long longValue) {
+    return BigDecimal.valueOf(longValue).setScale(STANDARD_SCALE);
+  }
+
+  public static BigDecimal valueOf(double doubleValue) {
+    return BigDecimal.valueOf(doubleValue).setScale(STANDARD_SCALE);
+  }
 }

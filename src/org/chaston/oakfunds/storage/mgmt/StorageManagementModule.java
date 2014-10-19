@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
+package org.chaston.oakfunds.storage.mgmt;
 
-import java.util.Map;
+import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
+
+import javax.sql.DataSource;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface RecordTypeRegistry {
-  void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes)
-      throws StorageException;
-
-  <T extends Record> RecordType<T> getType(String name, RecordType<T> recordType);
+public class StorageManagementModule extends AbstractModule {
+  @Override
+  protected void configure() {
+    requireBinding(SchemaBuilder.class);
+    requireBinding(DataSource.class);
+    bind(SchemaValidator.class).in(Singleton.class);
+    bind(SchemaUpdater.class).in(Singleton.class);
+  }
 }

@@ -21,8 +21,6 @@ import com.google.common.collect.MultimapBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
 import org.chaston.oakfunds.jdbc.ColumnDef;
 import org.chaston.oakfunds.jdbc.RemoteDataStoreModule;
 import org.chaston.oakfunds.jdbc.TableDef;
@@ -52,16 +50,12 @@ public class SchemaUpdater {
 
   public static void main(String[] args) throws SQLException {
     Flags.parse(args);
-    Injector injector = Guice.createInjector(createSchemaUpdaterModule());
-    injector.getInstance(SchemaUpdater.class).updateSchema();
-  }
-
-  static Module createSchemaUpdaterModule(Module... overridingModules) {
-    return Modules.override(
+    Injector injector = Guice.createInjector(
         new RecordTypeRegistryModule(),
         new AllTypesModule(),
-        new RemoteDataStoreModule())
-        .with(overridingModules);
+        new StorageManagementModule(),
+        new RemoteDataStoreModule());
+    injector.getInstance(SchemaUpdater.class).updateSchema();
   }
 
   @Inject

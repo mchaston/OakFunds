@@ -27,7 +27,7 @@ public class SystemColumnDefs {
   public static final ColumnDef MANUAL_ID = new ColumnDef(ID_COLUMN_NAME, Types.INTEGER, true, false);
   public static final ColumnDef AUTO_NUMBERED_ID = new ColumnDef(ID_COLUMN_NAME, Types.INTEGER, true, true);
   public static final ColumnDef TYPE = new ColumnDef("sys_type", Types.VARCHAR, true);
-  public static final ColumnDef PARENT_ID = new ColumnDef("sys_parent_id", Types.INTEGER, true);
+  public static final ColumnDef CONTAINER_ID = new ColumnDef("sys_container_id", Types.INTEGER, true);
   public static final ColumnDef INSTANT = new ColumnDef("sys_instant", Types.TIMESTAMP, true);
   public static final ColumnDef START_TIME = new ColumnDef("sys_start_time", Types.TIMESTAMP, true);
   public static final ColumnDef END_TIME = new ColumnDef("sys_end_time", Types.TIMESTAMP, true);

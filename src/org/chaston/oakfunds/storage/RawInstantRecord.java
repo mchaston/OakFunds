@@ -15,38 +15,46 @@
  */
 package org.chaston.oakfunds.storage;
 
-import javax.annotation.Nullable;
+import org.joda.time.Instant;
+
 import java.util.Map;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class ParentIdentifierSearchTerm extends SearchTerm {
-  private final RecordType<?> recordType;
+public class RawInstantRecord<T extends InstantRecord> {
+  private final int containerId;
+  private final RecordType<T> recordType;
   private final int id;
+  private final Instant instant;
+  private final Map<String, Object> attributes;
 
-  private ParentIdentifierSearchTerm(RecordType<?> recordType, int id) {
+  public RawInstantRecord(int containerId, RecordType<T> recordType, int id, Instant instant,
+      Map<String, Object> attributes) {
+    this.containerId = containerId;
     this.recordType = recordType;
     this.id = id;
+    this.instant = instant;
+    this.attributes = attributes;
   }
 
-  public static ParentIdentifierSearchTerm of(RecordType<?> recordType, int id) {
-    return new ParentIdentifierSearchTerm(recordType, id);
+  public int getContainerId() {
+    return containerId;
   }
 
-  public RecordType<?> getRecordType() {
+  public RecordType<T> getRecordType() {
     return recordType;
+  }
+
+  public Map<String, Object> getAttributes() {
+    return attributes;
   }
 
   public int getId() {
     return id;
   }
 
-  @Override
-  boolean matches(@Nullable Integer parentId, int id, Map<String, Object> attributes) {
-    if (parentId == null) {
-      return false;
-    }
-    return this.id == parentId;
+  public Instant getInstant() {
+    return instant;
   }
 }

@@ -67,5 +67,5 @@ public interface LedgerManager {
 
 
   Report runReport(Account<?> account, int startYear, int endYear,
-      ReportDateGranularity granularity);
+      ReportDateGranularity granularity) throws StorageException;
 }

@@ -37,15 +37,14 @@ class ReportBuilder {
 
   private final Map<Map<String, Object>, DimensionAggregator> dimensionAggregators =
       new HashMap<>();
-  @Nullable
-  private final String parentIdDimension;
+  private final String containerIdDimension;
   private final ImmutableList<String> dimensions;
   private final ImmutableList<String> measures;
   private final Set<Instant> instants;
 
   public ReportBuilder(ReportDateGranularity granularity, int startYear, int endYear,
-      @Nullable String parentIdDimension, List<String> dimensions, List<String> measures) {
-    this.parentIdDimension = parentIdDimension;
+      @Nullable String containerIdDimension, List<String> dimensions, List<String> measures) {
+    this.containerIdDimension = containerIdDimension;
     this.dimensions = ImmutableList.copyOf(dimensions);
     this.measures = ImmutableList.copyOf(measures);
     instants = buildReportInstants(granularity, startYear, endYear);
@@ -75,8 +74,8 @@ class ReportBuilder {
     return instants.build();
   }
 
-  public void aggregateEntry(Instant instant, int parentId, Map<String, Object> value) {
-    ImmutableMap<String, Object> dimensionValues = readDimensionValues(parentId, value);
+  public void aggregateEntry(Instant instant, int containerId, Map<String, Object> value) {
+    ImmutableMap<String, Object> dimensionValues = readDimensionValues(containerId, value);
     DimensionAggregator dimensionAggregator = dimensionAggregators.get(dimensionValues);
     if (dimensionAggregator == null) {
       dimensionAggregator = new DimensionAggregator(dimensionValues, instants);
@@ -86,7 +85,7 @@ class ReportBuilder {
   }
 
   private ImmutableMap<String, Object> readDimensionValues(
-      int parentId, Map<String, Object> value) {
+      int containerId, Map<String, Object> value) {
     ImmutableMap.Builder<String, Object> dimensionValues = ImmutableMap.builder();
     for (String dimension : dimensions) {
       Object dimensionValue = value.get(dimension);
@@ -94,8 +93,8 @@ class ReportBuilder {
         dimensionValues.put(dimension, dimensionValue);
       }
     }
-    if (parentIdDimension != null) {
-      dimensionValues.put(parentIdDimension, parentId);
+    if (containerIdDimension != null) {
+      dimensionValues.put(containerIdDimension, containerId);
     }
     return dimensionValues.build();
   }

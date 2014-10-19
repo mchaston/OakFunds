@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.chaston.oakfunds.account.AccountCodeManager;
 import org.chaston.oakfunds.account.AccountCodeModule;
+import org.chaston.oakfunds.jdbc.DatabaseTearDown;
 import org.chaston.oakfunds.ledger.BankAccountType;
 import org.chaston.oakfunds.storage.Report;
 import org.chaston.oakfunds.storage.ReportDateGranularity;
@@ -31,16 +32,19 @@ import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.storage.TestStorageModule;
 import org.chaston.oakfunds.storage.Transaction;
+import org.chaston.oakfunds.storage.mgmt.SchemaDeploymentTask;
 import org.chaston.oakfunds.system.TestSystemModuleBuilder;
+import org.chaston.oakfunds.util.BigDecimalUtil;
 import org.chaston.oakfunds.util.DateUtil;
 import org.joda.time.DateTimeFieldType;
 import org.joda.time.Instant;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
@@ -63,9 +67,13 @@ public class ModelManagerTest {
   private ModelManager modelManager;
   @Inject
   private Store store;
+  @Inject
+  private SchemaDeploymentTask schemaDeploymentTask;
+  @Inject
+  private DatabaseTearDown databaseTearDown;
 
   @Before
-  public void setUp() {
+  public void setUp() throws SQLException {
     Injector injector = Guice.createInjector(
         new AccountCodeModule(),
         new ModelModule(),
@@ -75,6 +83,11 @@ public class ModelManagerTest {
             .build(),
         new TestStorageModule());
     injector.injectMembers(this);
+  }
+
+  @After
+  public void teardown() throws SQLException {
+    databaseTearDown.teardown();
   }
 
   @Test
@@ -120,10 +133,10 @@ public class ModelManagerTest {
     MonthlyRecurringEvent monthlyRecurringEvent =
         modelManager.setMonthlyRecurringEventDetails(modelManager.getBaseModel(), expenseAccount,
             DateUtil.BEGINNING_OF_TIME, DateUtil.END_OF_TIME,
-            BigDecimal.valueOf(3000, 5));
+            BigDecimalUtil.valueOf(3000));
     transaction.commit();
 
-    assertEquals(BigDecimal.valueOf(3000, 5), monthlyRecurringEvent.getAmount());
+    assertEquals(BigDecimalUtil.valueOf(3000), monthlyRecurringEvent.getAmount());
 
     Iterable<ModelAccountTransaction> modelTransactions =
         modelManager.getModelTransactions(modelManager.getBaseModel(), expenseAccount,
@@ -134,7 +147,7 @@ public class ModelManagerTest {
     assertNotNull(firstModelTransaction);
     assertEquals(modelManager.getBaseModel().getId(), firstModelTransaction.getModelId());
     assertEquals(expenseAccount.getId(), firstModelTransaction.getAccountId());
-    assertEquals(BigDecimal.valueOf(3000, 5), firstModelTransaction.getAmount());
+    assertEquals(BigDecimalUtil.valueOf(3000), firstModelTransaction.getAmount());
     assertEquals(Instant.parse("2014-01-01"), firstModelTransaction.getInstant());
 
     Iterable<ModelDistributionTransaction> modelDistributionTransactions =
@@ -152,10 +165,10 @@ public class ModelManagerTest {
     AnnualRecurringEvent annualRecurringEvent =
         modelManager.setAnnualRecurringEventDetails(modelManager.getBaseModel(), expenseAccount,
             DateUtil.BEGINNING_OF_TIME, DateUtil.END_OF_TIME,
-            3, BigDecimal.valueOf(12000, 5));
+            3, BigDecimalUtil.valueOf(12000));
     transaction.commit();
 
-    assertEquals(BigDecimal.valueOf(12000, 5), annualRecurringEvent.getAmount());
+    assertEquals(BigDecimalUtil.valueOf(12000), annualRecurringEvent.getAmount());
     assertEquals(3, annualRecurringEvent.getPaymentMonth());
 
     Iterable<ModelAccountTransaction> modelTransactions =
@@ -166,7 +179,7 @@ public class ModelManagerTest {
     ModelAccountTransaction modelTransaction = Iterables.getOnlyElement(modelTransactions);
     assertEquals(modelManager.getBaseModel().getId(), modelTransaction.getModelId());
     assertEquals(expenseAccount.getId(), modelTransaction.getAccountId());
-    assertEquals(BigDecimal.valueOf(12000, 5), modelTransaction.getAmount());
+    assertEquals(BigDecimalUtil.valueOf(12000), modelTransaction.getAmount());
     assertEquals(Instant.parse("2014-03-01"), modelTransaction.getInstant());
 
     Iterable<ModelDistributionTransaction> modelDistributionTransactions =
@@ -181,7 +194,7 @@ public class ModelManagerTest {
     assertEquals(modelManager.getBaseModel().getId(), firstModelDistributionTransaction.getModelId());
     assertEquals(expenseAccount.getId(), firstModelDistributionTransaction.getAccountId());
     // This is the sum of distributions until the end of the previous year.
-    assertEquals(BigDecimal.valueOf(9000, 5), firstModelDistributionTransaction.getAmount());
+    assertEquals(BigDecimalUtil.valueOf(9000), firstModelDistributionTransaction.getAmount());
     assertEquals(DateUtil.endOfYear(2013), firstModelDistributionTransaction.getInstant());
 
     // This is the distribution that cancels out previous distributions.
@@ -190,7 +203,7 @@ public class ModelManagerTest {
     assertNotNull(thirdModelDistributionTransaction);
     assertEquals(modelManager.getBaseModel().getId(), thirdModelDistributionTransaction.getModelId());
     assertEquals(expenseAccount.getId(), thirdModelDistributionTransaction.getAccountId());
-    assertEquals(BigDecimal.valueOf(-11000, 5), thirdModelDistributionTransaction.getAmount());
+    assertEquals(BigDecimalUtil.valueOf(-11000), thirdModelDistributionTransaction.getAmount());
     assertEquals(Instant.parse("2014-03-01"), thirdModelDistributionTransaction.getInstant());
     assertEquals(firstModelDistributionTransaction.getModelAccountTransactionId(),
         thirdModelDistributionTransaction.getModelAccountTransactionId());
@@ -201,7 +214,7 @@ public class ModelManagerTest {
     assertEquals(modelManager.getBaseModel().getId(),
         fourthModelDistributionTransaction.getModelId());
     assertEquals(expenseAccount.getId(), fourthModelDistributionTransaction.getAccountId());
-    assertEquals(BigDecimal.valueOf(1000, 5), fourthModelDistributionTransaction.getAmount());
+    assertEquals(BigDecimalUtil.valueOf(1000), fourthModelDistributionTransaction.getAmount());
     assertEquals(Instant.parse("2014-04-01"), fourthModelDistributionTransaction.getInstant());
     // Different transaction from the previous ones.
     assertNotEquals(firstModelDistributionTransaction.getModelAccountTransactionId(),
@@ -216,7 +229,7 @@ public class ModelManagerTest {
     ModelAccountTransaction modelAccountTransaction =
         modelManager.createAdHocEvent(modelManager.getBaseModel(), expenseAccount,
             Instant.parse("2017-01-01"),
-            5, DistributionTimeUnit.YEARS, BigDecimal.valueOf(60000, 5));
+            5, DistributionTimeUnit.YEARS, BigDecimalUtil.valueOf(60000));
     transaction.commit();
 
     assertNotNull(modelAccountTransaction);
@@ -232,7 +245,7 @@ public class ModelManagerTest {
     assertEquals(modelManager.getBaseModel().getId(), firstModelDistributionTransaction.getModelId());
     assertEquals(expenseAccount.getId(), firstModelDistributionTransaction.getAccountId());
     // First one is a roll up of the previous distributions.
-    assertEquals(BigDecimal.valueOf(23000, 5), firstModelDistributionTransaction.getAmount());
+    assertEquals(BigDecimalUtil.valueOf(23000), firstModelDistributionTransaction.getAmount());
     assertEquals(DateUtil.endOfYear(2013), firstModelDistributionTransaction.getInstant());
 
     // Regular ones are a normal size.
@@ -241,7 +254,7 @@ public class ModelManagerTest {
     assertNotNull(secondModelDistributionTransaction);
     assertEquals(modelManager.getBaseModel().getId(), secondModelDistributionTransaction.getModelId());
     assertEquals(expenseAccount.getId(), secondModelDistributionTransaction.getAccountId());
-    assertEquals(BigDecimal.valueOf(1000, 5), secondModelDistributionTransaction.getAmount());
+    assertEquals(BigDecimalUtil.valueOf(1000), secondModelDistributionTransaction.getAmount());
     assertEquals(Instant.parse("2014-02-01"), secondModelDistributionTransaction.getInstant());
   }
 
@@ -253,7 +266,7 @@ public class ModelManagerTest {
     ModelAccountTransaction modelAccountTransaction =
         modelManager.createAdHocEvent(modelManager.getBaseModel(), expenseAccount,
             Instant.parse("2027-01-01"),
-            50, DistributionTimeUnit.YEARS, BigDecimal.valueOf(60000, 5));
+            50, DistributionTimeUnit.YEARS, BigDecimalUtil.valueOf(60000));
     transaction.commit();
 
     assertNotNull(modelAccountTransaction);
@@ -269,7 +282,7 @@ public class ModelManagerTest {
     assertEquals(modelManager.getBaseModel().getId(), firstModelDistributionTransaction.getModelId());
     assertEquals(expenseAccount.getId(), firstModelDistributionTransaction.getAccountId());
     // First one is a roll up of the previous distributions.
-    assertEquals(BigDecimal.valueOf(44300, 5), firstModelDistributionTransaction.getAmount());
+    assertEquals(BigDecimalUtil.valueOf(44300), firstModelDistributionTransaction.getAmount());
     assertEquals(DateUtil.endOfYear(2013), firstModelDistributionTransaction.getInstant());
 
     // Regular ones are a normal size.
@@ -278,7 +291,7 @@ public class ModelManagerTest {
     assertNotNull(secondModelDistributionTransaction);
     assertEquals(modelManager.getBaseModel().getId(), secondModelDistributionTransaction.getModelId());
     assertEquals(expenseAccount.getId(), secondModelDistributionTransaction.getAccountId());
-    assertEquals(BigDecimal.valueOf(100, 5), secondModelDistributionTransaction.getAmount());
+    assertEquals(BigDecimalUtil.valueOf(100), secondModelDistributionTransaction.getAmount());
     assertEquals(Instant.parse("2014-02-01"), secondModelDistributionTransaction.getInstant());
   }
 
@@ -290,7 +303,7 @@ public class ModelManagerTest {
         modelManager.createModelExpenseAccount("House Painting", BankAccountType.OPERATING);
     modelManager.createAdHocEvent(modelManager.getBaseModel(), expenseAccount,
         Instant.parse("2017-01-01"),
-        5, DistributionTimeUnit.YEARS, BigDecimal.valueOf(60000, 5));
+        5, DistributionTimeUnit.YEARS, BigDecimalUtil.valueOf(60000));
     transaction.commit();
 
     Iterable<ModelDistributionTransaction> oldModelDistributionTransactions =
@@ -305,7 +318,7 @@ public class ModelManagerTest {
     transaction = store.startTransaction();
     modelManager.updateAdHocEvent(modelAccountTransaction,
         Instant.parse("2017-06-01"),
-        5, DistributionTimeUnit.YEARS, BigDecimal.valueOf(60000, 5));
+        5, DistributionTimeUnit.YEARS, BigDecimalUtil.valueOf(60000));
     transaction.commit();
 
     Iterable<ModelDistributionTransaction> newModelDistributionTransactions =
@@ -336,7 +349,7 @@ public class ModelManagerTest {
         modelManager.createModelExpenseAccount("House Painting", BankAccountType.OPERATING);
     modelManager.createAdHocEvent(modelManager.getBaseModel(), expenseAccount,
         Instant.parse("2017-01-01"),
-        5, DistributionTimeUnit.YEARS, BigDecimal.valueOf(60000, 5));
+        5, DistributionTimeUnit.YEARS, BigDecimalUtil.valueOf(60000));
     transaction.commit();
 
     // Get the event back.
@@ -369,13 +382,13 @@ public class ModelManagerTest {
 
     ReportEntry entry = Iterables.get(reportRow.getEntries(), 0);
     assertEquals(DateUtil.endOfYear(2013), entry.getInstant());
-    assertEquals(BigDecimal.valueOf(11500, 5),
+    assertEquals(BigDecimalUtil.valueOf(11500),
         entry.getMeasure(ModelDistributionTransaction.ATTRIBUTE_AMOUNT));
 
     for (int i = 1; i <=12; i++) {
       entry = Iterables.get(reportRow.getEntries(), i);
       assertEquals(DateUtil.endOfMonth(2014, i), entry.getInstant());
-      assertEquals(BigDecimal.valueOf(11500 + (i * 250), 5),
+      assertEquals(BigDecimalUtil.valueOf(11500 + (i * 250)),
           entry.getMeasure(ModelDistributionTransaction.ATTRIBUTE_AMOUNT));
     }
 
@@ -387,24 +400,24 @@ public class ModelManagerTest {
     // Starts off with the amount owed from the beginning of the year.
     entry = Iterables.get(reportRow.getEntries(), 0);
     assertEquals(DateUtil.endOfYear(2013), entry.getInstant());
-    assertEquals(BigDecimal.valueOf(5247, 5),
+    assertEquals(BigDecimalUtil.valueOf(5249.99997),
         entry.getMeasure(ModelDistributionTransaction.ATTRIBUTE_AMOUNT));
 
     entry = Iterables.get(reportRow.getEntries(), 1);
     assertEquals(DateUtil.endOfMonth(2014, 1), entry.getInstant());
-    assertEquals(BigDecimal.valueOf(5830, 5),
+    assertEquals(BigDecimalUtil.valueOf(5833.33330),
         entry.getMeasure(ModelDistributionTransaction.ATTRIBUTE_AMOUNT));
 
     entry = Iterables.get(reportRow.getEntries(), 2);
     assertEquals(DateUtil.endOfMonth(2014, 2), entry.getInstant());
-    assertEquals(BigDecimal.valueOf(6413, 5),
+    assertEquals(BigDecimalUtil.valueOf(6416.66663),
         entry.getMeasure(ModelDistributionTransaction.ATTRIBUTE_AMOUNT));
 
     // The March distribution resets the sum to zero (as the event would happen).
     for (int i = 3; i <= 12; i++) {
       entry = Iterables.get(reportRow.getEntries(), i);
       assertEquals(DateUtil.endOfMonth(2014, i), entry.getInstant());
-      assertEquals(BigDecimal.valueOf(0, 5),
+      assertEquals(BigDecimalUtil.valueOf(0),
           entry.getMeasure(ModelDistributionTransaction.ATTRIBUTE_AMOUNT));
     }
   }
@@ -428,29 +441,29 @@ public class ModelManagerTest {
     // Revenue with model 1.
     modelManager.setMonthlyRecurringEventDetails(reportingAccounts.model1,
         reportingAccounts.revenueAccount,
-        Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), BigDecimal.valueOf(1000, 5));
+        Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), BigDecimalUtil.valueOf(1000));
     // Revenue with model 2.
     modelManager.setMonthlyRecurringEventDetails(reportingAccounts.model2,
         reportingAccounts.revenueAccount,
-        Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), BigDecimal.valueOf(1100, 5));
+        Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), BigDecimalUtil.valueOf(1100));
 
     modelManager.setMonthlyRecurringEventDetails(modelManager.getBaseModel(),
         reportingAccounts.monthlyExpenseAccount,
-        Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), BigDecimal.valueOf(200, 5));
+        Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), BigDecimalUtil.valueOf(200));
 
     modelManager.setAnnualRecurringEventDetails(modelManager.getBaseModel(),
         reportingAccounts.annualExpenseAccount,
-        Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), 3, BigDecimal.valueOf(7000, 5));
+        Instant.parse("2014-01-01"), Instant.parse("2015-01-01"), 3, BigDecimalUtil.valueOf(7000));
 
     // Long term expense in model 1 payed in 2020.
     modelManager.createAdHocEvent(reportingAccounts.model1,
         reportingAccounts.longTermExpenseAccount, Instant.parse("2020-02-01"),
-        10, DistributionTimeUnit.YEARS, BigDecimal.valueOf(30000, 5));
+        10, DistributionTimeUnit.YEARS, BigDecimalUtil.valueOf(30000));
 
     // Long term expense in model 2 payed in 2021.
     modelManager.createAdHocEvent(reportingAccounts.model2,
         reportingAccounts.longTermExpenseAccount, Instant.parse("2021-02-01"),
-        10, DistributionTimeUnit.YEARS, BigDecimal.valueOf(30000, 5));
+        10, DistributionTimeUnit.YEARS, BigDecimalUtil.valueOf(30000));
 
     transaction.commit();
 

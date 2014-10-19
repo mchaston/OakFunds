@@ -17,8 +17,13 @@ package org.chaston.oakfunds.system;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
+import org.chaston.oakfunds.storage.StorageException;
+import org.chaston.oakfunds.storage.Store;
+import org.chaston.oakfunds.storage.Transaction;
+import org.chaston.oakfunds.storage.mgmt.SchemaDeploymentTask;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -53,7 +58,37 @@ public class TestSystemModuleBuilder {
                     SystemPropertiesManagerImpl.PROPERTY_CURRENT_YEAR, currentYear),
                 SystemPropertyLoader.createIntegerProperty(
                     SystemPropertiesManagerImpl.PROPERTY_TIME_HORIZON, timeHorizon)));
+        bind(SystemPropertyBootstrapper.class).to(TestSystemPropertyBootstrapper.class);
       }
     };
+  }
+
+  /**
+   * Used for bootstrapping system properties into tests.
+   */
+  private static class TestSystemPropertyBootstrapper implements SystemPropertyBootstrapper {
+
+    @Inject
+    TestSystemPropertyBootstrapper(
+        SchemaDeploymentTask schemaDeploymentTask, // Here for dependency enforcement.
+        Store store,
+        Iterable<SystemPropertyLoader> systemPropertyLoaders) throws StorageException {
+      if (systemPropertyLoaders != null) {
+        Transaction transaction = store.startTransaction();
+        boolean successful = false;
+        try {
+          for (SystemPropertyLoader systemPropertyLoader : systemPropertyLoaders) {
+            systemPropertyLoader.load(store);
+          }
+          successful = true;
+        } finally {
+          if (successful) {
+            transaction.commit();
+          } else {
+            transaction.rollback();
+          }
+        }
+      }
+    }
   }
 }

@@ -20,7 +20,6 @@ import com.google.inject.Inject;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
-import org.chaston.oakfunds.storage.Transaction;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -39,26 +38,11 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
   private SystemProperty timeHorizon;
 
   @Inject
-  SystemPropertiesManagerImpl(Store store,
-      @Nullable Iterable<SystemPropertyLoader> bootstrappingSystemPropertyLoaders) throws StorageException {
+  SystemPropertiesManagerImpl(
+      // Here for dependency enforcement.
+      @Nullable SystemPropertyBootstrapper systemPropertyBootstrapper,
+      Store store) throws StorageException {
     this.store = store;
-
-    if (bootstrappingSystemPropertyLoaders != null) {
-      Transaction transaction = store.startTransaction();
-      boolean successful = false;
-      try {
-        for (SystemPropertyLoader bootstrappingSystemPropertyLoader : bootstrappingSystemPropertyLoaders) {
-          bootstrappingSystemPropertyLoader.load(store);
-        }
-        successful = true;
-      } finally {
-        if (successful) {
-          transaction.commit();
-        } else {
-          transaction.rollback();
-        }
-      }
-    }
 
     Iterable<SystemProperty> properties =
         store.findRecords(SystemProperty.TYPE, ImmutableList.<SearchTerm>of());

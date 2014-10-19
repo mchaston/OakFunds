@@ -20,8 +20,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
 import org.chaston.oakfunds.jdbc.ColumnDef;
 import org.chaston.oakfunds.jdbc.RemoteDataStoreModule;
 import org.chaston.oakfunds.jdbc.TableDef;
@@ -45,16 +43,12 @@ public class SchemaValidator {
 
   public static void main(String[] args) throws SQLException {
     Flags.parse(args);
-    Injector injector = Guice.createInjector(createSchemaValidatorModule());
-    injector.getInstance(SchemaValidator.class).validateSchema();
-  }
-
-  static Module createSchemaValidatorModule(Module... overridingModules) {
-    return Modules.override(
+    Injector injector = Guice.createInjector(
         new RecordTypeRegistryModule(),
         new AllTypesModule(),
-        new RemoteDataStoreModule())
-            .with(overridingModules);
+        new StorageManagementModule(),
+        new RemoteDataStoreModule());
+    injector.getInstance(SchemaValidator.class).validateSchema();
   }
 
   @Inject

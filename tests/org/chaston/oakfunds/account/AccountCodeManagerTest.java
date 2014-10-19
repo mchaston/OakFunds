@@ -18,14 +18,19 @@ package org.chaston.oakfunds.account;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import org.chaston.oakfunds.jdbc.DatabaseTearDown;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.storage.TestStorageModule;
 import org.chaston.oakfunds.storage.Transaction;
+import org.chaston.oakfunds.storage.mgmt.SchemaDeploymentTask;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.sql.SQLException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -40,13 +45,22 @@ public class AccountCodeManagerTest {
   private AccountCodeManager accountCodeManager;
   @Inject
   private Store store;
+  @Inject
+  private SchemaDeploymentTask schemaDeploymentTask;
+  @Inject
+  private DatabaseTearDown databaseTearDown;
 
   @Before
-  public void setUp() {
+  public void setUp() throws SQLException {
     Injector injector = Guice.createInjector(
         new AccountCodeModule(),
         new TestStorageModule());
     injector.injectMembers(this);
+  }
+
+  @After
+  public void teardown() throws SQLException {
+    databaseTearDown.teardown();
   }
 
   @Test

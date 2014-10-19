@@ -17,6 +17,11 @@ package org.chaston.oakfunds.storage;
 
 /**
  * TODO(mchaston): write JavaDocs
+ *
+ * <p>All implementations of this interface must implement a static method of the form:
+ * <code><pre>
+ *   public static IdentifiableSource getIdentifiableSource()
+ * </pre></code>
  */
 public interface Identifiable {
   byte identifier();

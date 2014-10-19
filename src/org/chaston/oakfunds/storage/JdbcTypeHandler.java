@@ -15,14 +15,26 @@
  */
 package org.chaston.oakfunds.storage;
 
-import java.util.Map;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface RecordTypeRegistry {
-  void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes)
-      throws StorageException;
+abstract class JdbcTypeHandler {
 
-  <T extends Record> RecordType<T> getType(String name, RecordType<T> recordType);
+  private final String attribute;
+
+  protected JdbcTypeHandler(String attribute) {
+    this.attribute = attribute;
+  }
+
+  String getAttribute() {
+    return attribute;
+  }
+
+  abstract Object get(ResultSet rs) throws SQLException;
+
+  abstract void set(PreparedStatement stmt, int index, Object value) throws SQLException;
 }

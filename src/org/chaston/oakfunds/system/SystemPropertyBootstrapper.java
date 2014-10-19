@@ -13,16 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
-
-import java.util.Map;
+package org.chaston.oakfunds.system;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface RecordTypeRegistry {
-  void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes)
-      throws StorageException;
-
-  <T extends Record> RecordType<T> getType(String name, RecordType<T> recordType);
+public interface SystemPropertyBootstrapper {
 }

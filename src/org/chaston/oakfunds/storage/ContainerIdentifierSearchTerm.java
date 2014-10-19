@@ -15,14 +15,27 @@
  */
 package org.chaston.oakfunds.storage;
 
-import java.util.Map;
-
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface RecordTypeRegistry {
-  void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes)
-      throws StorageException;
+public class ContainerIdentifierSearchTerm extends SearchTerm {
+  private final RecordType<?> recordType;
+  private final int id;
 
-  <T extends Record> RecordType<T> getType(String name, RecordType<T> recordType);
+  private ContainerIdentifierSearchTerm(RecordType<?> recordType, int id) {
+    this.recordType = recordType;
+    this.id = id;
+  }
+
+  public static ContainerIdentifierSearchTerm of(RecordType<?> recordType, int id) {
+    return new ContainerIdentifierSearchTerm(recordType, id);
+  }
+
+  public RecordType<?> getRecordType() {
+    return recordType;
+  }
+
+  public int getId() {
+    return id;
+  }
 }

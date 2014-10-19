@@ -17,8 +17,6 @@ package org.chaston.oakfunds.storage;
 
 import com.google.common.collect.ImmutableList;
 
-import java.util.Map;
-
 /**
  * TODO(mchaston): write JavaDocs
  */
@@ -33,13 +31,7 @@ public class OrSearchTerm extends SearchTerm {
     return new OrSearchTerm(ImmutableList.copyOf(searchTerms));
   }
 
-  @Override
-  boolean matches(Integer parentId, int id, Map<String, Object> attributes) {
-    for (SearchTerm searchTerm : searchTerms) {
-      if (searchTerm.matches(parentId, id, attributes)) {
-        return true;
-      }
-    }
-    return false;
+  public ImmutableList<SearchTerm> getSearchTerms() {
+    return searchTerms;
   }
 }

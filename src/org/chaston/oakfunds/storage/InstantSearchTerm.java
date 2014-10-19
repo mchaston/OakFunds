@@ -15,33 +15,37 @@
  */
 package org.chaston.oakfunds.storage;
 
+import org.joda.time.Instant;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class AttributeSearchTerm extends SearchTerm {
+public class InstantSearchTerm extends SearchTerm {
   private final String attribute;
   private final SearchOperator operator;
-  private final Object value;
+  private final Instant instant;
 
-  private AttributeSearchTerm(String attribute, SearchOperator operator, Object value) {
+  InstantSearchTerm(String attribute, SearchOperator operator, Instant instant) {
     this.attribute = attribute;
     this.operator = operator;
-    this.value = value;
+
+    this.instant = instant;
   }
 
-  public static AttributeSearchTerm of(String attribute, SearchOperator operator, Object value) {
-    return new AttributeSearchTerm(attribute, operator, value);
-  }
-
-  public String getAttribute() {
-    return attribute;
+  public static InstantSearchTerm of(String attribute, SearchOperator operator,
+      Instant instant) {
+    return new InstantSearchTerm(attribute, operator, instant);
   }
 
   public SearchOperator getOperator() {
     return operator;
   }
 
-  public Object getValue() {
-    return value;
+  public Instant getInstant() {
+    return instant;
+  }
+
+  public String getAttribute() {
+    return attribute;
   }
 }

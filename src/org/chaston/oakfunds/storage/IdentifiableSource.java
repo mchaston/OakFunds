@@ -15,14 +15,9 @@
  */
 package org.chaston.oakfunds.storage;
 
-import java.util.Map;
-
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface RecordTypeRegistry {
-  void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes)
-      throws StorageException;
-
-  <T extends Record> RecordType<T> getType(String name, RecordType<T> recordType);
+public interface IdentifiableSource {
+  Identifiable lookup(byte identifier);
 }

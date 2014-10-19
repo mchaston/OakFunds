@@ -15,14 +15,20 @@
  */
 package org.chaston.oakfunds.storage;
 
-import java.util.Map;
+import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
+
+import javax.sql.DataSource;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface RecordTypeRegistry {
-  void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes)
-      throws StorageException;
-
-  <T extends Record> RecordType<T> getType(String name, RecordType<T> recordType);
+public class StorageModule extends AbstractModule {
+  @Override
+  protected void configure() {
+    requireBinding(DataSource.class);
+    requireBinding(RecordTypeRegistry.class);
+    bind(Store.class).to(StoreImpl.class);
+    bind(StoreImpl.class).in(Singleton.class);
+  }
 }

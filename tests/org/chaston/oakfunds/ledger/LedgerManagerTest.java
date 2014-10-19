@@ -22,6 +22,7 @@ import com.google.inject.Injector;
 import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.account.AccountCodeManager;
 import org.chaston.oakfunds.account.AccountCodeModule;
+import org.chaston.oakfunds.jdbc.DatabaseTearDown;
 import org.chaston.oakfunds.storage.Report;
 import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.ReportEntry;
@@ -30,15 +31,19 @@ import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.storage.TestStorageModule;
 import org.chaston.oakfunds.storage.Transaction;
+import org.chaston.oakfunds.storage.mgmt.SchemaDeploymentTask;
+import org.chaston.oakfunds.util.BigDecimalUtil;
 import org.chaston.oakfunds.util.DateUtil;
 import org.joda.time.DateTimeFieldType;
 import org.joda.time.Instant;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -57,9 +62,13 @@ public class LedgerManagerTest {
   private LedgerManager ledgerManager;
   @Inject
   private Store store;
+  @Inject
+  private SchemaDeploymentTask schemaDeploymentTask;
+  @Inject
+  private DatabaseTearDown databaseTearDown;
 
   @Before
-  public void setUp() {
+  public void setUp() throws SQLException {
     Injector injector = Guice.createInjector(
         new AccountCodeModule(),
         new LedgerModule(),
@@ -67,24 +76,29 @@ public class LedgerManagerTest {
     injector.injectMembers(this);
   }
 
+  @After
+  public void teardown() throws SQLException {
+    databaseTearDown.teardown();
+  }
+
   @Test
   public void createNewBankAccount() throws StorageException {
     Transaction transaction = store.startTransaction();
     AccountCode accountCode = accountCodeManager.createAccountCode(80000, "Operating");
     BankAccount bankAccount = ledgerManager.createBankAccount(accountCode, "Bob's bank", BankAccountType.OPERATING);
-    BigDecimal interestRate = BigDecimal.valueOf(0.03); // 3%
+    BigDecimal interestRate = BigDecimalUtil.valueOf(0.03); // 3%
     ledgerManager.setInterestRate(bankAccount, interestRate, DateUtil.BEGINNING_OF_TIME,
         DateUtil.END_OF_TIME);
     transaction.commit();
 
     transaction = store.startTransaction();
     Instant date = Instant.parse("2014-09-28");
-    BigDecimal amount = BigDecimal.valueOf(12000);
+    BigDecimal amount = BigDecimalUtil.valueOf(12000);
     ledgerManager.recordTransaction(bankAccount, date, amount, "Initial value");
     transaction.commit();
 
     transaction = store.startTransaction();
-    BigDecimal interestRate2 = BigDecimal.valueOf(0.04); // 4%
+    BigDecimal interestRate2 = BigDecimalUtil.valueOf(0.04); // 4%
     ledgerManager.setInterestRate(bankAccount, interestRate2, Instant.parse("2014-01-01"),
         Instant.parse("2015-01-01"));
     transaction.commit();
@@ -103,14 +117,14 @@ public class LedgerManagerTest {
     Transaction transaction = store.startTransaction();
     AccountCode operatingAccountCode = accountCodeManager.createAccountCode(80000, "Operating");
     BankAccount bankAccount = ledgerManager.createBankAccount(operatingAccountCode, "Bob's bank", BankAccountType.OPERATING);
-    BigDecimal interestRate = BigDecimal.valueOf(0.03); // 3%
+    BigDecimal interestRate = BigDecimalUtil.valueOf(0.03); // 3%
     ledgerManager.setInterestRate(bankAccount, interestRate, DateUtil.BEGINNING_OF_TIME,
         DateUtil.END_OF_TIME);
     transaction.commit();
 
     transaction = store.startTransaction();
     Instant date = Instant.parse("2014-09-28");
-    BigDecimal amount = BigDecimal.valueOf(12000);
+    BigDecimal amount = BigDecimalUtil.valueOf(12000);
     ledgerManager.recordTransaction(bankAccount, date, amount, "Initial value");
     transaction.commit();
 
@@ -122,15 +136,15 @@ public class LedgerManagerTest {
 
     transaction = store.startTransaction();
     date = Instant.parse("2014-09-29");
-    amount = BigDecimal.valueOf(1000);
+    amount = BigDecimalUtil.valueOf(1000);
     ledgerManager.recordTransaction(electricityExpenseAccount, date, amount);
     transaction.commit();
 
-    assertEquals(BigDecimal.valueOf(0),
+    assertEquals(BigDecimal.ZERO,
         ledgerManager.getBalance(bankAccount, Instant.parse("2014-09-27")));
-    assertEquals(BigDecimal.valueOf(12000),
+    assertEquals(BigDecimalUtil.valueOf(12000),
         ledgerManager.getBalance(bankAccount, Instant.parse("2014-09-28")));
-    assertEquals(BigDecimal.valueOf(11000),
+    assertEquals(BigDecimalUtil.valueOf(11000),
         ledgerManager.getBalance(bankAccount, Instant.parse("2014-09-29")));
   }
 
@@ -139,14 +153,14 @@ public class LedgerManagerTest {
     Transaction transaction = store.startTransaction();
     AccountCode operatingAccountCode = accountCodeManager.createAccountCode(80000, "Operating");
     BankAccount bankAccount = ledgerManager.createBankAccount(operatingAccountCode, "Bob's bank", BankAccountType.OPERATING);
-    BigDecimal interestRate = BigDecimal.valueOf(0.03); // 3%
+    BigDecimal interestRate = BigDecimalUtil.valueOf(0.03); // 3%
     ledgerManager.setInterestRate(bankAccount, interestRate, DateUtil.BEGINNING_OF_TIME,
         DateUtil.END_OF_TIME);
     transaction.commit();
 
     transaction = store.startTransaction();
     Instant date = Instant.parse("2014-09-28");
-    BigDecimal amount = BigDecimal.valueOf(12000);
+    BigDecimal amount = BigDecimalUtil.valueOf(12000);
     ledgerManager.recordTransaction(bankAccount, date, amount, "Initial value");
     transaction.commit();
 
@@ -164,21 +178,21 @@ public class LedgerManagerTest {
 
     transaction = store.startTransaction();
     date = Instant.parse("2014-09-29");
-    amount = BigDecimal.valueOf(1000);
+    amount = BigDecimalUtil.valueOf(1000);
     ledgerManager.recordTransaction(electricityExpenseAccount, date, amount);
     transaction.commit();
 
     transaction = store.startTransaction();
     date = Instant.parse("2014-09-28");
-    amount = BigDecimal.valueOf(2000);
+    amount = BigDecimalUtil.valueOf(2000);
     ledgerManager.recordTransaction(interestRevenueAccount, date, amount);
     transaction.commit();
 
-    assertEquals(BigDecimal.valueOf(0),
+    assertEquals(BigDecimal.ZERO,
         ledgerManager.getBalance(bankAccount, Instant.parse("2014-09-27")));
-    assertEquals(BigDecimal.valueOf(14000),
+    assertEquals(BigDecimalUtil.valueOf(14000),
         ledgerManager.getBalance(bankAccount, Instant.parse("2014-09-28")));
-    assertEquals(BigDecimal.valueOf(13000),
+    assertEquals(BigDecimalUtil.valueOf(13000),
         ledgerManager.getBalance(bankAccount, Instant.parse("2014-09-29")));
   }
 
@@ -196,29 +210,29 @@ public class LedgerManagerTest {
 
     ReportEntry entry = Iterables.get(reportRow.getEntries(), 0);
     assertEquals(DateUtil.endOfYear(2013), entry.getInstant());
-    assertEquals(BigDecimal.valueOf(11000),
+    assertEquals(BigDecimalUtil.valueOf(11000),
         entry.getMeasure(AccountTransaction.ATTRIBUTE_AMOUNT));
 
     entry = Iterables.get(reportRow.getEntries(), 1);
     assertEquals(DateUtil.endOfMonth(2014, 1), entry.getInstant());
-    assertEquals(BigDecimal.valueOf(12000),
+    assertEquals(BigDecimalUtil.valueOf(12000),
         entry.getMeasure(AccountTransaction.ATTRIBUTE_AMOUNT));
 
     entry = Iterables.get(reportRow.getEntries(), 2);
     assertEquals(DateUtil.endOfMonth(2014, 2), entry.getInstant());
-    assertEquals(BigDecimal.valueOf(13000),
+    assertEquals(BigDecimalUtil.valueOf(13000),
         entry.getMeasure(AccountTransaction.ATTRIBUTE_AMOUNT));
 
     entry = Iterables.get(reportRow.getEntries(), 3);
     assertEquals(DateUtil.endOfMonth(2014, 3), entry.getInstant());
-    assertEquals(BigDecimal.valueOf(15000),
+    assertEquals(BigDecimalUtil.valueOf(15000),
         entry.getMeasure(AccountTransaction.ATTRIBUTE_AMOUNT));
 
     // Same value through the end of the year.
     for (int i = 4; i <= 12; i++) {
       entry = Iterables.get(reportRow.getEntries(), i);
       assertEquals(DateUtil.endOfMonth(2014, i), entry.getInstant());
-      assertEquals(BigDecimal.valueOf(16000),
+      assertEquals(BigDecimalUtil.valueOf(16000),
           entry.getMeasure(AccountTransaction.ATTRIBUTE_AMOUNT));
     }
   }
@@ -230,7 +244,7 @@ public class LedgerManagerTest {
     AccountCode operatingAccountCode = accountCodeManager.createAccountCode(80000, "Operating");
     reportingAccounts.bankAccount =
         ledgerManager.createBankAccount(operatingAccountCode, "Bob's bank", BankAccountType.OPERATING);
-    BigDecimal interestRate = BigDecimal.valueOf(0.03); // 3%
+    BigDecimal interestRate = BigDecimalUtil.valueOf(0.03); // 3%
     ledgerManager.setInterestRate(reportingAccounts.bankAccount,
         interestRate, DateUtil.BEGINNING_OF_TIME, DateUtil.END_OF_TIME);
     AccountCode interestAccountCode = accountCodeManager.createAccountCode(31000, "Operating Interest");
@@ -239,17 +253,17 @@ public class LedgerManagerTest {
             reportingAccounts.bankAccount);
 
     ledgerManager.recordTransaction(reportingAccounts.bankAccount,
-        Instant.parse("2013-12-31"), BigDecimal.valueOf(11000), "Initial value");
+        Instant.parse("2013-12-31"), BigDecimalUtil.valueOf(11000), "Initial value");
     ledgerManager.recordTransaction(reportingAccounts.interestRevenueAccount,
-        Instant.parse("2014-01-04"), BigDecimal.valueOf(1000));
+        Instant.parse("2014-01-04"), BigDecimalUtil.valueOf(1000));
     ledgerManager.recordTransaction(reportingAccounts.interestRevenueAccount,
-        Instant.parse("2014-02-02"), BigDecimal.valueOf(1000));
+        Instant.parse("2014-02-02"), BigDecimalUtil.valueOf(1000));
     ledgerManager.recordTransaction(reportingAccounts.interestRevenueAccount,
-        Instant.parse("2014-03-01"), BigDecimal.valueOf(1000));
+        Instant.parse("2014-03-01"), BigDecimalUtil.valueOf(1000));
     ledgerManager.recordTransaction(reportingAccounts.interestRevenueAccount,
-        Instant.parse("2014-03-15"), BigDecimal.valueOf(1000));
+        Instant.parse("2014-03-15"), BigDecimalUtil.valueOf(1000));
     ledgerManager.recordTransaction(reportingAccounts.interestRevenueAccount,
-        Instant.parse("2014-04-15"), BigDecimal.valueOf(1000));
+        Instant.parse("2014-04-15"), BigDecimalUtil.valueOf(1000));
     transaction.commit();
 
     return reportingAccounts;
