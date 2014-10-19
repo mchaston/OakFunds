@@ -15,11 +15,69 @@
  */
 package org.chaston.oakfunds.util;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
 public class Flags {
-  public static void parse(String[] args) {
 
+  private static final Map<String, Flag> flagsByName = new HashMap<>();
+  private static final Map<String, Flag> flagsByShortName = new HashMap<>();
+
+  public static String[] parse(String[] args) {
+    List<String> remainingArgs = new ArrayList<>();
+    for (String arg : args) {
+      int equalsIndex = arg.indexOf('=');
+      Flag flag;
+      if (arg.startsWith("--")) {
+        if (equalsIndex == -1) {
+          throw new IllegalArgumentException(
+              "Flag argument did not contain '=' character: " + arg);
+        }
+        String flagName = arg.substring(2, equalsIndex);
+        flag = flagsByName.get(flagName);
+        if (flag == null) {
+          throw new IllegalArgumentException("Flag " + flagName + " was not bound.");
+        }
+      } else if (arg.startsWith("-")) {
+        if (equalsIndex == -1) {
+          throw new IllegalArgumentException(
+              "Flag argument did not contain '=' character: " + arg);
+        }
+        String flagName = arg.substring(1, equalsIndex);
+        flag = flagsByShortName.get(flagName);
+        if (flag == null) {
+          throw new IllegalArgumentException("Flag " + flagName + " was not bound.");
+        }
+      } else {
+        // If not a flag, just skip it.
+        remainingArgs.add(arg);
+        continue;
+      }
+      String flagValue = arg.substring(equalsIndex + 1);
+      flag.parse(flagValue);
+    }
+    return remainingArgs.toArray(new String[remainingArgs.size()]);
+  }
+
+  static <V> void registerFlag(Flag<V> flag) {
+    if (flagsByName.containsKey(flag.getName())) {
+      throw new IllegalStateException(
+          "Multiple flags bound with the same name: " + flag.getName());
+    }
+    if (flag.getShortName() != null) {
+      if (flagsByShortName.containsKey(flag.getShortName())) {
+        throw new IllegalStateException(
+            "Multiple flags bound with the same short name: " + flag.getShortName());
+      }
+    }
+    flagsByName.put(flag.getName(), flag);
+    if (flag.getShortName() != null) {
+      flagsByShortName.put(flag.getShortName(), flag);
+    }
   }
 }
