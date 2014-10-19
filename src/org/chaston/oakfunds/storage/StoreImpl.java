@@ -721,23 +721,52 @@ class StoreImpl implements Store {
   }
 
   @Override
-  public <T extends InstantRecord> Report runReport(RecordType<T> type, int startYear, int endYear,
-      ReportDateGranularity granularity, List<? extends SearchTerm> searchTerms,
+  public <T extends InstantRecord> Report runReport(RecordType<T> recordType,
+      int startYear, int endYear, ReportDateGranularity granularity,
+      List<? extends SearchTerm> searchTerms,
       @Nullable String containerIdDimension, List<String> dimensions, List<String> measures)
       throws StorageException {
     ReportBuilder reportBuilder =
         new ReportBuilder(granularity, startYear, endYear, containerIdDimension, dimensions,
             measures);
-    // TODO: completely re-implement this using the database to do grouping
     try (ReadingDataSource readingDataSource = new ReadingDataSource()) {
       // Get all records that would match.
-      Iterable<RawInstantRecord<T>> rawInstantRecords =
-          findInstantRecords(readingDataSource.getConnection(), type,
-              DateUtil.BEGINNING_OF_TIME, DateUtil.endOfYear(endYear), searchTerms);
-      for (RawInstantRecord<T> rawInstantRecord : rawInstantRecords) {
-        // Group and sum to create the results.
-        reportBuilder.aggregateEntry(rawInstantRecord.getInstant(),
-            rawInstantRecord.getContainerId(), rawInstantRecord.getAttributes());
+      StringBuilder stringBuilder = new StringBuilder();
+      stringBuilder.append("SELECT *");
+      stringBuilder.append(" FROM ").append(recordType.getRootType().getName());
+      searchTerms = ImmutableList.<SearchTerm>builder()
+          .addAll(searchTerms)
+          .add(InstantSearchTerm.of(
+              SystemColumnDefs.INSTANT.getName(),
+              SearchOperator.GREATER_THAN_OR_EQUAL,
+              DateUtil.BEGINNING_OF_TIME))
+          .add(InstantSearchTerm.of(
+              SystemColumnDefs.INSTANT.getName(),
+              SearchOperator.LESS_THAN,
+              DateUtil.endOfYear(endYear)))
+          .build();
+      SearchTermHandler searchTermHandler = new SearchTermHandler(searchTerms);
+      searchTermHandler.appendWhereClause(stringBuilder);
+      stringBuilder.append(" ORDER BY ").append(SystemColumnDefs.INSTANT.getName()).append(" ASC ;");
+
+      try {
+        try (PreparedStatement stmt =
+                 readingDataSource.getConnection().prepareStatement(stringBuilder.toString())) {
+          searchTermHandler.setParameters(stmt, recordType);
+          try (ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+              // Group and sum to create the results.
+              RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
+              reportBuilder.aggregateEntry(
+                  getInstant(rs, SystemColumnDefs.INSTANT),
+                  rs.getInt(SystemColumnDefs.CONTAINER_ID.getName()),
+                  readAttributes(loadedRecordType, rs));
+            }
+          }
+        }
+      } catch (SQLException e) {
+        logger.log(Level.WARNING, "Failed to read records for type " + recordType.getName(), e);
+        throw new StorageException("Failed to read records for type " + recordType.getName(), e);
       }
     }
 
