@@ -23,12 +23,25 @@ import java.sql.Types;
  * TODO(mchaston): write JavaDocs
  */
 public class SystemColumnDefs {
-  public static final String ID_COLUMN_NAME = "sys_id";
-  public static final ColumnDef MANUAL_ID = new ColumnDef(ID_COLUMN_NAME, Types.INTEGER, true, false);
-  public static final ColumnDef AUTO_NUMBERED_ID = new ColumnDef(ID_COLUMN_NAME, Types.INTEGER, true, true);
-  public static final ColumnDef TYPE = new ColumnDef("sys_type", Types.VARCHAR, true);
-  public static final ColumnDef CONTAINER_ID = new ColumnDef("sys_container_id", Types.INTEGER, true);
-  public static final ColumnDef INSTANT = new ColumnDef("sys_instant", Types.TIMESTAMP, true);
-  public static final ColumnDef START_TIME = new ColumnDef("sys_start_time", Types.TIMESTAMP, true);
-  public static final ColumnDef END_TIME = new ColumnDef("sys_end_time", Types.TIMESTAMP, true);
+  public static final String TABLE_PREFIX = "of_";
+  public static final String SYSTEM_COLUMN_PREFIX = "sys_";
+  public static final String USER_COLUMN_PREFIX = "usr_";
+
+  public static final String ID_COLUMN_NAME =
+      SYSTEM_COLUMN_PREFIX + "id";
+
+  public static final ColumnDef MANUAL_ID =
+      new ColumnDef(ID_COLUMN_NAME, Types.INTEGER, true, false);
+  public static final ColumnDef AUTO_NUMBERED_ID =
+      new ColumnDef(ID_COLUMN_NAME, Types.INTEGER, true, true);
+  public static final ColumnDef TYPE =
+      new ColumnDef(SYSTEM_COLUMN_PREFIX + "type", Types.VARCHAR, true);
+  public static final ColumnDef CONTAINER_ID =
+      new ColumnDef(SYSTEM_COLUMN_PREFIX + "container_id", Types.INTEGER, true);
+  public static final ColumnDef INSTANT =
+      new ColumnDef(SYSTEM_COLUMN_PREFIX + "instant", Types.TIMESTAMP, true);
+  public static final ColumnDef START_TIME =
+      new ColumnDef(SYSTEM_COLUMN_PREFIX + "start_time", Types.TIMESTAMP, true);
+  public static final ColumnDef END_TIME =
+      new ColumnDef(SYSTEM_COLUMN_PREFIX + "end_time", Types.TIMESTAMP, true);
 }

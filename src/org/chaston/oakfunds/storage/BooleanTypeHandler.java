@@ -23,13 +23,13 @@ import java.sql.SQLException;
  * TODO(mchaston): write JavaDocs
  */
 class BooleanTypeHandler extends JdbcTypeHandler {
-  public BooleanTypeHandler(String attribute) {
-    super(attribute);
+  public BooleanTypeHandler(String columnName) {
+    super(columnName);
   }
 
   @Override
   Object get(ResultSet rs) throws SQLException {
-    boolean value = rs.getBoolean(getAttribute());
+    boolean value = rs.getBoolean(getColumnName());
     return rs.wasNull() ? null : value;
   }
 

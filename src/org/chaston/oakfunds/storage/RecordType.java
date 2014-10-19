@@ -152,24 +152,24 @@ public class RecordType<T extends Record> {
 
   private static JdbcTypeHandler createJdbcTypeHandler(AttributeType attributeType) {
     if (attributeType.getType().equals(String.class)) {
-      return new StringTypeHandler(attributeType.getName());
+      return new StringTypeHandler(attributeType.getColumnName());
     }
     if (attributeType.getType().equals(Integer.class)
         || attributeType.getType().equals(Integer.TYPE)) {
-      return new IntegerTypeHandler(attributeType.getName());
+      return new IntegerTypeHandler(attributeType.getColumnName());
     }
     if (attributeType.getType().equals(Instant.class)) {
-      return new InstantTypeHandler(attributeType.getName());
+      return new InstantTypeHandler(attributeType.getColumnName());
     }
     if (attributeType.getType().equals(Boolean.class)
         || attributeType.getType().equals(Boolean.TYPE)) {
-      return new BooleanTypeHandler(attributeType.getName());
+      return new BooleanTypeHandler(attributeType.getColumnName());
     }
     if (attributeType.getType().equals(BigDecimal.class)) {
-      return new BigDecimalTypeHandler(attributeType.getName());
+      return new BigDecimalTypeHandler(attributeType.getColumnName());
     }
     if (Identifiable.class.isAssignableFrom(attributeType.getType())) {
-      return new IdentifiableTypeHandler(attributeType.getName(),
+      return new IdentifiableTypeHandler(attributeType.getColumnName(),
           (Class<? extends Identifiable>) attributeType.getType());
     }
     throw new UnsupportedOperationException(
@@ -193,6 +193,10 @@ public class RecordType<T extends Record> {
 
   public Class<T> getRecordTypeClass() {
     return recordTypeClass;
+  }
+
+  public String getTableName() {
+    return SystemColumnDefs.TABLE_PREFIX + getRootType().getName();
   }
 
   public String getName() {
@@ -230,8 +234,8 @@ public class RecordType<T extends Record> {
     return jdbcTypeHandlers.get(attribute);
   }
 
-  Iterable<JdbcTypeHandler> getJdbcTypeHandlers() {
-    return jdbcTypeHandlers.values();
+  ImmutableMap<String, JdbcTypeHandler> getJdbcTypeHandlers() {
+    return jdbcTypeHandlers;
   }
 
   public static class RecordTypeBuilder<T extends Record<T>> {

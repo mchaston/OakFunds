@@ -23,13 +23,13 @@ import java.sql.SQLException;
  * TODO(mchaston): write JavaDocs
  */
 class IntegerTypeHandler extends JdbcTypeHandler {
-  public IntegerTypeHandler(String attribute) {
-    super(attribute);
+  public IntegerTypeHandler(String columnName) {
+    super(columnName);
   }
 
   @Override
   Object get(ResultSet rs) throws SQLException {
-    int value = rs.getInt(getAttribute());
+    int value = rs.getInt(getColumnName());
     return rs.wasNull() ? null : value;
   }
 

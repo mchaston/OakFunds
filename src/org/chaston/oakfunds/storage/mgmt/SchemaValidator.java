@@ -25,6 +25,7 @@ import org.chaston.oakfunds.jdbc.FunctionDef;
 import org.chaston.oakfunds.jdbc.RemoteDataStoreModule;
 import org.chaston.oakfunds.jdbc.TableDef;
 import org.chaston.oakfunds.storage.RecordTypeRegistryModule;
+import org.chaston.oakfunds.storage.SystemColumnDefs;
 import org.chaston.oakfunds.util.Flags;
 
 import javax.sql.DataSource;
@@ -68,7 +69,8 @@ public class SchemaValidator {
     Set<String> seenFunctions = new HashSet<>();
     try (Connection connection = dataSource.getConnection()) {
       DatabaseMetaData metaData = connection.getMetaData();
-      try (ResultSet allTables = metaData.getTables(null, null, null, null)) {
+      String tableNamePattern = SystemColumnDefs.TABLE_PREFIX.toUpperCase() + "%";
+      try (ResultSet allTables = metaData.getTables(null, null, tableNamePattern, null)) {
         while (allTables.next()) {
           String tableName = allTables.getString("TABLE_NAME").toLowerCase();
           TableDef tableDef = tableDefs.get(tableName);

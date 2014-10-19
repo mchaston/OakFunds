@@ -24,14 +24,14 @@ import java.sql.SQLException;
  */
 abstract class JdbcTypeHandler {
 
-  private final String attribute;
+  private final String columnName;
 
-  protected JdbcTypeHandler(String attribute) {
-    this.attribute = attribute;
+  protected JdbcTypeHandler(String columnName) {
+    this.columnName = columnName;
   }
 
-  String getAttribute() {
-    return attribute;
+  String getColumnName() {
+    return columnName;
   }
 
   abstract Object get(ResultSet rs) throws SQLException;

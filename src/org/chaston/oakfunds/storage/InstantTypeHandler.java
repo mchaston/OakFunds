@@ -26,13 +26,13 @@ import java.sql.Timestamp;
  * TODO(mchaston): write JavaDocs
  */
 class InstantTypeHandler extends JdbcTypeHandler {
-  public InstantTypeHandler(String attribute) {
-    super(attribute);
+  public InstantTypeHandler(String columnName) {
+    super(columnName);
   }
 
   @Override
   Object get(ResultSet rs) throws SQLException {
-    Timestamp value = rs.getTimestamp(getAttribute());
+    Timestamp value = rs.getTimestamp(getColumnName());
     return rs.wasNull() ? null : new Instant(value);
   }
 

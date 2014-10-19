@@ -53,8 +53,8 @@ public class SchemaBuilderTest {
 
     ImmutableMap<String, TableDef> tableDefs = schemaBuilder.getTableDefs();
     assertEquals(1, tableDefs.size());
-    TableDef tableDef = tableDefs.get("simple_record");
-    assertEquals("simple_record", tableDef.getName());
+    TableDef tableDef = tableDefs.get(SystemColumnDefs.TABLE_PREFIX + "simple_record");
+    assertEquals(SystemColumnDefs.TABLE_PREFIX + "simple_record", tableDef.getName());
 
     ImmutableMap<String, ColumnDef> columnDefs = tableDef.getColumnDefs();
     assertEquals(9, columnDefs.size());
@@ -81,8 +81,8 @@ public class SchemaBuilderTest {
 
     ImmutableMap<String, TableDef> tableDefs = schemaBuilder.getTableDefs();
     assertEquals(1, tableDefs.size());
-    TableDef tableDef = tableDefs.get("complex_record");
-    assertEquals("complex_record", tableDef.getName());
+    TableDef tableDef = tableDefs.get(SystemColumnDefs.TABLE_PREFIX + "complex_record");
+    assertEquals(SystemColumnDefs.TABLE_PREFIX + "complex_record", tableDef.getName());
 
     ImmutableMap<String, ColumnDef> columnDefs = tableDef.getColumnDefs();
     assertEquals(5, columnDefs.size());
@@ -104,8 +104,8 @@ public class SchemaBuilderTest {
 
     ImmutableMap<String, TableDef> tableDefs = schemaBuilder.getTableDefs();
     assertEquals(2, tableDefs.size());
-    TableDef tableDef = tableDefs.get("instant_record");
-    assertEquals("instant_record", tableDef.getName());
+    TableDef tableDef = tableDefs.get(SystemColumnDefs.TABLE_PREFIX + "instant_record");
+    assertEquals(SystemColumnDefs.TABLE_PREFIX + "instant_record", tableDef.getName());
 
     ImmutableMap<String, ColumnDef> columnDefs = tableDef.getColumnDefs();
     assertEquals(5, columnDefs.size());
@@ -127,8 +127,8 @@ public class SchemaBuilderTest {
 
     ImmutableMap<String, TableDef> tableDefs = schemaBuilder.getTableDefs();
     assertEquals(2, tableDefs.size());
-    TableDef tableDef = tableDefs.get("interval_record");
-    assertEquals("interval_record", tableDef.getName());
+    TableDef tableDef = tableDefs.get(SystemColumnDefs.TABLE_PREFIX + "interval_record");
+    assertEquals(SystemColumnDefs.TABLE_PREFIX + "interval_record", tableDef.getName());
 
     ImmutableMap<String, ColumnDef> columnDefs = tableDef.getColumnDefs();
     assertEquals(6, columnDefs.size());
@@ -144,8 +144,8 @@ public class SchemaBuilderTest {
 
   private void assertContainsColumn(ImmutableMap<String, ColumnDef> columnDefs,
       String name, int type, boolean required) {
-    ColumnDef columnDef = columnDefs.get(name);
-    assertEquals(name, columnDef.getName());
+    ColumnDef columnDef = columnDefs.get(SystemColumnDefs.USER_COLUMN_PREFIX + name);
+    assertEquals(SystemColumnDefs.USER_COLUMN_PREFIX + name, columnDef.getName());
     assertEquals(type, columnDef.getType());
     assertEquals(required, columnDef.isRequired());
   }

@@ -26,8 +26,8 @@ class IdentifiableTypeHandler extends JdbcTypeHandler {
 
   private final IdentifiableSource identifiableSource;
 
-  public IdentifiableTypeHandler(String attribute, Class<? extends Identifiable> type) {
-    super(attribute);
+  public IdentifiableTypeHandler(String columnName, Class<? extends Identifiable> type) {
+    super(columnName);
     try {
       identifiableSource =
           (IdentifiableSource) type.getMethod("getIdentifiableSource").invoke(null);
@@ -39,7 +39,7 @@ class IdentifiableTypeHandler extends JdbcTypeHandler {
 
   @Override
   Object get(ResultSet rs) throws SQLException {
-    byte value = rs.getByte(getAttribute());
+    byte value = rs.getByte(getColumnName());
     return rs.wasNull() ? null : identifiableSource.lookup(value);
   }
 

@@ -15,26 +15,27 @@
  */
 package org.chaston.oakfunds.storage;
 
+import org.chaston.oakfunds.jdbc.ColumnDef;
 import org.joda.time.Instant;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
 public class InstantSearchTerm extends SearchTerm {
-  private final String attribute;
+  private final ColumnDef columnDef;
   private final SearchOperator operator;
   private final Instant instant;
 
-  InstantSearchTerm(String attribute, SearchOperator operator, Instant instant) {
-    this.attribute = attribute;
+  InstantSearchTerm(ColumnDef columnDef, SearchOperator operator, Instant instant) {
+    this.columnDef = columnDef;
     this.operator = operator;
 
     this.instant = instant;
   }
 
-  public static InstantSearchTerm of(String attribute, SearchOperator operator,
+  public static InstantSearchTerm of(ColumnDef columnDef, SearchOperator operator,
       Instant instant) {
-    return new InstantSearchTerm(attribute, operator, instant);
+    return new InstantSearchTerm(columnDef, operator, instant);
   }
 
   public SearchOperator getOperator() {
@@ -45,7 +46,7 @@ public class InstantSearchTerm extends SearchTerm {
     return instant;
   }
 
-  public String getAttribute() {
-    return attribute;
+  public ColumnDef getColumnDef() {
+    return columnDef;
   }
 }

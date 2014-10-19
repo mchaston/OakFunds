@@ -15,10 +15,12 @@
  */
 package org.chaston.oakfunds.storage;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.jdbc.ColumnDef;
 import org.chaston.oakfunds.util.DateUtil;
@@ -95,10 +97,10 @@ class StoreImpl implements Store {
         "You cannot specify an ID for an auto-incrementing record type.");
 
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("INSERT INTO ").append(recordType.getRootType().getName()).append("(");
+    stringBuilder.append("INSERT INTO ").append(recordType.getTableName()).append("(");
     stringBuilder.append(SystemColumnDefs.ID_COLUMN_NAME).append(", ");
     stringBuilder.append(SystemColumnDefs.TYPE.getName()).append(", ");
-    Joiner.on(", ").appendTo(stringBuilder, attributes.keySet());
+    Joiner.on(", ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
     stringBuilder.append(") VALUES (");
     appendQuestionMarks(stringBuilder, attributes.size() + 2);
     stringBuilder.append(");");
@@ -134,9 +136,9 @@ class StoreImpl implements Store {
         "You must specify an ID for a manually identifying record type.");
 
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("INSERT INTO ").append(recordType.getRootType().getName()).append("(");
+    stringBuilder.append("INSERT INTO ").append(recordType.getTableName()).append("(");
     stringBuilder.append(SystemColumnDefs.TYPE.getName()).append(", ");
-    Joiner.on(", ").appendTo(stringBuilder, attributes.keySet());
+    Joiner.on(", ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
     stringBuilder.append(") VALUES (");
     appendQuestionMarks(stringBuilder, attributes.size() + 1);
     stringBuilder.append(");");
@@ -175,7 +177,7 @@ class StoreImpl implements Store {
   private <T extends Record> RawRecord<T> getRecord(Connection connection,
       RecordType<T> recordType, int id) throws StorageException {
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("SELECT * FROM ").append(recordType.getRootType().getName());
+    stringBuilder.append("SELECT * FROM ").append(recordType.getTableName());
     stringBuilder.append(" WHERE ").append(SystemColumnDefs.ID_COLUMN_NAME).append(" = ?;");
     try {
       try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
@@ -220,8 +222,8 @@ class StoreImpl implements Store {
   private <T extends Record> void updateRecord(Connection connection,
       RecordType<T> recordType, int id, Map<String, Object> attributes) throws StorageException {
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("UPDATE ").append(recordType.getRootType().getName()).append(" SET ");
-    Joiner.on(" = ?, ").appendTo(stringBuilder, attributes.keySet());
+    stringBuilder.append("UPDATE ").append(recordType.getTableName()).append(" SET ");
+    Joiner.on(" = ?, ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
     stringBuilder.append(" = ?");
     stringBuilder.append(" WHERE ").append(SystemColumnDefs.ID_COLUMN_NAME).append(" = ?;");
 
@@ -283,7 +285,7 @@ class StoreImpl implements Store {
       Record containingRecord, RecordType<T> recordType, Instant start, Instant end)
       throws StorageException {
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("DELETE FROM ").append(recordType.getRootType().getName());
+    stringBuilder.append("DELETE FROM ").append(recordType.getTableName());
     stringBuilder.append(" WHERE ");
     stringBuilder.append(SystemColumnDefs.CONTAINER_ID.getName()).append(" = ? AND ");
     stringBuilder.append(SystemColumnDefs.START_TIME.getName()).append(" >= ? AND ");
@@ -306,7 +308,7 @@ class StoreImpl implements Store {
       RawIntervalRecord<T> record, ColumnDef columnDef, Instant instant)
       throws StorageException {
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("UPDATE ").append(record.getRecordType().getRootType().getName());
+    stringBuilder.append("UPDATE ").append(record.getRecordType().getTableName());
     stringBuilder.append(" SET ").append(columnDef.getName()).append(" = ?");
     stringBuilder.append(" WHERE ").append(SystemColumnDefs.ID_COLUMN_NAME).append(" = ?;");
 
@@ -330,12 +332,12 @@ class StoreImpl implements Store {
       int containingId, RecordType<T> recordType,
       Instant start, Instant end, Map<String, Object> attributes) throws StorageException{
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("INSERT INTO ").append(recordType.getRootType().getName()).append("(");
+    stringBuilder.append("INSERT INTO ").append(recordType.getTableName()).append("(");
     stringBuilder.append(SystemColumnDefs.TYPE.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.CONTAINER_ID.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.START_TIME.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.END_TIME.getName()).append(", ");
-    Joiner.on(", ").appendTo(stringBuilder, attributes.keySet());
+    Joiner.on(", ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
     stringBuilder.append(") VALUES (");
     appendQuestionMarks(stringBuilder, attributes.size() + 4);
     stringBuilder.append(");");
@@ -387,11 +389,11 @@ class StoreImpl implements Store {
         "You must specify an ID for a manually identifying record type.");
 
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("INSERT INTO ").append(recordType.getRootType().getName()).append("(");
+    stringBuilder.append("INSERT INTO ").append(recordType.getTableName()).append("(");
     stringBuilder.append(SystemColumnDefs.TYPE.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.CONTAINER_ID.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.INSTANT.getName()).append(", ");
-    Joiner.on(", ").appendTo(stringBuilder, attributes.keySet());
+    Joiner.on(", ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
     stringBuilder.append(") VALUES (");
     appendQuestionMarks(stringBuilder, attributes.size() + 3);
     stringBuilder.append(");");
@@ -440,8 +442,8 @@ class StoreImpl implements Store {
       Map<String, Object> attributes) throws StorageException {
 
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("UPDATE ").append(recordType.getRootType().getName()).append(" SET ");
-    Joiner.on(" = ?, ").appendTo(stringBuilder, attributes.keySet());
+    stringBuilder.append("UPDATE ").append(recordType.getTableName()).append(" SET ");
+    Joiner.on(" = ?, ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
     stringBuilder.append(" = ?, ");
     stringBuilder.append(SystemColumnDefs.INSTANT.getName()).append(" = ?");
     stringBuilder.append(" WHERE ").append(SystemColumnDefs.ID_COLUMN_NAME).append(" = ?;");
@@ -469,7 +471,7 @@ class StoreImpl implements Store {
     }
 
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("DELETE FROM ").append(recordType.getRootType().getName());
+    stringBuilder.append("DELETE FROM ").append(recordType.getTableName());
     SearchTermHandler searchTermHandler = new SearchTermHandler(searchTerms);
     searchTermHandler.appendWhereClause(stringBuilder);
     stringBuilder.append(";");
@@ -515,15 +517,15 @@ class StoreImpl implements Store {
       List<? extends SearchTerm> searchTerms)
       throws StorageException {
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("SELECT * FROM ").append(recordType.getRootType().getName());
+    stringBuilder.append("SELECT * FROM ").append(recordType.getTableName());
     searchTerms = ImmutableList.<SearchTerm>builder()
         .addAll(searchTerms)
         .add(InstantSearchTerm.of(
-            SystemColumnDefs.INSTANT.getName(),
+            SystemColumnDefs.INSTANT,
             SearchOperator.GREATER_THAN_OR_EQUAL,
             start))
         .add(InstantSearchTerm.of(
-            SystemColumnDefs.INSTANT.getName(),
+            SystemColumnDefs.INSTANT,
             SearchOperator.LESS_THAN,
             end))
         .build();
@@ -574,7 +576,7 @@ class StoreImpl implements Store {
       Record containingRecord, RecordType<T> recordType, Instant date) throws StorageException {
 
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("SELECT * FROM ").append(recordType.getRootType().getName());
+    stringBuilder.append("SELECT * FROM ").append(recordType.getTableName());
     stringBuilder.append(" WHERE ");
     stringBuilder.append(SystemColumnDefs.CONTAINER_ID.getName()).append(" = ? AND ");
     stringBuilder.append(SystemColumnDefs.START_TIME.getName()).append(" <= ? AND ");
@@ -628,7 +630,7 @@ class StoreImpl implements Store {
       RecordType<T> recordType, List<? extends SearchTerm> searchTerms)
       throws StorageException {
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("SELECT * FROM ").append(recordType.getRootType().getName());
+    stringBuilder.append("SELECT * FROM ").append(recordType.getTableName());
     SearchTermHandler searchTermHandler = new SearchTermHandler(searchTerms);
     searchTermHandler.appendWhereClause(stringBuilder);
     stringBuilder.append(";");
@@ -676,17 +678,17 @@ class StoreImpl implements Store {
       Instant start, Instant end, List<? extends SearchTerm> searchTerms) throws StorageException {
 
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("SELECT * FROM ").append(recordType.getRootType().getName());
+    stringBuilder.append("SELECT * FROM ").append(recordType.getTableName());
     searchTerms = ImmutableList.<SearchTerm>builder()
         .addAll(searchTerms)
         .add(ContainerIdentifierSearchTerm.of(
             containingRecord.getRecordType(), containingRecord.getId()))
         .add(InstantSearchTerm.of(
-            SystemColumnDefs.START_TIME.getName(),
+            SystemColumnDefs.START_TIME,
             SearchOperator.GREATER_THAN_OR_EQUAL,
             start))
         .add(InstantSearchTerm.of(
-            SystemColumnDefs.START_TIME.getName(),
+            SystemColumnDefs.START_TIME,
             SearchOperator.LESS_THAN,
             end))
         .build();
@@ -739,21 +741,22 @@ class StoreImpl implements Store {
       stringBuilder.append(", ").append(SystemColumnDefs.CONTAINER_ID.getName());
       // Include the dimensions.
       for (String dimension : dimensions) {
-        stringBuilder.append(", ").append(dimension);
+        stringBuilder.append(", ").append(prefixColumnName(dimension));
       }
       // Include sums of the measures.
       for (String measure : measures) {
-        stringBuilder.append(", SUM(").append(measure).append(") AS ").append(measure);
+        stringBuilder.append(", SUM(").append(prefixColumnName(measure)).append(") AS ")
+            .append(prefixColumnName(measure));
       }
-      stringBuilder.append(" FROM ").append(recordType.getRootType().getName());
+      stringBuilder.append(" FROM ").append(recordType.getTableName());
       searchTerms = ImmutableList.<SearchTerm>builder()
           .addAll(searchTerms)
           .add(InstantSearchTerm.of(
-              SystemColumnDefs.INSTANT.getName(),
+              SystemColumnDefs.INSTANT,
               SearchOperator.GREATER_THAN_OR_EQUAL,
               DateUtil.BEGINNING_OF_TIME))
           .add(InstantSearchTerm.of(
-              SystemColumnDefs.INSTANT.getName(),
+              SystemColumnDefs.INSTANT,
               SearchOperator.LESS_THAN,
               DateUtil.endOfYear(endYear)))
           .build();
@@ -764,18 +767,19 @@ class StoreImpl implements Store {
       stringBuilder.append(", ").append(SystemColumnDefs.CONTAINER_ID.getName());
       // Include the dimensions.
       for (String dimension : dimensions) {
-        stringBuilder.append(", ").append(dimension);
+        stringBuilder.append(", ").append(prefixColumnName(dimension));
       }
       stringBuilder.append(";");
 
-      ImmutableList.Builder<JdbcTypeHandler> jdbcTypeHandlersBuilder = ImmutableList.builder();
+      ImmutableMap.Builder<String, JdbcTypeHandler> jdbcTypeHandlersBuilder =
+          ImmutableMap.builder();
       for (String dimension : dimensions) {
-        jdbcTypeHandlersBuilder.add(recordType.getJdbcTypeHandler(dimension));
+        jdbcTypeHandlersBuilder.put(dimension, recordType.getJdbcTypeHandler(dimension));
       }
       for (String measure : measures) {
-        jdbcTypeHandlersBuilder.add(recordType.getJdbcTypeHandler(measure));
+        jdbcTypeHandlersBuilder.put(measure, recordType.getJdbcTypeHandler(measure));
       }
-      ImmutableList<JdbcTypeHandler> jdbcTypeHandlers = jdbcTypeHandlersBuilder.build();
+      ImmutableMap<String, JdbcTypeHandler> jdbcTypeHandlers = jdbcTypeHandlersBuilder.build();
 
       try {
         try (PreparedStatement stmt =
@@ -839,13 +843,13 @@ class StoreImpl implements Store {
     return readAttributes(recordType.getJdbcTypeHandlers(), rs);
   }
 
-  private Map<String, Object> readAttributes(Iterable<JdbcTypeHandler> jdbcTypeHandlers,
+  private Map<String, Object> readAttributes(Map<String, JdbcTypeHandler> jdbcTypeHandlers,
       ResultSet rs) throws SQLException {
     Map<String, Object> attributes = new HashMap<>();
-    for (JdbcTypeHandler jdbcTypeHandler : jdbcTypeHandlers) {
-      Object value = jdbcTypeHandler.get(rs);
+    for (Map.Entry<String, JdbcTypeHandler> jdbcTypeHandlerEntry : jdbcTypeHandlers.entrySet()) {
+      Object value = jdbcTypeHandlerEntry.getValue().get(rs);
       if (value != null) {
-        attributes.put(jdbcTypeHandler.getAttribute(), value);
+        attributes.put(jdbcTypeHandlerEntry.getKey(), value);
       }
     }
     return ImmutableMap.copyOf(attributes);
@@ -875,6 +879,19 @@ class StoreImpl implements Store {
 
   private static Timestamp getTimestamp(Instant instant) {
     return new Timestamp(instant.getMillis());
+  }
+
+  private static String prefixColumnName(String attributeName) {
+    return SystemColumnDefs.USER_COLUMN_PREFIX + attributeName;
+  }
+
+  private static Iterable<String> prefixColumnNames(Iterable<String> attributeNames) {
+    return Iterables.transform(attributeNames, new Function<String, String>() {
+      @Override
+      public String apply(String attributeName) {
+        return prefixColumnName(attributeName);
+      }
+    });
   }
 
   private class ReadingDataSource implements AutoCloseable {
@@ -957,13 +974,13 @@ class StoreImpl implements Store {
         parameterValues.add(new IntegerParameterValue(identifierSearchTerm.getId()));
       } else if (searchTerm instanceof AttributeSearchTerm) {
         AttributeSearchTerm attributeSearchTerm = (AttributeSearchTerm) searchTerm;
-        stringBuilder.append(attributeSearchTerm.getAttribute()).append(" ")
+        stringBuilder.append(prefixColumnName(attributeSearchTerm.getAttribute())).append(" ")
             .append(attributeSearchTerm.getOperator().toSql()).append(" ?");
         parameterValues.add(new AttributeParameterValue(
             attributeSearchTerm.getAttribute(), attributeSearchTerm.getValue()));
       } else if (searchTerm instanceof InstantSearchTerm) {
         InstantSearchTerm instantSearchTerm = (InstantSearchTerm) searchTerm;
-        stringBuilder.append(instantSearchTerm.getAttribute()).append(" ")
+        stringBuilder.append(instantSearchTerm.getColumnDef().getName()).append(" ")
             .append(instantSearchTerm.getOperator().toSql()).append(" ?");
         parameterValues.add(new InstantParameterValue(instantSearchTerm.getInstant()));
       } else {

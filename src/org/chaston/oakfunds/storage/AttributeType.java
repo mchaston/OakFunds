@@ -29,6 +29,10 @@ public class AttributeType {
     this.required = required;
   }
 
+  public String getColumnName() {
+    return SystemColumnDefs.USER_COLUMN_PREFIX + name;
+  }
+
   public String getName() {
     return name;
   }

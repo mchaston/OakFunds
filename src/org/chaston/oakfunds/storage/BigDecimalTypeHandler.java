@@ -29,13 +29,13 @@ import java.sql.SQLException;
 class BigDecimalTypeHandler extends JdbcTypeHandler {
   private static final int SCALE = BigDecimalUtil.STANDARD_SCALE;
 
-  public BigDecimalTypeHandler(String attribute) {
-    super(attribute);
+  public BigDecimalTypeHandler(String columnName) {
+    super(columnName);
   }
 
   @Override
   Object get(ResultSet rs) throws SQLException {
-    long value = rs.getLong(getAttribute());
+    long value = rs.getLong(getColumnName());
     return rs.wasNull() ? null : BigDecimal.valueOf(value, SCALE);
   }
 

@@ -23,13 +23,13 @@ import java.sql.SQLException;
  * TODO(mchaston): write JavaDocs
  */
 class StringTypeHandler extends JdbcTypeHandler {
-  public StringTypeHandler(String attribute) {
-    super(attribute);
+  public StringTypeHandler(String columnName) {
+    super(columnName);
   }
 
   @Override
   Object get(ResultSet rs) throws SQLException {
-    String value = rs.getString(getAttribute());
+    String value = rs.getString(getColumnName());
     return rs.wasNull() ? null : value;
   }
 
