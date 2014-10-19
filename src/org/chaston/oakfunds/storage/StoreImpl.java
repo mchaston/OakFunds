@@ -292,8 +292,8 @@ class StoreImpl implements Store {
     try {
       try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
         stmt.setInt(1, containingRecord.getId());
-        stmt.setTimestamp(2, new Timestamp(start.getMillis()));
-        stmt.setTimestamp(3, new Timestamp(end.getMillis()));
+        stmt.setTimestamp(2, getTimestamp(start));
+        stmt.setTimestamp(3, getTimestamp(end));
         stmt.executeUpdate();
       }
     } catch (SQLException e) {
@@ -312,7 +312,7 @@ class StoreImpl implements Store {
 
     try {
       try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        stmt.setTimestamp(1, new Timestamp(instant.getMillis()));
+        stmt.setTimestamp(1, getTimestamp(instant));
         stmt.setInt(2, record.getId());
         stmt.executeUpdate();
       }
@@ -345,8 +345,8 @@ class StoreImpl implements Store {
           Statement.RETURN_GENERATED_KEYS)) {
         stmt.setString(1, recordType.getName());
         stmt.setInt(2, containingId);
-        stmt.setTimestamp(3, new Timestamp(start.getMillis()));
-        stmt.setTimestamp(4, new Timestamp(end.getMillis()));
+        stmt.setTimestamp(3, getTimestamp(start));
+        stmt.setTimestamp(4, getTimestamp(end));
         setParameters(recordType, stmt, 5, attributes);
         stmt.executeUpdate();
         // Get the generated ID back.
@@ -401,7 +401,7 @@ class StoreImpl implements Store {
           Statement.RETURN_GENERATED_KEYS)) {
         stmt.setString(1, recordType.getName());
         stmt.setInt(2, containingId);
-        stmt.setTimestamp(3, new Timestamp(instant.getMillis()));
+        stmt.setTimestamp(3, getTimestamp(instant));
         setParameters(recordType, stmt, 4, attributes);
         stmt.executeUpdate();
         // Get the generated ID back.
@@ -449,7 +449,7 @@ class StoreImpl implements Store {
     try {
       try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
         int nextIndex = setParameters(recordType, stmt, 1, attributes);
-        stmt.setTimestamp(nextIndex++, new Timestamp(instant.getMillis()));
+        stmt.setTimestamp(nextIndex++, getTimestamp(instant));
         stmt.setInt(nextIndex, id);
         stmt.executeUpdate();
       }
@@ -477,7 +477,7 @@ class StoreImpl implements Store {
     try {
       try (PreparedStatement stmt = currentTransaction.getConnection().prepareStatement(
           stringBuilder.toString())) {
-        searchTermHandler.setParameters(stmt, recordType);
+        searchTermHandler.setParameters(stmt, recordType, 1);
         stmt.executeUpdate();
       }
     } catch (SQLException e) {
@@ -534,7 +534,7 @@ class StoreImpl implements Store {
     ImmutableList.Builder<RawInstantRecord<T>> records = ImmutableList.builder();
     try {
       try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        searchTermHandler.setParameters(stmt, recordType);
+        searchTermHandler.setParameters(stmt, recordType, 1);
         try (ResultSet rs = stmt.executeQuery()) {
           while (rs.next()) {
             RecordType<T> loadedRecordType = loadedRecordType(rs, recordType);
@@ -582,8 +582,8 @@ class StoreImpl implements Store {
     try {
       try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
         stmt.setInt(1, containingRecord.getId());
-        stmt.setTimestamp(2, new Timestamp(date.getMillis()));
-        stmt.setTimestamp(3, new Timestamp(date.getMillis()));
+        stmt.setTimestamp(2, getTimestamp(date));
+        stmt.setTimestamp(3, getTimestamp(date));
         try (ResultSet rs = stmt.executeQuery()) {
           if (!rs.next()) {
             return null;
@@ -635,7 +635,7 @@ class StoreImpl implements Store {
     ImmutableList.Builder<RawRecord<T>> records = ImmutableList.builder();
     try {
       try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        searchTermHandler.setParameters(stmt, recordType);
+        searchTermHandler.setParameters(stmt, recordType, 1);
         try (ResultSet rs = stmt.executeQuery()) {
           while (rs.next()) {
             int id = rs.getInt(SystemColumnDefs.ID_COLUMN_NAME);
@@ -696,7 +696,7 @@ class StoreImpl implements Store {
         .append(SystemColumnDefs.START_TIME.getName()).append(" ASC ;");
     try {
       try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
-        searchTermHandler.setParameters(stmt, recordType);
+        searchTermHandler.setParameters(stmt, recordType, 1);
         ImmutableList.Builder<RawIntervalRecord<T>> results = ImmutableList.builder();
         try (ResultSet rs = stmt.executeQuery()) {
           while (rs.next()) {
@@ -732,7 +732,20 @@ class StoreImpl implements Store {
     try (ReadingDataSource readingDataSource = new ReadingDataSource()) {
       // Get all records that would match.
       StringBuilder stringBuilder = new StringBuilder();
-      stringBuilder.append("SELECT *");
+      stringBuilder.append("SELECT ");
+      // Include the date, type and container ID.
+      stringBuilder.append(getInstantFunction(granularity))
+          .append(" AS ").append(SystemColumnDefs.INSTANT.getName());
+      stringBuilder.append(", ").append(SystemColumnDefs.TYPE.getName());
+      stringBuilder.append(", ").append(SystemColumnDefs.CONTAINER_ID.getName());
+      // Include the dimensions.
+      for (String dimension : dimensions) {
+        stringBuilder.append(", ").append(dimension);
+      }
+      // Include sums of the measures.
+      for (String measure : measures) {
+        stringBuilder.append(", SUM(").append(measure).append(") AS ").append(measure);
+      }
       stringBuilder.append(" FROM ").append(recordType.getRootType().getName());
       searchTerms = ImmutableList.<SearchTerm>builder()
           .addAll(searchTerms)
@@ -747,12 +760,30 @@ class StoreImpl implements Store {
           .build();
       SearchTermHandler searchTermHandler = new SearchTermHandler(searchTerms);
       searchTermHandler.appendWhereClause(stringBuilder);
-      stringBuilder.append(" ORDER BY ").append(SystemColumnDefs.INSTANT.getName()).append(" ASC ;");
+      // Group by the date, type and container ID.
+      stringBuilder.append(" GROUP BY ").append(SystemColumnDefs.INSTANT.getName());
+      stringBuilder.append(", ").append(SystemColumnDefs.TYPE.getName());
+      stringBuilder.append(", ").append(SystemColumnDefs.CONTAINER_ID.getName());
+      // Include the dimensions.
+      for (String dimension : dimensions) {
+        stringBuilder.append(", ").append(dimension);
+      }
+      stringBuilder.append(";");
+
+      ImmutableList.Builder<JdbcTypeHandler> jdbcTypeHandlersBuilder = ImmutableList.builder();
+      for (String dimension : dimensions) {
+        jdbcTypeHandlersBuilder.add(recordType.getJdbcTypeHandler(dimension));
+      }
+      for (String measure : measures) {
+        jdbcTypeHandlersBuilder.add(recordType.getJdbcTypeHandler(measure));
+      }
+      ImmutableList<JdbcTypeHandler> jdbcTypeHandlers = jdbcTypeHandlersBuilder.build();
 
       try {
         try (PreparedStatement stmt =
                  readingDataSource.getConnection().prepareStatement(stringBuilder.toString())) {
-          searchTermHandler.setParameters(stmt, recordType);
+          stmt.setTimestamp(1, getTimestamp(DateUtil.endOfYear(startYear - 1)));
+          searchTermHandler.setParameters(stmt, recordType, 2);
           try (ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
               // Group and sum to create the results.
@@ -760,7 +791,7 @@ class StoreImpl implements Store {
               reportBuilder.aggregateEntry(
                   getInstant(rs, SystemColumnDefs.INSTANT),
                   rs.getInt(SystemColumnDefs.CONTAINER_ID.getName()),
-                  readAttributes(loadedRecordType, rs));
+                  readAttributes(jdbcTypeHandlers, rs));
             }
           }
         }
@@ -771,6 +802,20 @@ class StoreImpl implements Store {
     }
 
     return reportBuilder.build();
+  }
+
+  private String getInstantFunction(ReportDateGranularity granularity) {
+    switch (granularity) {
+      case YEAR:
+        return "reporting_year(?, " + SystemColumnDefs.INSTANT.getName() + ")";
+      case MONTH:
+        return "reporting_month(?, " + SystemColumnDefs.INSTANT.getName() + ")";
+      case DAY:
+        return "reporting_day(?, " + SystemColumnDefs.INSTANT.getName() + ")";
+      default:
+        throw new UnsupportedOperationException(
+            "Granularity " + granularity + " is not supported.");
+    }
   }
 
   private Connection getNewConnection() throws StorageException {
@@ -794,8 +839,13 @@ class StoreImpl implements Store {
 
   private Map<String, Object> readAttributes(RecordType<?> recordType, ResultSet rs)
       throws SQLException {
+    return readAttributes(recordType.getJdbcTypeHandlers(), rs);
+  }
+
+  private Map<String, Object> readAttributes(Iterable<JdbcTypeHandler> jdbcTypeHandlers,
+      ResultSet rs) throws SQLException {
     Map<String, Object> attributes = new HashMap<>();
-    for (JdbcTypeHandler jdbcTypeHandler : recordType.getJdbcTypeHandlers()) {
+    for (JdbcTypeHandler jdbcTypeHandler : jdbcTypeHandlers) {
       Object value = jdbcTypeHandler.get(rs);
       if (value != null) {
         attributes.put(jdbcTypeHandler.getAttribute(), value);
@@ -824,6 +874,10 @@ class StoreImpl implements Store {
 
   private static Instant getInstant(ResultSet rs, ColumnDef columnDef) throws SQLException {
     return new Instant(rs.getTimestamp(columnDef.getName()));
+  }
+
+  private static Timestamp getTimestamp(Instant instant) {
+    return new Timestamp(instant.getMillis());
   }
 
   private class ReadingDataSource implements AutoCloseable {
@@ -921,9 +975,8 @@ class StoreImpl implements Store {
       }
     }
 
-    public <T extends Record> void setParameters(PreparedStatement stmt, RecordType<T> recordType)
-        throws SQLException {
-      int index = 1;
+    public <T extends Record> void setParameters(PreparedStatement stmt, RecordType<T> recordType,
+        int index) throws SQLException {
       for (ParameterValue parameterValue : parameterValues) {
         parameterValue.set(stmt, index++, recordType);
       }
@@ -973,7 +1026,7 @@ class StoreImpl implements Store {
       @Override
       <T extends Record> void set(PreparedStatement stmt, int index, RecordType<T> recordType)
           throws SQLException {
-        stmt.setTimestamp(index, new Timestamp(instant.getMillis()));
+        stmt.setTimestamp(index, getTimestamp(instant));
       }
     }
   }
