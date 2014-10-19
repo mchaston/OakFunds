@@ -19,6 +19,7 @@ import com.google.inject.AbstractModule;
 import org.chaston.oakfunds.account.AccountTypesModule;
 import org.chaston.oakfunds.ledger.LedgerTypesModule;
 import org.chaston.oakfunds.model.ModelTypesModule;
+import org.chaston.oakfunds.storage.StorageTypesModule;
 import org.chaston.oakfunds.system.SystemTypesModule;
 
 /**
@@ -30,6 +31,7 @@ public class AllTypesModule extends AbstractModule {
     install(new AccountTypesModule());
     install(new LedgerTypesModule());
     install(new ModelTypesModule());
+    install(new StorageTypesModule());
     install(new SystemTypesModule());
   }
 }

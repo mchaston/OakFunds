@@ -26,6 +26,7 @@ import javax.sql.DataSource;
 public class StorageModule extends AbstractModule {
   @Override
   protected void configure() {
+    install(new StorageTypesModule());
     requireBinding(DataSource.class);
     requireBinding(RecordTypeRegistry.class);
     bind(Store.class).to(StoreImpl.class);

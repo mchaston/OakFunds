@@ -64,9 +64,7 @@ public class SchemaValidatorTest {
   @Test
   public void testValidateEmptySchema() throws SQLException {
     Iterable<SchemaDiscrepancy> discrepancies = schemaValidator.validateSchema();
-    assertEquals(10, Iterables.size(discrepancies));
-    for (SchemaDiscrepancy discrepancy : discrepancies) {
-      assertEquals(MissingTable.class, discrepancy.getClass());
-    }
+    assertEquals(10, Iterables.size(Iterables.filter(discrepancies, MissingTable.class)));
+    assertEquals(3, Iterables.size(Iterables.filter(discrepancies, MissingFunction.class)));
   }
 }
