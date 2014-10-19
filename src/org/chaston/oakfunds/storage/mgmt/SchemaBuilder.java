@@ -22,6 +22,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.jdbc.ColumnDef;
+import org.chaston.oakfunds.jdbc.FunctionDef;
 import org.chaston.oakfunds.jdbc.TableDef;
 import org.chaston.oakfunds.storage.AttributeType;
 import org.chaston.oakfunds.storage.Identifiable;
@@ -40,9 +41,10 @@ import java.util.Set;
  */
 public class SchemaBuilder {
   private final ImmutableMap<String, TableDef> tableDefs;
+  private final ImmutableMap<String, FunctionDef> functionDefs;
 
   @Inject
-  SchemaBuilder(Set<RecordType> recordTypes) {
+  SchemaBuilder(Set<RecordType> recordTypes, Set<FunctionDef> functionDefs) {
     Multimap<RecordType, RecordType> typesBySuperType = groupBySuperType(recordTypes);
     Map<String, TableDef.Builder> tableDefBuilders = createBaseTables(typesBySuperType);
     tableDefs = ImmutableMap.copyOf(Maps.transformValues(tableDefBuilders,
@@ -52,6 +54,11 @@ public class SchemaBuilder {
             return builder.build();
           }
         }));
+    ImmutableMap.Builder<String, FunctionDef> functionDefsBuilder = ImmutableMap.builder();
+    for (FunctionDef functionDef : functionDefs) {
+      functionDefsBuilder.put(functionDef.getName(), functionDef);
+    }
+    this.functionDefs = functionDefsBuilder.build();
   }
 
   private Multimap<RecordType, RecordType> groupBySuperType(Set<? extends RecordType> recordTypes) {
@@ -133,5 +140,9 @@ public class SchemaBuilder {
 
   public ImmutableMap<String, TableDef> getTableDefs() {
     return tableDefs;
+  }
+
+  public ImmutableMap<String, FunctionDef> getFunctionDefs() {
+    return functionDefs;
   }
 }

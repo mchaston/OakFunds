@@ -21,6 +21,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.chaston.oakfunds.jdbc.ColumnDef;
+import org.chaston.oakfunds.jdbc.FunctionDef;
 import org.chaston.oakfunds.jdbc.RemoteDataStoreModule;
 import org.chaston.oakfunds.jdbc.TableDef;
 import org.chaston.oakfunds.storage.RecordTypeRegistryModule;
@@ -61,8 +62,10 @@ public class SchemaValidator {
 
   Iterable<SchemaDiscrepancy> validateSchema() throws SQLException {
     ImmutableMap<String, TableDef> tableDefs = schemaBuilder.getTableDefs();
+    ImmutableMap<String, FunctionDef> functionDefs = schemaBuilder.getFunctionDefs();
     ImmutableList.Builder<SchemaDiscrepancy> schemaDiscrepancies = ImmutableList.builder();
     Set<String> seenTables = new HashSet<>();
+    Set<String> seenFunctions = new HashSet<>();
     try (Connection connection = dataSource.getConnection()) {
       DatabaseMetaData metaData = connection.getMetaData();
       try (ResultSet allTables = metaData.getTables(null, null, null, null)) {
@@ -70,17 +73,35 @@ public class SchemaValidator {
           String tableName = allTables.getString("TABLE_NAME").toLowerCase();
           TableDef tableDef = tableDefs.get(tableName);
           if (tableDef == null) {
-            // Table that the defs do not know and hence care) about.
+            // Table that the defs do not know (and hence care) about.
             continue;
           }
           seenTables.add(tableName);
           validateTable(metaData, tableDef, schemaDiscrepancies);
         }
       }
+
+      try (ResultSet allFunctions = metaData.getFunctions(null, null, null)) {
+        while (allFunctions.next()) {
+          String functionName = allFunctions.getString("FUNCTION_NAME").toLowerCase();
+          FunctionDef functionDef = functionDefs.get(functionName);
+          if (functionDef == null) {
+            // Function that the defs do not know (and hence care) about.
+            continue;
+          }
+          seenFunctions.add(functionName);
+          // TODO: validate function (?)
+        }
+      }
     }
     for (TableDef expectedTable : tableDefs.values()) {
       if (!seenTables.contains(expectedTable.getName())) {
         schemaDiscrepancies.add(new MissingTable(expectedTable));
+      }
+    }
+    for (FunctionDef expectedFunction : functionDefs.values()) {
+      if (!seenFunctions.contains(expectedFunction.getName())) {
+        schemaDiscrepancies.add(new MissingFunction(expectedFunction));
       }
     }
     return schemaDiscrepancies.build();

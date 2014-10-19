@@ -15,27 +15,19 @@
  */
 package org.chaston.oakfunds.storage.mgmt;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
 import org.chaston.oakfunds.jdbc.FunctionDef;
-import org.chaston.oakfunds.storage.RecordType;
-
-import javax.sql.DataSource;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class StorageManagementModule extends AbstractModule {
-  @Override
-  protected void configure() {
-    requireBinding(SchemaBuilder.class);
-    requireBinding(DataSource.class);
-    bind(SchemaValidator.class).in(Singleton.class);
-    bind(SchemaUpdater.class).in(Singleton.class);
+class MissingFunction extends SchemaDiscrepancy {
+  private final FunctionDef functionDef;
 
-    // Preemptively bind multivalues so that they are never null.
-    Multibinder.newSetBinder(binder(), RecordType.class);
-    Multibinder.newSetBinder(binder(), FunctionDef.class);
+  MissingFunction(FunctionDef functionDef) {
+    this.functionDef = functionDef;
+  }
+
+  public FunctionDef getFunctionDef() {
+    return functionDef;
   }
 }

@@ -18,6 +18,7 @@ package org.chaston.oakfunds.storage.mgmt;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.chaston.oakfunds.jdbc.ColumnDef;
+import org.chaston.oakfunds.jdbc.FunctionDef;
 import org.chaston.oakfunds.jdbc.TableDef;
 import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.Identifiable;
@@ -48,7 +49,7 @@ public class SchemaBuilderTest {
   @Test
   public void getTableDefsForRecord() {
     ImmutableSet<RecordType> recordTypes = ImmutableSet.<RecordType>of(TestSimpleRecord.TYPE);
-    SchemaBuilder schemaBuilder = new SchemaBuilder(recordTypes);
+    SchemaBuilder schemaBuilder = new SchemaBuilder(recordTypes, ImmutableSet.<FunctionDef>of());
 
     ImmutableMap<String, TableDef> tableDefs = schemaBuilder.getTableDefs();
     assertEquals(1, tableDefs.size());
@@ -76,7 +77,7 @@ public class SchemaBuilderTest {
         TestRootRecord.TYPE,
         TestSubRecord1.TYPE,
         TestSubRecord11.TYPE);
-    SchemaBuilder schemaBuilder = new SchemaBuilder(recordTypes);
+    SchemaBuilder schemaBuilder = new SchemaBuilder(recordTypes, ImmutableSet.<FunctionDef>of());
 
     ImmutableMap<String, TableDef> tableDefs = schemaBuilder.getTableDefs();
     assertEquals(1, tableDefs.size());
@@ -99,7 +100,7 @@ public class SchemaBuilderTest {
     ImmutableSet<RecordType> recordTypes = ImmutableSet.<RecordType>of(
         TestSimpleRecord.TYPE,
         TestInstantRecord.TYPE);
-    SchemaBuilder schemaBuilder = new SchemaBuilder(recordTypes);
+    SchemaBuilder schemaBuilder = new SchemaBuilder(recordTypes, ImmutableSet.<FunctionDef>of());
 
     ImmutableMap<String, TableDef> tableDefs = schemaBuilder.getTableDefs();
     assertEquals(2, tableDefs.size());
@@ -122,7 +123,7 @@ public class SchemaBuilderTest {
     ImmutableSet<RecordType> recordTypes = ImmutableSet.<RecordType>of(
         TestSimpleRecord.TYPE,
         TestIntervalRecord.TYPE);
-    SchemaBuilder schemaBuilder = new SchemaBuilder(recordTypes);
+    SchemaBuilder schemaBuilder = new SchemaBuilder(recordTypes, ImmutableSet.<FunctionDef>of());
 
     ImmutableMap<String, TableDef> tableDefs = schemaBuilder.getTableDefs();
     assertEquals(2, tableDefs.size());

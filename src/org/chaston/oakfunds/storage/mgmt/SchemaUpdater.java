@@ -22,6 +22,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.chaston.oakfunds.jdbc.ColumnDef;
+import org.chaston.oakfunds.jdbc.FunctionDef;
 import org.chaston.oakfunds.jdbc.RemoteDataStoreModule;
 import org.chaston.oakfunds.jdbc.TableDef;
 import org.chaston.oakfunds.storage.RecordTypeRegistryModule;
@@ -30,6 +31,7 @@ import org.chaston.oakfunds.util.Flags;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
@@ -73,6 +75,8 @@ public class SchemaUpdater {
           Iterables.filter(discrepancies, MissingTable.class));
       alterTableDefDiscrepancies(connection,
           Iterables.filter(discrepancies, TableDefDiscrepancy.class));
+      createMissingFunctions(connection,
+          Iterables.filter(discrepancies, MissingFunction.class));
     }
 
     // Re-validate when done.
@@ -175,5 +179,42 @@ public class SchemaUpdater {
       discrepanciesByTable.put(discrepancy.getTableName(), discrepancy);
     }
     return discrepanciesByTable.asMap();
+  }
+
+  private void createMissingFunctions(Connection connection,
+      Iterable<MissingFunction> missingFunctions) throws SQLException {
+    DatabaseMetaData metadata = connection.getMetaData();
+    FunctionSelector functionSelector = determineFunctionSelector(metadata);
+    for (MissingFunction missingFunction : missingFunctions) {
+      try (Statement stmt = connection.createStatement()) {
+        stmt.executeUpdate(functionSelector.functionContent(missingFunction.getFunctionDef()));
+      }
+    }
+  }
+
+  private FunctionSelector determineFunctionSelector(DatabaseMetaData metadata)
+      throws SQLException {
+    String databaseProduct = metadata.getDatabaseProductName();
+    if (databaseProduct.equalsIgnoreCase("HSQL Database Engine")) {
+      return new FunctionSelector() {
+        @Override
+        public String functionContent(FunctionDef functionDef) {
+          return functionDef.getHsqldbFunction();
+        }
+      };
+    }
+    if (databaseProduct.equalsIgnoreCase("MySQL")) {
+      return new FunctionSelector() {
+        @Override
+        public String functionContent(FunctionDef functionDef) {
+          return functionDef.getMysqlFunction();
+        }
+      };
+    }
+    throw new UnsupportedOperationException("Functions cannot be selected for " + databaseProduct);
+  }
+
+  private static interface FunctionSelector {
+    String functionContent(FunctionDef functionDef);
   }
 }
