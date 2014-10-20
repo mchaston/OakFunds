@@ -77,7 +77,13 @@ public class RecordType<T extends Record> {
                 + " must extend from one of the base record types.");
       }
     }
-    this.attributes = buildAttributes(recordTypeClass,
+    String columnNamespace = SystemColumnDefs.USER_COLUMN_PREFIX;
+    if (parentType != null) {
+      // If this is not the root, namespace all attributes with the type in order to avoid
+      // sibling attribute collision.
+      columnNamespace += name + "__";
+    }
+    this.attributes = buildAttributes(recordTypeClass, columnNamespace,
         parentType == null ? null : parentType.getRecordTypeClass());
     this.jdbcTypeHandlers = buildTypeHandlers(attributes, parentType);
   }
@@ -93,9 +99,9 @@ public class RecordType<T extends Record> {
   }
 
   private static ImmutableMap<String, AttributeType> buildAttributes(Class<?> recordTypeClass,
-      @Nullable Class<?> parentClass) {
+      String columnNamespace, @Nullable Class<?> parentClass) {
     Map<String, AttributeType> attributes = new HashMap<>();
-    extractAttributesFromMethods(attributes, recordTypeClass);
+    extractAttributesFromMethods(attributes, recordTypeClass, columnNamespace);
     boolean seenParentClass = false;
     for (Class<?> interfaceClass : recordTypeClass.getInterfaces()) {
       if (interfaceClass.equals(parentClass)) {
@@ -103,7 +109,7 @@ public class RecordType<T extends Record> {
         continue;
       }
       ImmutableMap<String, AttributeType> superInterfaceAttributes =
-          buildAttributes(interfaceClass, null);
+          buildAttributes(interfaceClass, columnNamespace, null);
       for (String otherAttribute : superInterfaceAttributes.keySet()) {
         if (attributes.containsKey(otherAttribute)) {
           throw new IllegalStateException("Attribute " + otherAttribute
@@ -122,7 +128,7 @@ public class RecordType<T extends Record> {
   }
 
   private static void extractAttributesFromMethods(Map<String, AttributeType> attributes,
-      Class<?> clazz) {
+      Class<?> clazz, String columnNamespace) {
     for (Method method : clazz.getDeclaredMethods()) {
       AttributeMethod attributeMethod = method.getAnnotation(AttributeMethod.class);
       if (attributeMethod != null) {
@@ -131,8 +137,11 @@ public class RecordType<T extends Record> {
               + " is declared more than once for type " + clazz.getName() + ".");
         }
         attributes.put(attributeMethod.attribute(),
-            new AttributeType(attributeMethod.attribute(),
-                method.getReturnType(), attributeMethod.required()));
+            new AttributeType(
+                attributeMethod.attribute(),
+                method.getReturnType(),
+                columnNamespace + attributeMethod.attribute(),
+                attributeMethod.required()));
       }
     }
   }

@@ -100,7 +100,7 @@ class StoreImpl implements Store {
     stringBuilder.append("INSERT INTO ").append(recordType.getTableName()).append("(");
     stringBuilder.append(SystemColumnDefs.ID_COLUMN_NAME).append(", ");
     stringBuilder.append(SystemColumnDefs.TYPE.getName()).append(", ");
-    appendAttributeColumnNames(stringBuilder, attributes);
+    appendAttributeColumnNames(stringBuilder, recordType, attributes);
     stringBuilder.append(") VALUES (");
     appendQuestionMarks(stringBuilder, attributes.size() + 2);
     stringBuilder.append(");");
@@ -136,7 +136,7 @@ class StoreImpl implements Store {
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("INSERT INTO ").append(recordType.getTableName()).append("(");
     stringBuilder.append(SystemColumnDefs.TYPE.getName()).append(", ");
-    appendAttributeColumnNames(stringBuilder, attributes);
+    appendAttributeColumnNames(stringBuilder, recordType, attributes);
     stringBuilder.append(") VALUES (");
     appendQuestionMarks(stringBuilder, attributes.size() + 1);
     stringBuilder.append(");");
@@ -218,7 +218,7 @@ class StoreImpl implements Store {
       RecordType<T> recordType, int id, Map<String, Object> attributes) throws StorageException {
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("UPDATE ").append(recordType.getTableName()).append(" SET ");
-    Joiner.on(" = ?, ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
+    Joiner.on(" = ?, ").appendTo(stringBuilder, prefixColumnNames(recordType, attributes.keySet()));
     stringBuilder.append(" = ?");
     stringBuilder.append(" WHERE ").append(SystemColumnDefs.ID_COLUMN_NAME).append(" = ?;");
 
@@ -326,7 +326,7 @@ class StoreImpl implements Store {
     stringBuilder.append(SystemColumnDefs.CONTAINER_ID.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.START_TIME.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.END_TIME.getName()).append(", ");
-    appendAttributeColumnNames(stringBuilder, attributes);
+    appendAttributeColumnNames(stringBuilder, recordType, attributes);
     stringBuilder.append(") VALUES (");
     appendQuestionMarks(stringBuilder, attributes.size() + 4);
     stringBuilder.append(");");
@@ -380,7 +380,7 @@ class StoreImpl implements Store {
     stringBuilder.append(SystemColumnDefs.TYPE.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.CONTAINER_ID.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.INSTANT.getName()).append(", ");
-    appendAttributeColumnNames(stringBuilder, attributes);
+    appendAttributeColumnNames(stringBuilder, recordType, attributes);
     stringBuilder.append(") VALUES (");
     appendQuestionMarks(stringBuilder, attributes.size() + 3);
     stringBuilder.append(");");
@@ -428,7 +428,7 @@ class StoreImpl implements Store {
 
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("UPDATE ").append(recordType.getTableName()).append(" SET ");
-    Joiner.on(" = ?, ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
+    Joiner.on(" = ?, ").appendTo(stringBuilder, prefixColumnNames(recordType, attributes.keySet()));
     stringBuilder.append(" = ?, ");
     stringBuilder.append(SystemColumnDefs.INSTANT.getName()).append(" = ?");
     stringBuilder.append(" WHERE ").append(SystemColumnDefs.ID_COLUMN_NAME).append(" = ?;");
@@ -455,7 +455,7 @@ class StoreImpl implements Store {
 
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("DELETE FROM ").append(recordType.getTableName());
-    SearchTermHandler searchTermHandler = new SearchTermHandler(searchTerms);
+    SearchTermHandler searchTermHandler = new SearchTermHandler(recordType, searchTerms);
     searchTermHandler.appendWhereClause(stringBuilder);
     stringBuilder.append(";");
 
@@ -510,7 +510,7 @@ class StoreImpl implements Store {
             SearchOperator.LESS_THAN,
             end))
         .build();
-    SearchTermHandler searchTermHandler = new SearchTermHandler(searchTerms);
+    SearchTermHandler searchTermHandler = new SearchTermHandler(recordType, searchTerms);
     searchTermHandler.appendWhereClause(stringBuilder);
     stringBuilder.append(" ORDER BY ").append(SystemColumnDefs.INSTANT.getName()).append(" ASC ;");
 
@@ -609,7 +609,7 @@ class StoreImpl implements Store {
       throws StorageException {
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("SELECT * FROM ").append(recordType.getTableName());
-    SearchTermHandler searchTermHandler = new SearchTermHandler(searchTerms);
+    SearchTermHandler searchTermHandler = new SearchTermHandler(recordType, searchTerms);
     searchTermHandler.appendWhereClause(stringBuilder);
     stringBuilder.append(";");
 
@@ -669,7 +669,7 @@ class StoreImpl implements Store {
             SearchOperator.LESS_THAN,
             end))
         .build();
-    SearchTermHandler searchTermHandler = new SearchTermHandler(searchTerms);
+    SearchTermHandler searchTermHandler = new SearchTermHandler(recordType, searchTerms);
     searchTermHandler.appendWhereClause(stringBuilder);
     stringBuilder.append(" ORDER BY ")
         .append(SystemColumnDefs.START_TIME.getName()).append(" ASC ;");
@@ -716,13 +716,12 @@ class StoreImpl implements Store {
           .append(" AS ").append(SystemColumnDefs.INSTANT.getName());
       stringBuilder.append(", ").append(SystemColumnDefs.CONTAINER_ID.getName());
       // Include the dimensions.
-      for (String dimension : dimensions) {
-        stringBuilder.append(", ").append(prefixColumnName(dimension));
+      for (String dimensionColumn : prefixColumnNames(recordType, dimensions)) {
+        stringBuilder.append(", ").append(dimensionColumn);
       }
       // Include sums of the measures.
-      for (String measure : measures) {
-        stringBuilder.append(", SUM(").append(prefixColumnName(measure)).append(") AS ")
-            .append(prefixColumnName(measure));
+      for (String measureColumn : prefixColumnNames(recordType, measures)) {
+        stringBuilder.append(", SUM(").append(measureColumn).append(") AS ").append(measureColumn);
       }
       stringBuilder.append(" FROM ").append(recordType.getTableName());
       searchTerms = ImmutableList.<SearchTerm>builder()
@@ -736,14 +735,14 @@ class StoreImpl implements Store {
               SearchOperator.LESS_THAN,
               DateUtil.endOfYear(endYear)))
           .build();
-      SearchTermHandler searchTermHandler = new SearchTermHandler(searchTerms);
+      SearchTermHandler searchTermHandler = new SearchTermHandler(recordType, searchTerms);
       searchTermHandler.appendWhereClause(stringBuilder);
       // Group by the date  and container ID.
       stringBuilder.append(" GROUP BY ").append(SystemColumnDefs.INSTANT.getName());
       stringBuilder.append(", ").append(SystemColumnDefs.CONTAINER_ID.getName());
       // Include the dimensions.
-      for (String dimension : dimensions) {
-        stringBuilder.append(", ").append(prefixColumnName(dimension));
+      for (String dimensionColumn : prefixColumnNames(recordType, dimensions)) {
+        stringBuilder.append(", ").append(dimensionColumn);
       }
       stringBuilder.append(";");
 
@@ -855,22 +854,23 @@ class StoreImpl implements Store {
     return new Timestamp(instant.getMillis());
   }
 
-  private static String prefixColumnName(String attributeName) {
-    return SystemColumnDefs.USER_COLUMN_PREFIX + attributeName;
+  private static String prefixColumnName(RecordType<?> recordType, String attributeName) {
+    return recordType.getJdbcTypeHandler(attributeName).getColumnName();
   }
 
-  private static Iterable<String> prefixColumnNames(Iterable<String> attributeNames) {
+  private static Iterable<String> prefixColumnNames(
+      final RecordType<?> recordType, Iterable<String> attributeNames) {
     return Iterables.transform(attributeNames, new Function<String, String>() {
       @Override
       public String apply(String attributeName) {
-        return prefixColumnName(attributeName);
+        return prefixColumnName(recordType, attributeName);
       }
     });
   }
 
   private static void appendAttributeColumnNames(StringBuilder stringBuilder,
-      Map<String, Object> attributes) {
-    Joiner.on(", ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
+      RecordType<?> recordType, Map<String, Object> attributes) {
+    Joiner.on(", ").appendTo(stringBuilder, prefixColumnNames(recordType, attributes.keySet()));
   }
 
   private class ReadingDataSource implements AutoCloseable {
@@ -898,11 +898,13 @@ class StoreImpl implements Store {
   }
 
   private class SearchTermHandler {
+    private final RecordType<?> recordType;
     private final List<? extends SearchTerm> searchTerms;
     // This is linked to ensure that they are set in the same order as they need to be written.
     private final List<ParameterValue> parameterValues = new LinkedList<>();
 
-    public SearchTermHandler(List<? extends SearchTerm> searchTerms) {
+    public SearchTermHandler(RecordType<?> recordType, List<? extends SearchTerm> searchTerms) {
+      this.recordType = recordType;
       this.searchTerms = searchTerms;
     }
 
@@ -953,7 +955,8 @@ class StoreImpl implements Store {
         parameterValues.add(new IntegerParameterValue(identifierSearchTerm.getId()));
       } else if (searchTerm instanceof AttributeSearchTerm) {
         AttributeSearchTerm attributeSearchTerm = (AttributeSearchTerm) searchTerm;
-        stringBuilder.append(prefixColumnName(attributeSearchTerm.getAttribute())).append(" ")
+        stringBuilder.append(prefixColumnName(recordType, attributeSearchTerm.getAttribute()))
+            .append(" ")
             .append(attributeSearchTerm.getOperator().toSql()).append(" ?");
         parameterValues.add(new AttributeParameterValue(
             attributeSearchTerm.getAttribute(), attributeSearchTerm.getValue()));

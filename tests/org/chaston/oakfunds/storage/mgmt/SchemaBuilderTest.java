@@ -63,13 +63,13 @@ public class SchemaBuilderTest {
     assertSame(SystemColumnDefs.MANUAL_ID, columnDefs.get("sys_id"));
     assertSame(SystemColumnDefs.TYPE, columnDefs.get("sys_type"));
 
-    assertContainsColumn(columnDefs, "name", Types.VARCHAR);
-    assertContainsColumn(columnDefs, "string", Types.VARCHAR);
-    assertContainsColumn(columnDefs, "boolean", Types.BOOLEAN);
-    assertContainsColumn(columnDefs, "int", Types.INTEGER);
-    assertContainsColumn(columnDefs, "date", Types.TIMESTAMP);
-    assertContainsColumn(columnDefs, "big_decimal", Types.BIGINT);
-    assertContainsColumn(columnDefs, "identifiable", Types.SMALLINT);
+    assertContainsColumn(columnDefs, "usr_name", Types.VARCHAR);
+    assertContainsColumn(columnDefs, "usr_string", Types.VARCHAR);
+    assertContainsColumn(columnDefs, "usr_boolean", Types.BOOLEAN);
+    assertContainsColumn(columnDefs, "usr_int", Types.INTEGER);
+    assertContainsColumn(columnDefs, "usr_date", Types.TIMESTAMP);
+    assertContainsColumn(columnDefs, "usr_big_decimal", Types.BIGINT);
+    assertContainsColumn(columnDefs, "usr_identifiable", Types.SMALLINT);
   }
 
   @Test
@@ -77,7 +77,8 @@ public class SchemaBuilderTest {
     ImmutableSet<RecordType> recordTypes = ImmutableSet.<RecordType>of(
         TestRootRecord.TYPE,
         TestSubRecord1.TYPE,
-        TestSubRecord11.TYPE);
+        TestSubRecord11.TYPE,
+        TestSubRecord2.TYPE);
     SchemaBuilder schemaBuilder = new SchemaBuilder(recordTypes, ImmutableSet.<FunctionDef>of());
 
     ImmutableMap<String, TableDef> tableDefs = schemaBuilder.getTableDefs();
@@ -86,14 +87,15 @@ public class SchemaBuilderTest {
     assertEquals(SystemColumnDefs.TABLE_PREFIX + "complex_record", tableDef.getName());
 
     ImmutableMap<String, ColumnDef> columnDefs = tableDef.getColumnDefs();
-    assertEquals(5, columnDefs.size());
+    assertEquals(6, columnDefs.size());
 
     assertSame(SystemColumnDefs.AUTO_NUMBERED_ID, columnDefs.get("sys_id"));
     assertSame(SystemColumnDefs.TYPE, columnDefs.get("sys_type"));
 
-    assertContainsColumn(columnDefs, "name", Types.VARCHAR);
-    assertContainsColumn(columnDefs, "string", Types.VARCHAR);
-    assertContainsColumn(columnDefs, "other_string", Types.VARCHAR);
+    assertContainsColumn(columnDefs, "usr_name", Types.VARCHAR);
+    assertContainsColumn(columnDefs, "usr_sub1__string", Types.VARCHAR);
+    assertContainsColumn(columnDefs, "usr_sub11__other_string", Types.VARCHAR);
+    assertContainsColumn(columnDefs, "usr_sub2__string", Types.VARCHAR);
   }
 
   @Test
@@ -116,7 +118,7 @@ public class SchemaBuilderTest {
     assertSame(SystemColumnDefs.INSTANT, columnDefs.get("sys_instant"));
     assertSame(SystemColumnDefs.CONTAINER_ID, columnDefs.get("sys_container_id"));
 
-    assertContainsColumn(columnDefs, "big_decimal", Types.BIGINT);
+    assertContainsColumn(columnDefs, "usr_big_decimal", Types.BIGINT);
   }
 
   @Test
@@ -140,13 +142,13 @@ public class SchemaBuilderTest {
     assertSame(SystemColumnDefs.END_TIME, columnDefs.get("sys_end_time"));
     assertSame(SystemColumnDefs.CONTAINER_ID, columnDefs.get("sys_container_id"));
 
-    assertContainsColumn(columnDefs, "big_decimal", Types.BIGINT);
+    assertContainsColumn(columnDefs, "usr_big_decimal", Types.BIGINT);
   }
 
   private void assertContainsColumn(ImmutableMap<String, ColumnDef> columnDefs,
-      String name, int type) {
-    ColumnDef columnDef = columnDefs.get(SystemColumnDefs.USER_COLUMN_PREFIX + name);
-    assertEquals(SystemColumnDefs.USER_COLUMN_PREFIX + name, columnDef.getName());
+      String columnName, int type) {
+    ColumnDef columnDef = columnDefs.get(columnName);
+    assertEquals(columnName, columnDef.getName());
     assertEquals(type, columnDef.getType());
     // No user-defined columns are required at the database level.
     assertFalse(columnDef.isRequired());
@@ -243,6 +245,16 @@ public class SchemaBuilderTest {
 
     @AttributeMethod(attribute = "other_string")
     String getOtherString();
+  }
+
+  private interface TestSubRecord2 extends TestRootRecord<TestSubRecord2> {
+    final RecordType<TestSubRecord2> TYPE =
+        RecordType.builder("sub2", TestSubRecord2.class)
+            .extensionOf(TestRootRecord.TYPE)
+            .build();
+
+    @AttributeMethod(attribute = "string")
+    String getString();
   }
 
   private interface TestInstantRecord extends InstantRecord<TestInstantRecord> {

@@ -21,16 +21,18 @@ package org.chaston.oakfunds.storage;
 public class AttributeType {
   private final String name;
   private final Class<?> type;
+  private final String columnName;
   private final boolean required;
 
-  AttributeType(String name, Class<?> type, boolean required) {
+  AttributeType(String name, Class<?> type, String columnName, boolean required) {
     this.name = name;
     this.type = type;
+    this.columnName = columnName;
     this.required = required;
   }
 
   public String getColumnName() {
-    return SystemColumnDefs.USER_COLUMN_PREFIX + name;
+    return columnName;
   }
 
   public String getName() {
