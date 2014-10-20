@@ -100,7 +100,7 @@ class StoreImpl implements Store {
     stringBuilder.append("INSERT INTO ").append(recordType.getTableName()).append("(");
     stringBuilder.append(SystemColumnDefs.ID_COLUMN_NAME).append(", ");
     stringBuilder.append(SystemColumnDefs.TYPE.getName()).append(", ");
-    Joiner.on(", ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
+    appendAttributeColumnNames(stringBuilder, attributes);
     stringBuilder.append(") VALUES (");
     appendQuestionMarks(stringBuilder, attributes.size() + 2);
     stringBuilder.append(");");
@@ -136,7 +136,7 @@ class StoreImpl implements Store {
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("INSERT INTO ").append(recordType.getTableName()).append("(");
     stringBuilder.append(SystemColumnDefs.TYPE.getName()).append(", ");
-    Joiner.on(", ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
+    appendAttributeColumnNames(stringBuilder, attributes);
     stringBuilder.append(") VALUES (");
     appendQuestionMarks(stringBuilder, attributes.size() + 1);
     stringBuilder.append(");");
@@ -326,7 +326,7 @@ class StoreImpl implements Store {
     stringBuilder.append(SystemColumnDefs.CONTAINER_ID.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.START_TIME.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.END_TIME.getName()).append(", ");
-    Joiner.on(", ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
+    appendAttributeColumnNames(stringBuilder, attributes);
     stringBuilder.append(") VALUES (");
     appendQuestionMarks(stringBuilder, attributes.size() + 4);
     stringBuilder.append(");");
@@ -380,7 +380,7 @@ class StoreImpl implements Store {
     stringBuilder.append(SystemColumnDefs.TYPE.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.CONTAINER_ID.getName()).append(", ");
     stringBuilder.append(SystemColumnDefs.INSTANT.getName()).append(", ");
-    Joiner.on(", ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
+    appendAttributeColumnNames(stringBuilder, attributes);
     stringBuilder.append(") VALUES (");
     appendQuestionMarks(stringBuilder, attributes.size() + 3);
     stringBuilder.append(");");
@@ -866,6 +866,11 @@ class StoreImpl implements Store {
         return prefixColumnName(attributeName);
       }
     });
+  }
+
+  private static void appendAttributeColumnNames(StringBuilder stringBuilder,
+      Map<String, Object> attributes) {
+    Joiner.on(", ").appendTo(stringBuilder, prefixColumnNames(attributes.keySet()));
   }
 
   private class ReadingDataSource implements AutoCloseable {
