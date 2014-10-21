@@ -1,4 +1,4 @@
-CREATE FUNCTION reporting_year (range_start TIMESTAMP, attribute_value TIMESTAMP)
+CREATE FUNCTION %SCHEMA%.reporting_year (range_start TIMESTAMP, attribute_value TIMESTAMP)
    RETURNS TIMESTAMP
    DETERMINISTIC
    IF attribute_value <= range_start THEN

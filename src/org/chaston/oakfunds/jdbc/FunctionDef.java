@@ -26,19 +26,21 @@ import java.io.InputStreamReader;
  * TODO(mchaston): write JavaDocs
  */
 public class FunctionDef {
+  private final String schema;
   private final String name;
   private final String hsqldbFunction;
   private final String mysqlFunction;
 
-  public FunctionDef(String name,
+  public FunctionDef(String schema, String name,
       String hsqldbResourcePath,
       String mysqlResourcePath) throws IOException {
+    this.schema = schema;
     this.name = name;
     this.hsqldbFunction = loadResource(hsqldbResourcePath);
     this.mysqlFunction = loadResource(mysqlResourcePath);
   }
 
-  private static String loadResource(String resourcePath) throws IOException {
+  private String loadResource(String resourcePath) throws IOException {
     try (InputStream resourceStream = FunctionDef.class.getClassLoader()
         .getResourceAsStream(resourcePath)) {
       if (resourceStream == null) {
@@ -53,7 +55,7 @@ public class FunctionDef {
             out.write(buf, 0, len);
             len = in.read();
           }
-          return out.toString();
+          return out.toString().replace("%SCHEMA%", schema);
         }
       }
     }

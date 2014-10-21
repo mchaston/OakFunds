@@ -24,16 +24,22 @@ import java.util.Map;
  * TODO(mchaston): write JavaDocs
  */
 public class TableDef {
+  private final String schema;
   private final String name;
   private final ImmutableMap<String, ColumnDef> columnDefs;
 
-  private TableDef(String name, ImmutableMap<String, ColumnDef> columnDefs) {
+  private TableDef(String schema, String name, ImmutableMap<String, ColumnDef> columnDefs) {
+    this.schema = schema;
     this.name = name;
     this.columnDefs = columnDefs;
   }
 
-  public static Builder builder(String name) {
-    return new Builder(name);
+  public static Builder builder(String schema, String name) {
+    return new Builder(schema, name);
+  }
+
+  public String getFullName() {
+    return schema + "." + name;
   }
 
   public String getName() {
@@ -45,10 +51,12 @@ public class TableDef {
   }
 
   public static class Builder {
+    private final String schema;
     private final String name;
     private final Map<String, ColumnDef> columnDefs = new HashMap<>();
 
-    private Builder(String name) {
+    private Builder(String schema, String name) {
+      this.schema = schema;
       this.name = name;
     }
 
@@ -62,7 +70,7 @@ public class TableDef {
     }
 
     public TableDef build() {
-      return new TableDef(name, ImmutableMap.<String, ColumnDef>of().copyOf(columnDefs));
+      return new TableDef(schema, name, ImmutableMap.<String, ColumnDef>of().copyOf(columnDefs));
     }
   }
 }

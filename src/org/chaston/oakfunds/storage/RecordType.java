@@ -205,7 +205,7 @@ public class RecordType<T extends Record> {
   }
 
   public String getTableName() {
-    return SystemColumnDefs.TABLE_PREFIX + getRootType().getName();
+    return SystemColumnDefs.SCHEMA + "." + getRootType().getName();
   }
 
   public String getName() {

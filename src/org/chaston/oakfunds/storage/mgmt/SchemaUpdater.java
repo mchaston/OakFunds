@@ -71,6 +71,8 @@ public class SchemaUpdater {
   Iterable<SchemaDiscrepancy> updateSchema() throws SQLException {
     Iterable<SchemaDiscrepancy> discrepancies = schemaValidator.validateSchema();
     try (Connection connection = dataSource.getConnection()) {
+      createMissingSchemas(connection,
+          Iterables.filter(discrepancies, MissingSchema.class));
       createMissingTables(connection,
           Iterables.filter(discrepancies, MissingTable.class));
       handleTableDefDiscrepancies(connection,
@@ -83,12 +85,26 @@ public class SchemaUpdater {
     return schemaValidator.validateSchema();
   }
 
+  private void createMissingSchemas(Connection connection, Iterable<MissingSchema> missingSchemas)
+      throws SQLException {
+    for (MissingSchema missingSchema : missingSchemas) {
+      StringBuilder createSchemaStatement = new StringBuilder();
+      createSchemaStatement.append("CREATE SCHEMA ").append(missingSchema.getName()).append(";");
+      try (Statement stmt = connection.createStatement()) {
+        stmt.executeUpdate(createSchemaStatement.toString());
+      } catch (SQLException e) {
+        logger.log(Level.SEVERE, "Failure to execute: " + createSchemaStatement.toString());
+        throw e;
+      }
+    }
+  }
+
   private void createMissingTables(Connection connection,
       Iterable<MissingTable> discrepancies) throws SQLException {
     for (MissingTable discrepancy : discrepancies) {
       TableDef missingTable = discrepancy.getTableDef();
       StringBuilder createTableStatement = new StringBuilder();
-      createTableStatement.append("CREATE TABLE ").append(missingTable.getName()).append(" (");
+      createTableStatement.append("CREATE TABLE ").append(missingTable.getFullName()).append(" (");
       for (ColumnDef columnDef : missingTable.getColumnDefs().values()) {
         appendColumnDeclaration(createTableStatement, columnDef);
         createTableStatement.append(",\n");
@@ -97,7 +113,7 @@ public class SchemaUpdater {
           .append(SystemColumnDefs.ID_COLUMN_NAME).append(" )\n");
       createTableStatement.append(");");
       try (Statement stmt = connection.createStatement()) {
-        stmt.execute(createTableStatement.toString());
+        stmt.executeUpdate(createTableStatement.toString());
       } catch (SQLException e) {
         logger.log(Level.SEVERE, "Failure to execute: " + createTableStatement.toString());
         throw e;
@@ -162,7 +178,7 @@ public class SchemaUpdater {
         }
         alterTableStatement.append(";");
         try (Statement stmt = connection.createStatement()) {
-          stmt.execute(alterTableStatement.toString());
+          stmt.executeUpdate(alterTableStatement.toString());
         } catch (SQLException e) {
           logger.log(Level.SEVERE, "Failure to execute: " + alterTableStatement.toString());
           throw e;

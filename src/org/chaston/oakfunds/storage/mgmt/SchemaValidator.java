@@ -69,8 +69,16 @@ public class SchemaValidator {
     Set<String> seenFunctions = new HashSet<>();
     try (Connection connection = dataSource.getConnection()) {
       DatabaseMetaData metaData = connection.getMetaData();
-      String tableNamePattern = SystemColumnDefs.TABLE_PREFIX.toUpperCase() + "%";
-      try (ResultSet allTables = metaData.getTables(null, null, tableNamePattern, null)) {
+
+      // Look for schema.
+      String upperSchemaName = SystemColumnDefs.SCHEMA.toUpperCase();
+      ResultSet allSchemas = metaData.getSchemas(null, upperSchemaName);
+      if (!allSchemas.next()) {
+        schemaDiscrepancies.add(new MissingSchema(SystemColumnDefs.SCHEMA));
+      }
+
+      // Look for tables.
+      try (ResultSet allTables = metaData.getTables(null, upperSchemaName, null, null)) {
         while (allTables.next()) {
           String tableName = allTables.getString("TABLE_NAME").toLowerCase();
           TableDef tableDef = tableDefs.get(tableName);
@@ -83,7 +91,8 @@ public class SchemaValidator {
         }
       }
 
-      try (ResultSet allFunctions = metaData.getFunctions(null, null, null)) {
+      // Look for functions.
+      try (ResultSet allFunctions = metaData.getFunctions(null, upperSchemaName, null)) {
         while (allFunctions.next()) {
           String functionName = allFunctions.getString("FUNCTION_NAME").toLowerCase();
           FunctionDef functionDef = functionDefs.get(functionName);
@@ -112,13 +121,14 @@ public class SchemaValidator {
   private void validateTable(DatabaseMetaData metaData, TableDef tableDef,
       ImmutableList.Builder<SchemaDiscrepancy> schemaDiscrepancies) throws SQLException {
     Set<String> seenColumns = new HashSet<>();
+    String upperSchemaName = SystemColumnDefs.SCHEMA.toUpperCase();
     String upperTableName = tableDef.getName().toUpperCase();
-    try (ResultSet columns = metaData.getColumns(null, null, upperTableName, null)) {
+    try (ResultSet columns = metaData.getColumns(null, upperSchemaName, upperTableName, null)) {
       while (columns.next()) {
         String columnName = columns.getString("COLUMN_NAME").toLowerCase();
         ColumnDef columnDef = tableDef.getColumnDefs().get(columnName);
         if (columnDef == null) {
-          schemaDiscrepancies.add(new ExtraColumn(tableDef.getName(), columnName));
+          schemaDiscrepancies.add(new ExtraColumn(tableDef.getFullName(), columnName));
           continue;
         }
         seenColumns.add(columnName);
@@ -128,7 +138,7 @@ public class SchemaValidator {
     }
     for (ColumnDef expectedColumn : tableDef.getColumnDefs().values()) {
       if (!seenColumns.contains(expectedColumn.getName())) {
-        schemaDiscrepancies.add(new MissingColumn(tableDef.getName(), expectedColumn));
+        schemaDiscrepancies.add(new MissingColumn(tableDef.getFullName(), expectedColumn));
       }
     }
   }

@@ -781,11 +781,14 @@ class StoreImpl implements Store {
   private String getInstantFunction(ReportDateGranularity granularity) {
     switch (granularity) {
       case YEAR:
-        return "reporting_year(?, " + SystemColumnDefs.INSTANT.getName() + ")";
+        return SystemColumnDefs.SCHEMA
+            + ".reporting_year(?, " + SystemColumnDefs.INSTANT.getName() + ")";
       case MONTH:
-        return "reporting_month(?, " + SystemColumnDefs.INSTANT.getName() + ")";
+        return SystemColumnDefs.SCHEMA
+            + ".reporting_month(?, " + SystemColumnDefs.INSTANT.getName() + ")";
       case DAY:
-        return "reporting_day(?, " + SystemColumnDefs.INSTANT.getName() + ")";
+        return SystemColumnDefs.SCHEMA
+            + ".reporting_day(?, " + SystemColumnDefs.INSTANT.getName() + ")";
       default:
         throw new UnsupportedOperationException(
             "Granularity " + granularity + " is not supported.");

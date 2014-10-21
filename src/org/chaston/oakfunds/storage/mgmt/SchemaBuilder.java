@@ -76,7 +76,8 @@ public class SchemaBuilder {
     for (Map.Entry<RecordType, Collection<RecordType>> entry
         : typesBySuperType.asMap().entrySet()) {
       RecordType rootType = entry.getKey();
-      TableDef.Builder tableDefBuilder = TableDef.builder(rootType.getTableName());
+      TableDef.Builder tableDefBuilder =
+          TableDef.builder(SystemColumnDefs.SCHEMA, rootType.getName());
       tableDefBuilder.addColumnDef(rootType.isAutoIncrementId() ?
           SystemColumnDefs.AUTO_NUMBERED_ID :
           SystemColumnDefs.MANUAL_ID);
@@ -111,7 +112,7 @@ public class SchemaBuilder {
               false)); // Never make user defined types required.
         }
       }
-      baseTables.put(rootType.getTableName(), tableDefBuilder);
+      baseTables.put(rootType.getName(), tableDefBuilder);
     }
     return baseTables.build();
   }

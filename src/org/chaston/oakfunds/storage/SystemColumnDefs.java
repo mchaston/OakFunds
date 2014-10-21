@@ -23,7 +23,8 @@ import java.sql.Types;
  * TODO(mchaston): write JavaDocs
  */
 public class SystemColumnDefs {
-  public static final String TABLE_PREFIX = "of_";
+  public static final String SCHEMA = "oakfunds";
+
   public static final String SYSTEM_COLUMN_PREFIX = "sys_";
   public static final String USER_COLUMN_PREFIX = "usr_";
 

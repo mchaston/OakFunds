@@ -74,7 +74,7 @@ public class StorageTypesModule extends AbstractModule {
   }
 
   private FunctionDef createFunctionDef(String functionName) throws IOException {
-    return new FunctionDef(functionName,
+    return new FunctionDef(SystemColumnDefs.SCHEMA, functionName,
         "org/chaston/oakfunds/storage/" + functionName + "_hsqldb.sql",
         "org/chaston/oakfunds/storage/" + functionName + "_mysql.sql");
   }
