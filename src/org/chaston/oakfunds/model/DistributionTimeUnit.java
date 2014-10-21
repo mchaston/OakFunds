@@ -15,6 +15,7 @@
  */
 package org.chaston.oakfunds.model;
 
+import org.chaston.oakfunds.storage.EnumIdentifiableSource;
 import org.chaston.oakfunds.storage.Identifiable;
 import org.chaston.oakfunds.storage.IdentifiableSource;
 
@@ -35,20 +36,13 @@ public enum DistributionTimeUnit implements Identifiable {
     }
   };
 
+  private static final IdentifiableSource IDENTIFIABLE_SOURCE =
+      new EnumIdentifiableSource<>(DistributionTimeUnit.class);
+
   /**
    * Supports the Identifiable type contract.
    */
   public static IdentifiableSource getIdentifiableSource() {
-    return new IdentifiableSource() {
-      @Override
-      public Identifiable lookup(byte identifier) {
-        for (DistributionTimeUnit distributionTimeUnit : values()) {
-          if (distributionTimeUnit.identifier() == identifier) {
-            return distributionTimeUnit;
-          }
-        }
-        throw new IllegalArgumentException("No such DistributionTimeUnit identifier: " + identifier);
-      }
-    };
+    return IDENTIFIABLE_SOURCE;
   }
 }

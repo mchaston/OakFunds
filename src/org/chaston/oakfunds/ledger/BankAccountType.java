@@ -15,6 +15,7 @@
  */
 package org.chaston.oakfunds.ledger;
 
+import org.chaston.oakfunds.storage.EnumIdentifiableSource;
 import org.chaston.oakfunds.storage.Identifiable;
 import org.chaston.oakfunds.storage.IdentifiableSource;
 
@@ -35,20 +36,13 @@ public enum BankAccountType implements Identifiable {
     }
   };
 
+  private static final IdentifiableSource IDENTIFIABLE_SOURCE =
+      new EnumIdentifiableSource<>(BankAccountType.class);
+
   /**
    * Supports the Identifiable type contract.
    */
   public static IdentifiableSource getIdentifiableSource() {
-    return new IdentifiableSource() {
-      @Override
-      public Identifiable lookup(byte identifier) {
-        for (BankAccountType bankAccountType : values()) {
-          if (bankAccountType.identifier() == identifier) {
-            return bankAccountType;
-          }
-        }
-        throw new IllegalArgumentException("No such BankAccountType identifier: " + identifier);
-      }
-    };
+    return IDENTIFIABLE_SOURCE;
   }
 }

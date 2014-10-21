@@ -21,6 +21,7 @@ import org.chaston.oakfunds.jdbc.ColumnDef;
 import org.chaston.oakfunds.jdbc.FunctionDef;
 import org.chaston.oakfunds.jdbc.TableDef;
 import org.chaston.oakfunds.storage.AttributeMethod;
+import org.chaston.oakfunds.storage.EnumIdentifiableSource;
 import org.chaston.oakfunds.storage.Identifiable;
 import org.chaston.oakfunds.storage.IdentifiableSource;
 import org.chaston.oakfunds.storage.InstantRecord;
@@ -202,21 +203,14 @@ public class SchemaBuilderTest {
       }
     };
 
+    private static final IdentifiableSource IDENTIFIABLE_SOURCE =
+        new EnumIdentifiableSource<>(CustomEnum.class);
+
     /**
      * Supports the Identifiable type contract.
      */
     public static IdentifiableSource getIdentifiableSource() {
-      return new IdentifiableSource() {
-        @Override
-        public Identifiable lookup(byte identifier) {
-          for (CustomEnum customEnum : values()) {
-            if (customEnum.identifier() == identifier) {
-              return customEnum;
-            }
-          }
-          throw new IllegalArgumentException("No such CustomEnum identifier: " + identifier);
-        }
-      };
+      return IDENTIFIABLE_SOURCE;
     }
   }
 
