@@ -51,12 +51,12 @@ public class SchemaUpdater {
   private final DataSource dataSource;
 
   public static void main(String[] args) throws SQLException {
-    Flags.parse(args);
     Injector injector = Guice.createInjector(
         new RecordTypeRegistryModule(),
         new AllTypesModule(),
         new StorageManagementModule(),
         new RemoteDataStoreModule());
+    Flags.parse(args);
     injector.getInstance(SchemaUpdater.class).updateSchema();
   }
 

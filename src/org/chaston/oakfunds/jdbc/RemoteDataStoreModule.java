@@ -18,6 +18,9 @@ package org.chaston.oakfunds.jdbc;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import org.chaston.oakfunds.storage.SystemColumnDefs;
+import org.chaston.oakfunds.util.Flag;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -26,14 +29,46 @@ import java.sql.SQLException;
  * TODO(mchaston): write JavaDocs
  */
 public class RemoteDataStoreModule extends AbstractModule {
+
+  private static final String URL_PATTERN = "jdbc:mysql://%s:3306/" + SystemColumnDefs.SCHEMA;
+
+  private static final Flag<String> DB_ADDRESS =
+      Flag.builder("db_address", "127.0.0.1")
+          .build();
+
+  private static final Flag<String> DB_USERNAME =
+      Flag.builder("db_username", "root")
+          .build();
+
+  private static final Flag<String> DB_PASSWORD =
+      Flag.builder("db_password", "xxxxx")
+          .build();
+
   @Override
   protected void configure() {
-    // Do nothing.
+    bind(DatabaseObjectNameHandler.class).to(MySqlDatabaseObjectNameHandler.class);
   }
 
   @Provides
   @Singleton
   DataSource provideDataSource() throws SQLException {
-    throw new UnsupportedOperationException("Not implemented yet.");
+    MysqlDataSource dataSource = new MysqlDataSource();
+    dataSource.setUrl(String.format(URL_PATTERN, DB_ADDRESS.get()));
+    dataSource.setUser(DB_USERNAME.get());
+    dataSource.setPassword(DB_PASSWORD.get());
+    dataSource.setCreateDatabaseIfNotExist(true);
+    return dataSource;
+  }
+
+  private static class MySqlDatabaseObjectNameHandler implements DatabaseObjectNameHandler {
+    @Override
+    public String toDatabaseForm(String normalName) {
+      return normalName;
+    }
+
+    @Override
+    public String toNormalName(String databaseForm) {
+      return databaseForm;
+    }
   }
 }
