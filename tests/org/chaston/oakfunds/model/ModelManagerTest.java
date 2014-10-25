@@ -24,7 +24,10 @@ import org.chaston.oakfunds.account.AccountCodeManager;
 import org.chaston.oakfunds.account.AccountCodeModule;
 import org.chaston.oakfunds.jdbc.DatabaseTearDown;
 import org.chaston.oakfunds.ledger.BankAccountType;
+import org.chaston.oakfunds.security.AuthenticationManager;
+import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.SecurityModule;
+import org.chaston.oakfunds.security.TestUserManagerModule;
 import org.chaston.oakfunds.storage.Report;
 import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.ReportEntry;
@@ -65,6 +68,8 @@ public class ModelManagerTest {
   @Inject
   private AccountCodeManager accountCodeManager;
   @Inject
+  private AuthenticationManager authenticationManager;
+  @Inject
   private ModelManager modelManager;
   @Inject
   private Store store;
@@ -72,6 +77,8 @@ public class ModelManagerTest {
   private SchemaDeploymentTask schemaDeploymentTask;
   @Inject
   private DatabaseTearDown databaseTearDown;
+
+  private AuthenticationScope authenticationScope;
 
   @Before
   public void setUp() throws SQLException {
@@ -83,12 +90,15 @@ public class ModelManagerTest {
             .setCurrentYear(Instant.parse("2014-01-01").get(DateTimeFieldType.year()))
             .setTimeHorizon(10)
             .build(),
-        new TestStorageModule());
+        new TestStorageModule(),
+        new TestUserManagerModule());
     injector.injectMembers(this);
+    authenticationScope = authenticationManager.authenticateUser();
   }
 
   @After
   public void teardown() throws SQLException {
+    authenticationScope.close();
     databaseTearDown.teardown();
   }
 

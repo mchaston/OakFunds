@@ -20,6 +20,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
+import org.chaston.oakfunds.security.AuthenticationManager;
+import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.AuthorizationContext;
 import org.chaston.oakfunds.security.SinglePermissionAssertion;
 import org.chaston.oakfunds.storage.StorageException;
@@ -74,17 +76,21 @@ public class TestSystemModuleBuilder {
     TestSystemPropertyBootstrapper(
         SchemaDeploymentTask schemaDeploymentTask, // Here for dependency enforcement.
         AuthorizationContext authorizationContext,
+        AuthenticationManager authenticationManager,
         Store store,
         Iterable<SystemPropertyLoader> systemPropertyLoaders) throws StorageException {
       if (systemPropertyLoaders != null) {
         Transaction transaction = store.startTransaction();
         boolean successful = false;
-        try (SinglePermissionAssertion singlePermissionAssertion =
-                 authorizationContext.assertPermission("system_property.create")) {
-          for (SystemPropertyLoader systemPropertyLoader : systemPropertyLoaders) {
-            systemPropertyLoader.load(store);
+        try (AuthenticationScope authenticationScope =
+                 authenticationManager.authenticateSystem()) {
+          try (SinglePermissionAssertion singlePermissionAssertion =
+                   authorizationContext.assertPermission("system_property.create")) {
+            for (SystemPropertyLoader systemPropertyLoader : systemPropertyLoaders) {
+              systemPropertyLoader.load(store);
+            }
+            successful = true;
           }
-          successful = true;
         } finally {
           if (successful) {
             transaction.commit();

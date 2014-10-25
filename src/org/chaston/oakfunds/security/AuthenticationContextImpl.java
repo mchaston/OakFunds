@@ -15,29 +15,22 @@
  */
 package org.chaston.oakfunds.security;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-
-import javax.annotation.Nullable;
-import java.util.Set;
+import javax.inject.Inject;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-class PermissionRegistry {
-  private final ImmutableMap<String, Permission> permissions;
+class AuthenticationContextImpl implements AuthenticationContext {
+
+  private final AuthenticationManagerImpl authenticationManager;
 
   @Inject
-  PermissionRegistry(Set<Permission> permissions) {
-    ImmutableMap.Builder<String, Permission> permissionsBuilder = ImmutableMap.builder();
-    for (Permission permission : permissions) {
-      permissionsBuilder.put(permission.getName(), permission);
-    }
-    this.permissions = permissionsBuilder.build();
+  AuthenticationContextImpl(AuthenticationManagerImpl authenticationManager) {
+    this.authenticationManager = authenticationManager;
   }
 
-  @Nullable
-  Permission getPermission(String permissionName) {
-    return permissions.get(permissionName);
+  @Override
+  public boolean currentUserHasPermission(String permission) {
+    return authenticationManager.getCurrentScope().hasPermission(permission);
   }
 }

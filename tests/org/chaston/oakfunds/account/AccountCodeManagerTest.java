@@ -19,7 +19,10 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.chaston.oakfunds.jdbc.DatabaseTearDown;
+import org.chaston.oakfunds.security.AuthenticationManager;
+import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.SecurityModule;
+import org.chaston.oakfunds.security.TestUserManagerModule;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.storage.TestStorageModule;
@@ -45,23 +48,30 @@ public class AccountCodeManagerTest {
   @Inject
   private AccountCodeManager accountCodeManager;
   @Inject
+  private AuthenticationManager authenticationManager;
+  @Inject
   private Store store;
   @Inject
   private SchemaDeploymentTask schemaDeploymentTask;
   @Inject
   private DatabaseTearDown databaseTearDown;
 
+  private AuthenticationScope authenticationScope;
+
   @Before
   public void setUp() throws SQLException {
     Injector injector = Guice.createInjector(
         new AccountCodeModule(),
         new SecurityModule(),
-        new TestStorageModule());
+        new TestStorageModule(),
+        new TestUserManagerModule());
     injector.injectMembers(this);
+    authenticationScope = authenticationManager.authenticateUser();
   }
 
   @After
   public void teardown() throws SQLException {
+    authenticationScope.close();
     databaseTearDown.teardown();
   }
 

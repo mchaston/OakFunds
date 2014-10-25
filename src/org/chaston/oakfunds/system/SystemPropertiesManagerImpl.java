@@ -18,6 +18,8 @@ package org.chaston.oakfunds.system;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.security.ActionType;
+import org.chaston.oakfunds.security.AuthenticationManager;
+import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.AuthorizationContext;
 import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.security.PermissionAssertion;
@@ -61,19 +63,22 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
       // Here for dependency enforcement.
       @Nullable SystemPropertyBootstrapper systemPropertyBootstrapper,
       Store store,
-      AuthorizationContext authorizationContext) throws StorageException {
+      AuthorizationContext authorizationContext,
+      AuthenticationManager authenticationManager) throws StorageException {
     this.store = store;
 
-    try (SinglePermissionAssertion singlePermissionAssertion =
-             authorizationContext.assertPermission("system_property.read")) {
-      Iterable<SystemProperty> properties =
-          store.findRecords(SystemProperty.TYPE, ImmutableList.<SearchTerm>of());
-      for (SystemProperty property : properties) {
-        if (PROPERTY_CURRENT_YEAR.equals(property.getName())) {
-          currentYear = property;
-        }
-        if (PROPERTY_TIME_HORIZON.equals(property.getName())) {
-          timeHorizon = property;
+    try (AuthenticationScope authenticationScope = authenticationManager.authenticateSystem()) {
+      try (SinglePermissionAssertion singlePermissionAssertion =
+               authorizationContext.assertPermission("system_property.read")) {
+        Iterable<SystemProperty> properties =
+            store.findRecords(SystemProperty.TYPE, ImmutableList.<SearchTerm>of());
+        for (SystemProperty property : properties) {
+          if (PROPERTY_CURRENT_YEAR.equals(property.getName())) {
+            currentYear = property;
+          }
+          if (PROPERTY_TIME_HORIZON.equals(property.getName())) {
+            timeHorizon = property;
+          }
         }
       }
     }

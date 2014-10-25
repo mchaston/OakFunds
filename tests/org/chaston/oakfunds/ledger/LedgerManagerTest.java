@@ -23,7 +23,10 @@ import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.account.AccountCodeManager;
 import org.chaston.oakfunds.account.AccountCodeModule;
 import org.chaston.oakfunds.jdbc.DatabaseTearDown;
+import org.chaston.oakfunds.security.AuthenticationManager;
+import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.SecurityModule;
+import org.chaston.oakfunds.security.TestUserManagerModule;
 import org.chaston.oakfunds.storage.Report;
 import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.ReportEntry;
@@ -60,6 +63,8 @@ public class LedgerManagerTest {
   @Inject
   private AccountCodeManager accountCodeManager;
   @Inject
+  private AuthenticationManager authenticationManager;
+  @Inject
   private LedgerManager ledgerManager;
   @Inject
   private Store store;
@@ -68,18 +73,23 @@ public class LedgerManagerTest {
   @Inject
   private DatabaseTearDown databaseTearDown;
 
+  private AuthenticationScope authenticationScope;
+
   @Before
   public void setUp() throws SQLException {
     Injector injector = Guice.createInjector(
         new AccountCodeModule(),
         new LedgerModule(),
         new SecurityModule(),
-        new TestStorageModule());
+        new TestStorageModule(),
+        new TestUserManagerModule());
     injector.injectMembers(this);
+    authenticationScope = authenticationManager.authenticateUser();
   }
 
   @After
   public void teardown() throws SQLException {
+    authenticationScope.close();
     databaseTearDown.teardown();
   }
 

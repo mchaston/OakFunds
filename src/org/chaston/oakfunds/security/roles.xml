@@ -1,0 +1,37 @@
+<role name="admin">
+	<permission name="account_code.create"/>
+	<permission name="account_code.read"/>
+
+	<permission name="bank_account.read"/>
+	<permission name="bank_account.create"/>
+
+	<permission name="bank_account_interest.read"/>
+	<permission name="bank_account_interest.update"/>
+
+	<permission name="expense_account.create"/>
+
+	<permission name="revenue_account.create"/>
+
+	<permission name="account_transaction.read"/>
+	<permission name="account_transaction.create"/>
+	<permission name="account_transaction.report"/>
+
+	<permission name="model.read"/>
+	<permission name="model.create"/>
+
+	<permission name="model_expense_account.create"/>
+
+	<permission name="model_revenue_account.create"/>
+
+	<permission name="model_account_transaction.read"/>
+	<permission name="model_account_transaction.create"/>
+	<permission name="model_account_transaction.update"/>
+	<permission name="model_account_transaction.delete"/>
+
+	<permission name="model_distribution_transaction.read"/>
+	<permission name="model_distribution_transaction.report"/>
+
+	<permission name="monthly_recurring_event.update"/>
+
+	<permission name="annual_recurring_event.update"/>
+</role>

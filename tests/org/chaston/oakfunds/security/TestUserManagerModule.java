@@ -15,29 +15,15 @@
  */
 package org.chaston.oakfunds.security;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-
-import javax.annotation.Nullable;
-import java.util.Set;
+import com.google.inject.AbstractModule;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-class PermissionRegistry {
-  private final ImmutableMap<String, Permission> permissions;
-
-  @Inject
-  PermissionRegistry(Set<Permission> permissions) {
-    ImmutableMap.Builder<String, Permission> permissionsBuilder = ImmutableMap.builder();
-    for (Permission permission : permissions) {
-      permissionsBuilder.put(permission.getName(), permission);
-    }
-    this.permissions = permissionsBuilder.build();
-  }
-
-  @Nullable
-  Permission getPermission(String permissionName) {
-    return permissions.get(permissionName);
+public class TestUserManagerModule extends AbstractModule {
+  @Override
+  protected void configure() {
+    requireBinding(RoleRegistry.class);
+    bind(UserManager.class).to(TestUserManager.class);
   }
 }

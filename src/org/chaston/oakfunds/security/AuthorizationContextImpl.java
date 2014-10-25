@@ -30,18 +30,23 @@ class AuthorizationContextImpl implements AuthorizationContext {
 
   private final Provider<Map<RecordType, Map<ActionType, AtomicInteger>>> accessCountersProvider;
   private final SinglePermissionAssertionFactory singlePermissionAssertionFactory;
+  private final AuthenticationContext authenticationContext;
 
   @Inject
   AuthorizationContextImpl(
       Provider<Map<RecordType, Map<ActionType, AtomicInteger>>> accessCountersProvider,
-      SinglePermissionAssertionFactory singlePermissionAssertionFactory) {
+      SinglePermissionAssertionFactory singlePermissionAssertionFactory,
+      AuthenticationContext authenticationContext) {
     this.accessCountersProvider = accessCountersProvider;
     this.singlePermissionAssertionFactory = singlePermissionAssertionFactory;
+    this.authenticationContext = authenticationContext;
   }
 
   @Override
-  public <T extends Record> SinglePermissionAssertion assertPermission(String permission) {
-    // TODO: check against the current user to see if they have this permission
+  public SinglePermissionAssertion assertPermission(String permission) {
+    if (!authenticationContext.currentUserHasPermission(permission)) {
+      throw throwAuthorizationException(permission);
+    }
     return singlePermissionAssertionFactory.create(permission);
   }
 
@@ -76,5 +81,9 @@ class AuthorizationContextImpl implements AuthorizationContext {
       RecordType<T> recordType, ActionType actionType) {
     throw new AuthorizationException("User has not been given access to "
         + actionType + " records of type " + recordType.getName() + ".");
+  }
+
+  private AuthorizationException throwAuthorizationException(String permission) {
+    throw new AuthorizationException("User does not have permission " + permission + ".");
   }
 }

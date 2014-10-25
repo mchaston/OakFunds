@@ -39,14 +39,20 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class SecurityModule extends AbstractModule {
 
-  private static final ThreadLocal<Map<RecordType, Map<ActionType, AtomicInteger>>>
-      ACCESS_COUNTERS = new ThreadLocal<>();
-
   @Override
   protected void configure() {
+    requireBinding(UserManager.class);
     bind(AuthorizationContext.class).to(AuthorizationContextImpl.class);
+    bind(AuthenticationContext.class).to(AuthenticationContextImpl.class);
+    bind(AuthenticationManager.class).to(AuthenticationManagerImpl.class);
+    bind(AuthenticationManagerImpl.class).in(Scopes.SINGLETON);
+    bind(RoleRegistry.class).in(Scopes.SINGLETON);
+
     bind(new TypeLiteral<Map<RecordType, Map<ActionType, AtomicInteger>>>() {})
         .toProvider(AccessCountersProvider.class);
+    bind(new TypeLiteral<ThreadLocal<Map<RecordType, Map<ActionType, AtomicInteger>>>>() {})
+       .toInstance(new ThreadLocal<Map<RecordType, Map<ActionType, AtomicInteger>>>());
+
     bind(PermissionRegistry.class).in(Scopes.SINGLETON);
     bind(SinglePermissionAssertionFactory.class).to(SinglePermissionAssertionFactoryImpl.class);
 
@@ -59,9 +65,18 @@ public class SecurityModule extends AbstractModule {
 
   private static class AccessCountersProvider
       implements Provider<Map<RecordType, Map<ActionType, AtomicInteger>>> {
+
+    private final ThreadLocal<Map<RecordType, Map<ActionType, AtomicInteger>>> accessCounters;
+
+    @Inject
+    AccessCountersProvider(
+        ThreadLocal<Map<RecordType, Map<ActionType, AtomicInteger>>> accessCounters) {
+      this.accessCounters = accessCounters;
+    }
+
     @Override
     public Map<RecordType, Map<ActionType, AtomicInteger>> get() {
-      Map<RecordType, Map<ActionType, AtomicInteger>> accessCounters = ACCESS_COUNTERS.get();
+      Map<RecordType, Map<ActionType, AtomicInteger>> accessCounters = this.accessCounters.get();
       return accessCounters == null ? null : Collections.unmodifiableMap(accessCounters);
     }
   }
@@ -89,17 +104,24 @@ public class SecurityModule extends AbstractModule {
   private static class SinglePermissionAssertionFactoryImpl
       implements SinglePermissionAssertionFactory {
 
+    private final ThreadLocal<Map<RecordType, Map<ActionType, AtomicInteger>>> accessCountersThreadLocal;
     private final PermissionRegistry permissionRegistry;
 
     @Inject
-    SinglePermissionAssertionFactoryImpl(PermissionRegistry permissionRegistry) {
+    SinglePermissionAssertionFactoryImpl(
+        ThreadLocal<Map<RecordType, Map<ActionType, AtomicInteger>>> accessCountersThreadLocal,
+        PermissionRegistry permissionRegistry) {
+      this.accessCountersThreadLocal = accessCountersThreadLocal;
       this.permissionRegistry = permissionRegistry;
     }
 
     @Override
     public SinglePermissionAssertion create(String permissionName) {
       Permission permission = permissionRegistry.getPermission(permissionName);
-      return new SinglePermissionAssertionImpl(permission);
+      if (permission == null) {
+        throw new IllegalArgumentException("Permission " + permissionName + " does not exist.");
+      }
+      return new SinglePermissionAssertionImpl(accessCountersThreadLocal, permission);
     }
   }
 
@@ -121,15 +143,21 @@ public class SecurityModule extends AbstractModule {
           }
         };
 
+    private final ThreadLocal<Map<RecordType, Map<ActionType, AtomicInteger>>>
+        accessCountersThreadLocal;
     private final boolean firstAssertion;
     private final List<AtomicInteger> actionTypeCounts;
 
-    public SinglePermissionAssertionImpl(Permission permission) {
-      Map<RecordType, Map<ActionType, AtomicInteger>> accessCounters = SecurityModule.ACCESS_COUNTERS.get();
+    public SinglePermissionAssertionImpl(
+        ThreadLocal<Map<RecordType, Map<ActionType, AtomicInteger>>> accessCountersThreadLocal,
+        Permission permission) {
+      this.accessCountersThreadLocal = accessCountersThreadLocal;
+      Map<RecordType, Map<ActionType, AtomicInteger>> accessCounters =
+          accessCountersThreadLocal.get();
       if (accessCounters == null) {
         firstAssertion = true;
         accessCounters = new HashMap<>();
-        SecurityModule.ACCESS_COUNTERS.set(accessCounters);
+        accessCountersThreadLocal.set(accessCounters);
       } else {
         firstAssertion = false;
       }
@@ -161,7 +189,7 @@ public class SecurityModule extends AbstractModule {
         actionTypeCount.decrementAndGet();
       }
       if (firstAssertion) {
-        SecurityModule.ACCESS_COUNTERS.remove();
+        accessCountersThreadLocal.remove();
       }
     }
   }

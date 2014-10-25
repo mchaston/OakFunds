@@ -20,6 +20,8 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.ledger.BankAccountType;
 import org.chaston.oakfunds.security.ActionType;
+import org.chaston.oakfunds.security.AuthenticationManager;
+import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.AuthorizationContext;
 import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.security.PermissionAssertion;
@@ -128,7 +130,8 @@ class ModelManagerImpl implements ModelManager {
   ModelManagerImpl(
       SystemPropertiesManager systemPropertiesManager,
       Store store,
-      AuthorizationContext authorizationContext) throws StorageException {
+      AuthorizationContext authorizationContext,
+      AuthenticationManager authenticationManager) throws StorageException {
     this.systemPropertiesManager = systemPropertiesManager;
     this.store = store;
 
@@ -136,27 +139,29 @@ class ModelManagerImpl implements ModelManager {
         ImmutableList.of(AttributeSearchTerm.of(Model.ATTRIBUTE_BASE_MODEL,
             SearchOperator.EQUALS, true));
     Model baseModel;
-    try (SinglePermissionAssertion singlePermissionAssertion =
-             authorizationContext.assertPermission("model.create")) {
-      Iterable<Model> baseModels = store.findRecords(Model.TYPE, searchTerms);
-      if (Iterables.isEmpty(baseModels)) {
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put(Model.ATTRIBUTE_TITLE, "[base]");
-        attributes.put(Model.ATTRIBUTE_BASE_MODEL, true);
-        Transaction transaction = store.startTransaction();
-        boolean success = false;
-        try {
-          baseModel = store.createRecord(Model.TYPE, attributes);
-          success = true;
-        } finally {
-          if (success) {
-            transaction.commit();
-          } else {
-            transaction.rollback();
+    try (AuthenticationScope authenticationScope = authenticationManager.authenticateSystem()) {
+      try (SinglePermissionAssertion singlePermissionAssertion =
+               authorizationContext.assertPermission("model.create")) {
+        Iterable<Model> baseModels = store.findRecords(Model.TYPE, searchTerms);
+        if (Iterables.isEmpty(baseModels)) {
+          Map<String, Object> attributes = new HashMap<>();
+          attributes.put(Model.ATTRIBUTE_TITLE, "[base]");
+          attributes.put(Model.ATTRIBUTE_BASE_MODEL, true);
+          Transaction transaction = store.startTransaction();
+          boolean success = false;
+          try {
+            baseModel = store.createRecord(Model.TYPE, attributes);
+            success = true;
+          } finally {
+            if (success) {
+              transaction.commit();
+            } else {
+              transaction.rollback();
+            }
           }
+        } else {
+          baseModel = Iterables.getOnlyElement(baseModels);
         }
-      } else {
-        baseModel = Iterables.getOnlyElement(baseModels);
       }
     }
     baseModelId = baseModel.getId();

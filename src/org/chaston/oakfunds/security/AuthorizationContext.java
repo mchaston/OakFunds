@@ -24,5 +24,5 @@ import org.chaston.oakfunds.storage.RecordType;
 public interface AuthorizationContext {
   <T extends Record> void assertAccess(RecordType<T> recordType, ActionType actionType);
 
-  <T extends Record> SinglePermissionAssertion assertPermission(String permission);
+  SinglePermissionAssertion assertPermission(String permission);
 }
