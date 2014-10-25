@@ -17,6 +17,7 @@ package org.chaston.oakfunds.model;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
@@ -40,5 +41,33 @@ public class ModelTypesModule extends AbstractModule {
 
     recordTypeMultibinder.addBinding().toInstance(ModelAccountTransaction.TYPE);
     recordTypeMultibinder.addBinding().toInstance(ModelDistributionTransaction.TYPE);
+
+    Multibinder<Permission> permissionMultibinder
+        = Multibinder.newSetBinder(binder(), Permission.class);
+
+    permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MODEL_READ);
+    permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MODEL_CREATE);
+    permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MODEL_EXPENSE_ACCOUNT_CREATE);
+    permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MODEL_REVENUE_ACCOUNT_CREATE);
+    permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MONTHLY_RECURRING_EVENT_UPDATE);
+    permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_ANNUAL_RECURRING_EVENT_UPDATE);
+    permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MODEL_ACCOUNT_TRANSACTION_CREATE);
+    permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MODEL_ACCOUNT_TRANSACTION_READ);
+    permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MODEL_ACCOUNT_TRANSACTION_UPDATE);
+    permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MODEL_ACCOUNT_TRANSACTION_DELETE);
+    permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MODEL_DISTRIBUTION_TRANSACTION_READ);
+    permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MODEL_DISTRIBUTION_TRANSACTION_REPORT);
   }
 }

@@ -13,25 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
+package org.chaston.oakfunds.security;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import org.chaston.oakfunds.security.AuthorizationContext;
-
-import javax.sql.DataSource;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class StorageModule extends AbstractModule {
+public enum ActionType {
+  CREATE(),
+  REPORT(),
+  DELETE(),
+  UPDATE(DELETE),
+  READ(CREATE, REPORT, UPDATE, DELETE);
+
+  private final ImmutableSet<ActionType> impliedActions;
+
+  ActionType(ActionType... impliedActions) {
+    this.impliedActions = ImmutableSet.copyOf(impliedActions);
+  }
+
   @Override
-  protected void configure() {
-    install(new StorageTypesModule());
-    requireBinding(DataSource.class);
-    requireBinding(RecordTypeRegistry.class);
-    requireBinding(AuthorizationContext.class);
-    bind(Store.class).to(StoreImpl.class);
-    bind(StoreImpl.class).in(Scopes.SINGLETON);
+  public String toString() {
+    return super.toString().toLowerCase();
+  }
+
+  public ImmutableSet<ActionType> getImpliedActions() {
+    return impliedActions;
   }
 }

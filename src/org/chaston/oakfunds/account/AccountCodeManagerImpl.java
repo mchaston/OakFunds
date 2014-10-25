@@ -16,6 +16,9 @@
 package org.chaston.oakfunds.account;
 
 import com.google.inject.Inject;
+import org.chaston.oakfunds.security.ActionType;
+import org.chaston.oakfunds.security.Permission;
+import org.chaston.oakfunds.security.PermissionAssertion;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 
@@ -27,6 +30,13 @@ import java.util.Map;
  */
 class AccountCodeManagerImpl implements AccountCodeManager {
 
+  static final Permission PERMISSION_ACCOUNT_CODE_CREATE =
+      Permission.builder("account_code.create")
+          .addRelatedAction(AccountCode.TYPE, ActionType.CREATE).build();
+  static final Permission PERMISSION_ACCOUNT_CODE_READ =
+      Permission.builder("account_code.read")
+          .addRelatedAction(AccountCode.TYPE, ActionType.READ).build();
+
   private final Store store;
 
   @Inject
@@ -35,6 +45,7 @@ class AccountCodeManagerImpl implements AccountCodeManager {
   }
 
   @Override
+  @PermissionAssertion("account_code.create")
   public AccountCode createAccountCode(int accountCodeNumber, String title)
       throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
@@ -43,6 +54,7 @@ class AccountCodeManagerImpl implements AccountCodeManager {
   }
 
   @Override
+  @PermissionAssertion("account_code.read")
   public AccountCode getAccountCode(int accountCodeNumber) throws StorageException {
     return store.getRecord(AccountCode.TYPE, accountCodeNumber);
   }

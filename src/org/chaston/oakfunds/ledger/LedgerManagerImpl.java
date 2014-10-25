@@ -19,6 +19,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.model.ModelAccount;
+import org.chaston.oakfunds.security.ActionType;
+import org.chaston.oakfunds.security.Permission;
+import org.chaston.oakfunds.security.PermissionAssertion;
 import org.chaston.oakfunds.storage.ContainerIdentifierSearchTerm;
 import org.chaston.oakfunds.storage.Report;
 import org.chaston.oakfunds.storage.ReportDateGranularity;
@@ -37,6 +40,44 @@ import java.util.Map;
  */
 class LedgerManagerImpl implements LedgerManager {
 
+  static final Permission PERMISSION_BANK_ACCOUNT_READ =
+      Permission.builder("bank_account.read")
+          .addRelatedAction(BankAccount.TYPE, ActionType.READ).build();
+  static final Permission PERMISSION_BANK_ACCOUNT_CREATE =
+      Permission.builder("bank_account.create")
+          .addRelatedAction(BankAccount.TYPE, ActionType.CREATE).build();
+
+  static final Permission PERMISSION_EXPENSE_ACCOUNT_READ =
+      Permission.builder("expense_account.read")
+          .addRelatedAction(ExpenseAccount.TYPE, ActionType.READ).build();
+  static final Permission PERMISSION_EXPENSE_ACCOUNT_CREATE =
+      Permission.builder("expense_account.create")
+          .addRelatedAction(ExpenseAccount.TYPE, ActionType.CREATE).build();
+
+  static final Permission PERMISSION_REVENUE_ACCOUNT_READ =
+      Permission.builder("revenue_account.read")
+          .addRelatedAction(RevenueAccount.TYPE, ActionType.READ).build();
+  static final Permission PERMISSION_REVENUE_ACCOUNT_CREATE =
+      Permission.builder("revenue_account.create")
+          .addRelatedAction(RevenueAccount.TYPE, ActionType.CREATE).build();
+
+  static final Permission PERMISSION_BANK_ACCOUNT_INTEREST_READ =
+      Permission.builder("bank_account_interest.read")
+          .addRelatedAction(BankAccountInterest.TYPE, ActionType.READ).build();
+  static final Permission PERMISSION_BANK_ACCOUNT_INTEREST_UPDATE =
+      Permission.builder("bank_account_interest.update")
+          .addRelatedAction(BankAccountInterest.TYPE, ActionType.UPDATE).build();
+
+  static final Permission PERMISSION_ACCOUNT_TRANSACTION_READ =
+      Permission.builder("account_transaction.read")
+          .addRelatedAction(AccountTransaction.TYPE, ActionType.READ).build();
+  static final Permission PERMISSION_ACCOUNT_TRANSACTION_CREATE =
+      Permission.builder("account_transaction.create")
+          .addRelatedAction(AccountTransaction.TYPE, ActionType.CREATE).build();
+  static final Permission PERMISSION_ACCOUNT_TRANSACTION_REPORT =
+      Permission.builder("account_transaction.report")
+          .addRelatedAction(AccountTransaction.TYPE, ActionType.REPORT).build();
+
   private final Store store;
 
   @Inject
@@ -45,6 +86,7 @@ class LedgerManagerImpl implements LedgerManager {
   }
 
   @Override
+  @PermissionAssertion("bank_account.create")
   public BankAccount createBankAccount(AccountCode accountCode, String title,
       BankAccountType bankAccountType) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
@@ -54,6 +96,7 @@ class LedgerManagerImpl implements LedgerManager {
   }
 
   @Override
+  @PermissionAssertion("bank_account_interest.update")
   public void setInterestRate(BankAccount bankAccount, BigDecimal interestRate, Instant start,
       Instant end) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
@@ -63,6 +106,7 @@ class LedgerManagerImpl implements LedgerManager {
   }
 
   @Override
+  @PermissionAssertion("bank_account_interest.read")
   public BigDecimal getInterestRate(BankAccount bankAccount, Instant date) throws StorageException {
     BankAccountInterest interestRecord =
         store.getIntervalRecord(bankAccount, BankAccountInterest.TYPE, date);
@@ -70,6 +114,7 @@ class LedgerManagerImpl implements LedgerManager {
   }
 
   @Override
+  @PermissionAssertion("account_transaction.read")
   public BigDecimal getBalance(BankAccount bankAccount, Instant date) throws StorageException {
     Iterable<AccountTransaction> accountTransactions =
         store.findInstantRecords(bankAccount, AccountTransaction.TYPE,
@@ -82,11 +127,13 @@ class LedgerManagerImpl implements LedgerManager {
   }
 
   @Override
+  @PermissionAssertion("bank_account.read")
   public BankAccount getBankAccount(int id) throws StorageException {
     return store.getRecord(BankAccount.TYPE, id);
   }
 
   @Override
+  @PermissionAssertion("expense_account.create")
   public ExpenseAccount createExpenseAccount(AccountCode accountCode, String title,
       BankAccount defaultSourceAccount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
@@ -96,6 +143,7 @@ class LedgerManagerImpl implements LedgerManager {
   }
 
   @Override
+  @PermissionAssertion("revenue_account.create")
   public RevenueAccount createRevenueAccount(AccountCode accountCode, String title,
       BankAccount defaultDepositAccount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
@@ -105,12 +153,14 @@ class LedgerManagerImpl implements LedgerManager {
   }
 
   @Override
+  @PermissionAssertion("account_transaction.create")
   public void recordTransaction(Account account, Instant date, BigDecimal amount)
       throws StorageException {
     recordTransaction(account, date, amount, null);
   }
 
   @Override
+  @PermissionAssertion("account_transaction.create")
   public void recordTransaction(Account account, Instant date, BigDecimal amount, String comment)
       throws StorageException {
     recordTransaction(account, date, amount, comment, null);
@@ -129,6 +179,7 @@ class LedgerManagerImpl implements LedgerManager {
   }
 
   @Override
+  @PermissionAssertion("account_transaction.report")
   public Report runReport(Account<?> account, int startYear, int endYear,
       ReportDateGranularity granularity) throws StorageException {
     ImmutableList<? extends SearchTerm> searchTerms =

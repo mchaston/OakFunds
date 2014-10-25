@@ -23,6 +23,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.jdbc.ColumnDef;
+import org.chaston.oakfunds.security.ActionType;
+import org.chaston.oakfunds.security.AuthorizationContext;
 import org.chaston.oakfunds.util.DateUtil;
 import org.joda.time.Instant;
 
@@ -51,12 +53,15 @@ class StoreImpl implements Store {
 
   private final DataSource dataSource;
   private final RecordTypeRegistry recordTypeRegistry;
+  private final AuthorizationContext authorizationContext;
 
   @Inject
   StoreImpl(DataSource dataSource,
-      RecordTypeRegistry recordTypeRegistry) {
+      RecordTypeRegistry recordTypeRegistry,
+      AuthorizationContext authorizationContext) {
     this.dataSource = dataSource;
     this.recordTypeRegistry = recordTypeRegistry;
+    this.authorizationContext = authorizationContext;
   }
 
   @Override
@@ -82,6 +87,7 @@ class StoreImpl implements Store {
   @Override
   public <T extends Record> T createRecord(RecordType<T> recordType, int id,
       Map<String, Object> attributes) throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.CREATE);
     recordTypeRegistry.validateRecordAttributes(recordType, attributes);
     TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
@@ -119,6 +125,7 @@ class StoreImpl implements Store {
   @Override
   public <T extends Record> T createRecord(RecordType<T> recordType, Map<String, Object> attributes)
       throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.CREATE);
     recordTypeRegistry.validateRecordAttributes(recordType, attributes);
     TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
@@ -130,6 +137,7 @@ class StoreImpl implements Store {
 
   private <T extends Record> int insertRecord(Connection connection,
       RecordType<T> recordType, Map<String, Object> attributes) throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.CREATE);
     Preconditions.checkArgument(recordType.isAutoIncrementId(),
         "You must specify an ID for a manually identifying record type.");
 
@@ -163,6 +171,7 @@ class StoreImpl implements Store {
 
   @Override
   public <T extends Record> T getRecord(RecordType<T> recordType, int id) throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.READ);
     try (ReadingDataSource readingDataSource = new ReadingDataSource()) {
       RawRecord<T> rawRecord = getRecord(readingDataSource.getConnection(), recordType, id);
       return RecordProxy.proxyRecord(rawRecord.getRecordType(),
@@ -204,6 +213,7 @@ class StoreImpl implements Store {
   @Override
   public <T extends Record> T updateRecord(T record, Map<String, Object> attributes)
       throws StorageException {
+    authorizationContext.assertAccess(record.getRecordType(), ActionType.UPDATE);
     recordTypeRegistry.validateRecordAttributes(record.getRecordType(), attributes);
     TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
@@ -236,6 +246,7 @@ class StoreImpl implements Store {
   public <T extends IntervalRecord> T updateIntervalRecord(Record containingRecord,
       RecordType<T> recordType, Instant start, Instant end, Map<String, Object> attributes)
       throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.UPDATE);
     recordTypeRegistry.validateRecordAttributes(recordType, attributes);
     TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
@@ -358,6 +369,7 @@ class StoreImpl implements Store {
   public <T extends InstantRecord> T insertInstantRecord(Record containingRecord,
       RecordType<T> recordType, Instant instant, Map<String, Object> attributes)
       throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.CREATE);
     recordTypeRegistry.validateRecordAttributes(recordType, attributes);
     TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
@@ -369,7 +381,7 @@ class StoreImpl implements Store {
         containingRecord, id, instant, attributes);
   }
 
-  <T extends InstantRecord> int insertInstantRecord(Connection connection,
+  private <T extends InstantRecord> int insertInstantRecord(Connection connection,
       int containingId, RecordType<T> recordType, Instant instant, Map<String, Object> attributes)
       throws StorageException {
     Preconditions.checkArgument(recordType.isAutoIncrementId(),
@@ -411,6 +423,7 @@ class StoreImpl implements Store {
   public <T extends InstantRecord> T updateInstantRecord(Record containingRecord,
       RecordType<T> recordType, int id, Instant instant, Map<String, Object> attributes)
       throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.UPDATE);
     recordTypeRegistry.validateRecordAttributes(recordType, attributes);
     TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
@@ -422,7 +435,7 @@ class StoreImpl implements Store {
         containingRecord, id, instant, attributes);
   }
 
-  public <T extends InstantRecord> void updateInstantRecord(Connection connection,
+  private <T extends InstantRecord> void updateInstantRecord(Connection connection,
       RecordType<T> recordType, int id, Instant instant,
       Map<String, Object> attributes) throws StorageException {
 
@@ -448,6 +461,7 @@ class StoreImpl implements Store {
   public <T extends InstantRecord> void deleteInstantRecords(Record containingRecord,
       RecordType<T> recordType, ImmutableList<? extends SearchTerm> searchTerms)
       throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.DELETE);
     TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
@@ -473,6 +487,7 @@ class StoreImpl implements Store {
   public <T extends InstantRecord> Iterable<T> findInstantRecords(Record containingRecord,
       RecordType<T> recordType, Instant start, Instant end, List<? extends SearchTerm> searchTerms)
       throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.READ);
     try(ReadingDataSource readingDataSource = new ReadingDataSource()) {
       Iterable<RawInstantRecord<T>> rawRecords =
           findInstantRecords(readingDataSource.getConnection(),
@@ -493,7 +508,7 @@ class StoreImpl implements Store {
     }
   }
 
-  public <T extends InstantRecord> Iterable<RawInstantRecord<T>> findInstantRecords(
+  private <T extends InstantRecord> Iterable<RawInstantRecord<T>> findInstantRecords(
       Connection connection, RecordType<T> recordType, Instant start, Instant end,
       List<? extends SearchTerm> searchTerms)
       throws StorageException {
@@ -538,6 +553,7 @@ class StoreImpl implements Store {
   @Override
   public <T extends IntervalRecord> T getIntervalRecord(Record containingRecord,
       RecordType<T> recordType, Instant date) throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.READ);
     try(ReadingDataSource readingDataSource = new ReadingDataSource()) {
       RawIntervalRecord<T> rawRecord =
           getIntervalRecord(readingDataSource.getConnection(), containingRecord, recordType, date);
@@ -590,6 +606,7 @@ class StoreImpl implements Store {
   @Override
   public <T extends Record> Iterable<T> findRecords(RecordType<T> recordType,
       List<? extends SearchTerm> searchTerms) throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.READ);
     try(ReadingDataSource readingDataSource = new ReadingDataSource()) {
       // TODO(mchaston): add ordering
       Iterable<RawRecord<T>> rawRecords =
@@ -635,6 +652,7 @@ class StoreImpl implements Store {
   public <T extends IntervalRecord> Iterable<T> findIntervalRecords(Record containingRecord,
       RecordType<T> recordType, Instant start, Instant end, List<? extends SearchTerm> searchTerms)
       throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.READ);
     try (ReadingDataSource readingDataSource = new ReadingDataSource()) {
       Iterable<RawIntervalRecord<T>> rawRecords =
           findIntervalRecords(readingDataSource.getConnection(), containingRecord, recordType,
@@ -704,6 +722,7 @@ class StoreImpl implements Store {
       List<? extends SearchTerm> searchTerms,
       @Nullable String containerIdDimension, List<String> dimensions, List<String> measures)
       throws StorageException {
+    authorizationContext.assertAccess(recordType, ActionType.REPORT);
     ReportBuilder reportBuilder =
         new ReportBuilder(granularity, startYear, endYear, containerIdDimension, dimensions,
             measures);

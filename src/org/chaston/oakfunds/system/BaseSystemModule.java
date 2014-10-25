@@ -16,7 +16,7 @@
 package org.chaston.oakfunds.system;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
+import com.google.inject.Scopes;
 import org.chaston.oakfunds.storage.Store;
 
 /**
@@ -28,7 +28,7 @@ class BaseSystemModule extends AbstractModule {
     install(new SystemTypesModule());
     requireBinding(Store.class);
     requireBinding(SystemPropertyBootstrapper.class);
-    bind(SystemPropertiesManagerImpl.class).in(Singleton.class);
+    bind(SystemPropertiesManagerImpl.class).in(Scopes.SINGLETON);
     bind(SystemPropertiesManager.class).to(SystemPropertiesManagerImpl.class);
   }
 }

@@ -247,6 +247,23 @@ public class RecordType<T extends Record> {
     return jdbcTypeHandlers;
   }
 
+  @Override
+  public int hashCode() {
+    return name.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    } else if (obj == null || !(obj instanceof RecordType)) {
+      return false;
+    } else {
+      RecordType that = (RecordType) obj;
+      return name.equals(that.name);
+    }
+  }
+
   public static class RecordTypeBuilder<T extends Record<T>> {
     private final String name;
     private final Class<T> recordTypeClass;

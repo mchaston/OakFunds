@@ -13,25 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import org.chaston.oakfunds.security.AuthorizationContext;
-
-import javax.sql.DataSource;
+package org.chaston.oakfunds.security;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class StorageModule extends AbstractModule {
-  @Override
-  protected void configure() {
-    install(new StorageTypesModule());
-    requireBinding(DataSource.class);
-    requireBinding(RecordTypeRegistry.class);
-    requireBinding(AuthorizationContext.class);
-    bind(Store.class).to(StoreImpl.class);
-    bind(StoreImpl.class).in(Scopes.SINGLETON);
-  }
+interface SinglePermissionAssertionFactory {
+  SinglePermissionAssertion create(String permissionName);
 }

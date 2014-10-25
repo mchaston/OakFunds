@@ -17,6 +17,11 @@ package org.chaston.oakfunds.system;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import org.chaston.oakfunds.security.ActionType;
+import org.chaston.oakfunds.security.AuthorizationContext;
+import org.chaston.oakfunds.security.Permission;
+import org.chaston.oakfunds.security.PermissionAssertion;
+import org.chaston.oakfunds.security.SinglePermissionAssertion;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
@@ -33,6 +38,20 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
   static final String PROPERTY_CURRENT_YEAR = "current_year";
   static final String PROPERTY_TIME_HORIZON = "time_horizon";
 
+  static final Permission PERMISSION_SYSTEM_PROPERTY_READ =
+      Permission.builder("system_property.read")
+          .addRelatedAction(SystemProperty.TYPE, ActionType.READ).build();
+  static final Permission PERMISSION_SYSTEM_PROPERTY_CREATE =
+      Permission.builder("system_property.create")
+          .addRelatedAction(SystemProperty.TYPE, ActionType.CREATE).build();
+
+  static final Permission PERMISSION_CURRENT_YEAR_UPDATE =
+      Permission.builder("current_year.update")
+          .addRelatedAction(SystemProperty.TYPE, ActionType.UPDATE).build();
+  static final Permission PERMISSION_TIME_HORIZON_UPDATE =
+      Permission.builder("time_horizon.update")
+          .addRelatedAction(SystemProperty.TYPE, ActionType.UPDATE).build();
+
   private final Store store;
   private SystemProperty currentYear;
   private SystemProperty timeHorizon;
@@ -41,17 +60,21 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
   SystemPropertiesManagerImpl(
       // Here for dependency enforcement.
       @Nullable SystemPropertyBootstrapper systemPropertyBootstrapper,
-      Store store) throws StorageException {
+      Store store,
+      AuthorizationContext authorizationContext) throws StorageException {
     this.store = store;
 
-    Iterable<SystemProperty> properties =
-        store.findRecords(SystemProperty.TYPE, ImmutableList.<SearchTerm>of());
-    for (SystemProperty property : properties) {
-      if (PROPERTY_CURRENT_YEAR.equals(property.getName())) {
-        currentYear = property;
-      }
-      if (PROPERTY_TIME_HORIZON.equals(property.getName())) {
-        timeHorizon = property;
+    try (SinglePermissionAssertion singlePermissionAssertion =
+             authorizationContext.assertPermission("system_property.read")) {
+      Iterable<SystemProperty> properties =
+          store.findRecords(SystemProperty.TYPE, ImmutableList.<SearchTerm>of());
+      for (SystemProperty property : properties) {
+        if (PROPERTY_CURRENT_YEAR.equals(property.getName())) {
+          currentYear = property;
+        }
+        if (PROPERTY_TIME_HORIZON.equals(property.getName())) {
+          timeHorizon = property;
+        }
       }
     }
     if (currentYear == null) {
@@ -68,6 +91,7 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
   }
 
   @Override
+  @PermissionAssertion("current_year.update")
   public void setCurrentYear(int year) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(SystemProperty.ATTRIBUTE_INTEGER_VALUE, year);
@@ -80,6 +104,7 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
   }
 
   @Override
+  @PermissionAssertion("time_horizon.update")
   public void setTimeHorizon(int years) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(SystemProperty.ATTRIBUTE_INTEGER_VALUE, years);

@@ -16,7 +16,7 @@
 package org.chaston.oakfunds.storage.mgmt;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
+import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import org.chaston.oakfunds.jdbc.FunctionDef;
 import org.chaston.oakfunds.storage.RecordType;
@@ -31,8 +31,8 @@ public class StorageManagementModule extends AbstractModule {
   protected void configure() {
     requireBinding(SchemaBuilder.class);
     requireBinding(DataSource.class);
-    bind(SchemaValidator.class).in(Singleton.class);
-    bind(SchemaUpdater.class).in(Singleton.class);
+    bind(SchemaValidator.class).in(Scopes.SINGLETON);
+    bind(SchemaUpdater.class).in(Scopes.SINGLETON);
 
     // Preemptively bind multivalues so that they are never null.
     Multibinder.newSetBinder(binder(), RecordType.class);

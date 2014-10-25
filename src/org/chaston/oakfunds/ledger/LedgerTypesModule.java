@@ -17,6 +17,7 @@ package org.chaston.oakfunds.ledger;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
@@ -34,5 +35,32 @@ public class LedgerTypesModule extends AbstractModule {
     recordTypeMultibinder.addBinding().toInstance(BankAccountInterest.TYPE);
     recordTypeMultibinder.addBinding().toInstance(ExpenseAccount.TYPE);
     recordTypeMultibinder.addBinding().toInstance(RevenueAccount.TYPE);
+
+
+    Multibinder<Permission> permissionMultibinder
+        = Multibinder.newSetBinder(binder(), Permission.class);
+
+    permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_BANK_ACCOUNT_READ);
+    permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_BANK_ACCOUNT_CREATE);
+    permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_EXPENSE_ACCOUNT_READ);
+    permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_EXPENSE_ACCOUNT_CREATE);
+    permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_REVENUE_ACCOUNT_READ);
+    permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_REVENUE_ACCOUNT_CREATE);
+    permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_BANK_ACCOUNT_INTEREST_READ);
+    permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_BANK_ACCOUNT_INTEREST_UPDATE);
+    permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_ACCOUNT_TRANSACTION_READ);
+    permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_ACCOUNT_TRANSACTION_CREATE);
+    permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_ACCOUNT_TRANSACTION_REPORT);
   }
 }

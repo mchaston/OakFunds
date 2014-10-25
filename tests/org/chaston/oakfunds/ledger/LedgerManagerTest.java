@@ -23,6 +23,7 @@ import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.account.AccountCodeManager;
 import org.chaston.oakfunds.account.AccountCodeModule;
 import org.chaston.oakfunds.jdbc.DatabaseTearDown;
+import org.chaston.oakfunds.security.SecurityModule;
 import org.chaston.oakfunds.storage.Report;
 import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.ReportEntry;
@@ -72,6 +73,7 @@ public class LedgerManagerTest {
     Injector injector = Guice.createInjector(
         new AccountCodeModule(),
         new LedgerModule(),
+        new SecurityModule(),
         new TestStorageModule());
     injector.injectMembers(this);
   }

@@ -17,6 +17,7 @@ package org.chaston.oakfunds.account;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
@@ -29,5 +30,13 @@ public class AccountTypesModule extends AbstractModule {
         = Multibinder.newSetBinder(binder(), RecordType.class);
 
     recordTypeMultibinder.addBinding().toInstance(AccountCode.TYPE);
+
+    Multibinder<Permission> permissionMultibinder
+        = Multibinder.newSetBinder(binder(), Permission.class);
+
+    permissionMultibinder.addBinding()
+        .toInstance(AccountCodeManagerImpl.PERMISSION_ACCOUNT_CODE_CREATE);
+    permissionMultibinder.addBinding()
+        .toInstance(AccountCodeManagerImpl.PERMISSION_ACCOUNT_CODE_READ);
   }
 }

@@ -17,6 +17,7 @@ package org.chaston.oakfunds.system;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.storage.RecordType;
 
 /**
@@ -29,5 +30,18 @@ public class SystemTypesModule extends AbstractModule {
         = Multibinder.newSetBinder(binder(), RecordType.class);
 
     recordTypeMultibinder.addBinding().toInstance(SystemProperty.TYPE);
+
+
+    Multibinder<Permission> permissionMultibinder
+        = Multibinder.newSetBinder(binder(), Permission.class);
+
+    permissionMultibinder.addBinding()
+        .toInstance(SystemPropertiesManagerImpl.PERMISSION_SYSTEM_PROPERTY_READ);
+    permissionMultibinder.addBinding()
+        .toInstance(SystemPropertiesManagerImpl.PERMISSION_SYSTEM_PROPERTY_CREATE);
+    permissionMultibinder.addBinding()
+        .toInstance(SystemPropertiesManagerImpl.PERMISSION_CURRENT_YEAR_UPDATE);
+    permissionMultibinder.addBinding()
+        .toInstance(SystemPropertiesManagerImpl.PERMISSION_TIME_HORIZON_UPDATE);
   }
 }

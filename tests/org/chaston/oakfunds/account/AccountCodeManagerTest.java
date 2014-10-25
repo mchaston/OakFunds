@@ -19,6 +19,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.chaston.oakfunds.jdbc.DatabaseTearDown;
+import org.chaston.oakfunds.security.SecurityModule;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.storage.TestStorageModule;
@@ -54,6 +55,7 @@ public class AccountCodeManagerTest {
   public void setUp() throws SQLException {
     Injector injector = Guice.createInjector(
         new AccountCodeModule(),
+        new SecurityModule(),
         new TestStorageModule());
     injector.injectMembers(this);
   }

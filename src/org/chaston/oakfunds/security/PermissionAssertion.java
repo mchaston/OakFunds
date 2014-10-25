@@ -13,25 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
+package org.chaston.oakfunds.security;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import org.chaston.oakfunds.security.AuthorizationContext;
-
-import javax.sql.DataSource;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class StorageModule extends AbstractModule {
-  @Override
-  protected void configure() {
-    install(new StorageTypesModule());
-    requireBinding(DataSource.class);
-    requireBinding(RecordTypeRegistry.class);
-    requireBinding(AuthorizationContext.class);
-    bind(Store.class).to(StoreImpl.class);
-    bind(StoreImpl.class).in(Scopes.SINGLETON);
-  }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface PermissionAssertion {
+  String value();
 }

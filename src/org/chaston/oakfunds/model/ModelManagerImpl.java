@@ -19,6 +19,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.ledger.BankAccountType;
+import org.chaston.oakfunds.security.ActionType;
+import org.chaston.oakfunds.security.AuthorizationContext;
+import org.chaston.oakfunds.security.Permission;
+import org.chaston.oakfunds.security.PermissionAssertion;
+import org.chaston.oakfunds.security.SinglePermissionAssertion;
 import org.chaston.oakfunds.storage.AttributeSearchTerm;
 import org.chaston.oakfunds.storage.IdentifierSearchTerm;
 import org.chaston.oakfunds.storage.OrSearchTerm;
@@ -47,43 +52,118 @@ import java.util.Map;
  */
 class ModelManagerImpl implements ModelManager {
 
+  static final Permission PERMISSION_MODEL_READ = Permission.builder("model.read")
+      .addRelatedAction(Model.TYPE, ActionType.READ)
+      .build();
+  static final Permission PERMISSION_MODEL_CREATE = Permission.builder("model.create")
+      .addRelatedAction(Model.TYPE, ActionType.CREATE)
+      .build();
+  static final Permission PERMISSION_MODEL_EXPENSE_ACCOUNT_CREATE =
+      Permission.builder("model_expense_account.create")
+          .addRelatedAction(ModelExpenseAccount.TYPE, ActionType.CREATE)
+          .build();
+  static final Permission PERMISSION_MODEL_REVENUE_ACCOUNT_CREATE =
+      Permission.builder("model_revenue_account.create")
+          .addRelatedAction(ModelRevenueAccount.TYPE, ActionType.CREATE)
+          .build();
+  static final Permission PERMISSION_MONTHLY_RECURRING_EVENT_UPDATE =
+      Permission.builder("monthly_recurring_event.update")
+          .addRelatedAction(RecurringEvent.TYPE, ActionType.READ)
+          .addRelatedAction(MonthlyRecurringEvent.TYPE, ActionType.UPDATE)
+          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.CREATE)
+          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.UPDATE)
+          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.DELETE)
+          .build();
+  static final Permission PERMISSION_ANNUAL_RECURRING_EVENT_UPDATE =
+      Permission.builder("annual_recurring_event.update")
+          .addRelatedAction(RecurringEvent.TYPE, ActionType.READ)
+          .addRelatedAction(AnnualRecurringEvent.TYPE, ActionType.UPDATE)
+          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.CREATE)
+          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.UPDATE)
+          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.DELETE)
+          .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.CREATE)
+          .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.UPDATE)
+          .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.DELETE)
+          .build();
+  static final Permission PERMISSION_MODEL_ACCOUNT_TRANSACTION_READ =
+      Permission.builder("model_account_transaction.read")
+          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.READ)
+          .build();
+  static final Permission PERMISSION_MODEL_ACCOUNT_TRANSACTION_CREATE =
+      Permission.builder("model_account_transaction.create")
+          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.CREATE)
+          .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.CREATE)
+          .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.UPDATE)
+          .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.DELETE)
+          .build();
+  static final Permission PERMISSION_MODEL_ACCOUNT_TRANSACTION_UPDATE =
+      Permission.builder("model_account_transaction.update")
+          .addRelatedAction(Model.TYPE, ActionType.READ)
+          .addRelatedAction(ModelAccount.TYPE, ActionType.READ)
+          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.UPDATE)
+          .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.CREATE)
+          .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.UPDATE)
+          .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.DELETE)
+          .build();
+  static final Permission PERMISSION_MODEL_ACCOUNT_TRANSACTION_DELETE =
+      Permission.builder("model_account_transaction.delete")
+          .addRelatedAction(ModelAccount.TYPE, ActionType.READ)
+          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.DELETE)
+          .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.DELETE)
+          .build();
+  static final Permission PERMISSION_MODEL_DISTRIBUTION_TRANSACTION_READ =
+      Permission.builder("model_distribution_transaction.read")
+          .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.READ)
+          .build();
+  static final Permission PERMISSION_MODEL_DISTRIBUTION_TRANSACTION_REPORT =
+      Permission.builder("model_distribution_transaction.report")
+          .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.REPORT)
+          .build();
+
   private final SystemPropertiesManager systemPropertiesManager;
   private final Store store;
   private int baseModelId;
 
   @Inject
-  ModelManagerImpl(SystemPropertiesManager systemPropertiesManager, Store store)
-      throws StorageException {
+  ModelManagerImpl(
+      SystemPropertiesManager systemPropertiesManager,
+      Store store,
+      AuthorizationContext authorizationContext) throws StorageException {
     this.systemPropertiesManager = systemPropertiesManager;
     this.store = store;
 
     List<? extends SearchTerm> searchTerms =
-        ImmutableList.of(AttributeSearchTerm.of(Model.ATTRIBUTE_BASE_MODEL, SearchOperator.EQUALS, true));
-    Iterable<Model> baseModels = store.findRecords(Model.TYPE, searchTerms);
+        ImmutableList.of(AttributeSearchTerm.of(Model.ATTRIBUTE_BASE_MODEL,
+            SearchOperator.EQUALS, true));
     Model baseModel;
-    if (Iterables.isEmpty(baseModels)) {
-      Map<String, Object> attributes = new HashMap<>();
-      attributes.put(Model.ATTRIBUTE_TITLE, "[base]");
-      attributes.put(Model.ATTRIBUTE_BASE_MODEL, true);
-      Transaction transaction = store.startTransaction();
-      boolean success = false;
-      try {
-        baseModel = store.createRecord(Model.TYPE, attributes);
-        success = true;
-      } finally {
-        if (success) {
-          transaction.commit();
-        } else {
-          transaction.rollback();
+    try (SinglePermissionAssertion singlePermissionAssertion =
+             authorizationContext.assertPermission("model.create")) {
+      Iterable<Model> baseModels = store.findRecords(Model.TYPE, searchTerms);
+      if (Iterables.isEmpty(baseModels)) {
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put(Model.ATTRIBUTE_TITLE, "[base]");
+        attributes.put(Model.ATTRIBUTE_BASE_MODEL, true);
+        Transaction transaction = store.startTransaction();
+        boolean success = false;
+        try {
+          baseModel = store.createRecord(Model.TYPE, attributes);
+          success = true;
+        } finally {
+          if (success) {
+            transaction.commit();
+          } else {
+            transaction.rollback();
+          }
         }
+      } else {
+        baseModel = Iterables.getOnlyElement(baseModels);
       }
-    } else {
-      baseModel = Iterables.getOnlyElement(baseModels);
     }
     baseModelId = baseModel.getId();
   }
 
   @Override
+  @PermissionAssertion("model.create")
   public Model createNewModel(String title) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(Model.ATTRIBUTE_TITLE, title);
@@ -92,16 +172,19 @@ class ModelManagerImpl implements ModelManager {
   }
 
   @Override
+  @PermissionAssertion("model.read")
   public Model getBaseModel() throws StorageException {
     return getModel(baseModelId);
   }
 
   @Override
+  @PermissionAssertion("model.read")
   public Model getModel(int modelId) throws StorageException {
     return store.getRecord(Model.TYPE, modelId);
   }
 
   @Override
+  @PermissionAssertion("model_expense_account.create")
   public ModelExpenseAccount createModelExpenseAccount(String title,
       BankAccountType sourceBankAccountType) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
@@ -111,6 +194,7 @@ class ModelManagerImpl implements ModelManager {
   }
 
   @Override
+  @PermissionAssertion("model_revenue_account.create")
   public ModelRevenueAccount createModelRevenueAccount(String title,
       BankAccountType depositBankAccountType) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
@@ -120,6 +204,7 @@ class ModelManagerImpl implements ModelManager {
   }
 
   @Override
+  @PermissionAssertion("monthly_recurring_event.update")
   public MonthlyRecurringEvent setMonthlyRecurringEventDetails(Model model, ModelAccount account,
       Instant start, Instant end, BigDecimal amount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
@@ -133,6 +218,7 @@ class ModelManagerImpl implements ModelManager {
   }
 
   @Override
+  @PermissionAssertion("annual_recurring_event.update")
   public AnnualRecurringEvent setAnnualRecurringEventDetails(Model model, ModelAccount account,
       Instant start, Instant end, int paymentMonth, BigDecimal amount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
@@ -147,6 +233,7 @@ class ModelManagerImpl implements ModelManager {
   }
 
   @Override
+  @PermissionAssertion("model_account_transaction.create")
   public ModelAccountTransaction createAdHocEvent(Model model, ModelAccount account, Instant date,
       int distributionTime, DistributionTimeUnit distributionTimeUnit, BigDecimal amount)
       throws StorageException {
@@ -163,6 +250,7 @@ class ModelManagerImpl implements ModelManager {
   }
 
   @Override
+  @PermissionAssertion("model_account_transaction.update")
   public ModelAccountTransaction updateAdHocEvent(ModelAccountTransaction modelAccountTransaction,
       Instant date, int distributionTime, DistributionTimeUnit distributionTimeUnit,
       BigDecimal amount) throws StorageException {
@@ -184,6 +272,7 @@ class ModelManagerImpl implements ModelManager {
   }
 
   @Override
+  @PermissionAssertion("model_account_transaction.delete")
   public void deleteAdHocEvent(ModelAccountTransaction modelAccountTransaction)
       throws StorageException {
     ModelAccount account =
@@ -195,6 +284,7 @@ class ModelManagerImpl implements ModelManager {
   }
 
   @Override
+  @PermissionAssertion("model_account_transaction.read")
   public Iterable<ModelAccountTransaction> getModelTransactions(Model model, ModelAccount account,
       Instant start, Instant end) throws StorageException {
     List<? extends SearchTerm> searchTerms = ImmutableList.of(
@@ -204,6 +294,7 @@ class ModelManagerImpl implements ModelManager {
   }
 
   @Override
+  @PermissionAssertion("model_distribution_transaction.read")
   public Iterable<ModelDistributionTransaction> getModelDistributionTransactions(Model model,
       ModelAccount account, Instant start, Instant end) throws StorageException {
     List<? extends SearchTerm> searchTerms = ImmutableList.of(
@@ -213,6 +304,7 @@ class ModelManagerImpl implements ModelManager {
   }
 
   @Override
+  @PermissionAssertion("model_distribution_transaction.report")
   public Report runDistributionReport(Model model, int startYear, int endYear,
       ReportDateGranularity reportDateGranularity) throws StorageException {
     return store.runReport(ModelDistributionTransaction.TYPE, startYear, endYear,

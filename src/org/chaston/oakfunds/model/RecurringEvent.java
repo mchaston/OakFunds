@@ -27,7 +27,7 @@ import java.math.BigDecimal;
 public interface RecurringEvent<T extends RecurringEvent> extends IntervalRecord<T>, ModelBound, AccountChild {
 
   static final RecordType<RecurringEvent> TYPE =
-      RecordType.builder("record_type", RecurringEvent.class)
+      RecordType.builder("recurring_event", RecurringEvent.class)
           .containedBy(ModelAccount.TYPE)
           .build();
 

@@ -16,7 +16,7 @@
 package org.chaston.oakfunds.ledger;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
+import com.google.inject.Scopes;
 import org.chaston.oakfunds.storage.Store;
 
 /**
@@ -27,7 +27,7 @@ public class LedgerModule extends AbstractModule {
   protected void configure() {
     install(new LedgerTypesModule());
     requireBinding(Store.class);
-    bind(LedgerManagerImpl.class).in(Singleton.class);
+    bind(LedgerManagerImpl.class).in(Scopes.SINGLETON);
     bind(LedgerManager.class).to(LedgerManagerImpl.class);
   }
 }

@@ -24,6 +24,7 @@ import org.chaston.oakfunds.account.AccountCodeManager;
 import org.chaston.oakfunds.account.AccountCodeModule;
 import org.chaston.oakfunds.jdbc.DatabaseTearDown;
 import org.chaston.oakfunds.ledger.BankAccountType;
+import org.chaston.oakfunds.security.SecurityModule;
 import org.chaston.oakfunds.storage.Report;
 import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.ReportEntry;
@@ -77,6 +78,7 @@ public class ModelManagerTest {
     Injector injector = Guice.createInjector(
         new AccountCodeModule(),
         new ModelModule(),
+        new SecurityModule(),
         new TestSystemModuleBuilder()
             .setCurrentYear(Instant.parse("2014-01-01").get(DateTimeFieldType.year()))
             .setTimeHorizon(10)
