@@ -92,8 +92,9 @@ public class SchemaUpdater {
       createSchemaStatement.append("CREATE SCHEMA ").append(missingSchema.getName()).append(";");
       try (Statement stmt = connection.createStatement()) {
         stmt.executeUpdate(createSchemaStatement.toString());
+        logger.info("Schema " + missingSchema.getName() + " was created.");
       } catch (SQLException e) {
-        logger.log(Level.SEVERE, "Failure to execute: " + createSchemaStatement.toString());
+        logger.log(Level.SEVERE, "Failure to execute: " + createSchemaStatement.toString(), e);
         throw e;
       }
     }
@@ -114,8 +115,9 @@ public class SchemaUpdater {
       createTableStatement.append(");");
       try (Statement stmt = connection.createStatement()) {
         stmt.executeUpdate(createTableStatement.toString());
+        logger.info("Table " + missingTable.getName() + " was created.");
       } catch (SQLException e) {
-        logger.log(Level.SEVERE, "Failure to execute: " + createTableStatement.toString());
+        logger.log(Level.SEVERE, "Failure to execute: " + createTableStatement.toString(), e);
         throw e;
       }
     }
@@ -168,8 +170,13 @@ public class SchemaUpdater {
           MissingColumn missingColumn = (MissingColumn) tableDefDiscrepancy;
           alterTableStatement.append("ADD COLUMN ");
           appendColumnDeclaration(alterTableStatement, missingColumn.getColumnDef());
+          logger.info("Column " + missingColumn.getTableName() + "."
+              + missingColumn.getColumnDef().getName() + " was added.");
         } else if (tableDefDiscrepancy instanceof ExtraColumn) {
           // Columns are not automatically dropped as this is dangerous.
+          ExtraColumn extraColumn = (ExtraColumn) tableDefDiscrepancy;
+          logger.warning("Extra column " + extraColumn.getTableName() + "."
+              + extraColumn.getColumnName() + " was detected.");
           continue;
         } else {
           throw new UnsupportedOperationException(
@@ -180,7 +187,7 @@ public class SchemaUpdater {
         try (Statement stmt = connection.createStatement()) {
           stmt.executeUpdate(alterTableStatement.toString());
         } catch (SQLException e) {
-          logger.log(Level.SEVERE, "Failure to execute: " + alterTableStatement.toString());
+          logger.log(Level.SEVERE, "Failure to execute: " + alterTableStatement.toString(), e);
           throw e;
         }
       }
@@ -202,8 +209,13 @@ public class SchemaUpdater {
     DatabaseMetaData metadata = connection.getMetaData();
     FunctionSelector functionSelector = determineFunctionSelector(metadata);
     for (MissingFunction missingFunction : missingFunctions) {
+      String createFunctionSql = functionSelector.functionContent(missingFunction.getFunctionDef());
       try (Statement stmt = connection.createStatement()) {
-        stmt.executeUpdate(functionSelector.functionContent(missingFunction.getFunctionDef()));
+        stmt.executeUpdate(createFunctionSql);
+        logger.info("Function " + missingFunction.getFunctionDef().getName() + " was created.");
+      } catch (SQLException e) {
+        logger.log(Level.SEVERE, "Failure to execute: " + createFunctionSql, e);
+        throw e;
       }
     }
   }
