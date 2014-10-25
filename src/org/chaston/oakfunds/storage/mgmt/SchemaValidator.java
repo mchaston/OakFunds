@@ -21,7 +21,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.chaston.oakfunds.jdbc.ColumnDef;
-import org.chaston.oakfunds.jdbc.DatabaseObjectNameHandler;
+import org.chaston.oakfunds.jdbc.DatabaseVariantHandler;
 import org.chaston.oakfunds.jdbc.FunctionDef;
 import org.chaston.oakfunds.jdbc.RemoteDataStoreModule;
 import org.chaston.oakfunds.jdbc.TableDef;
@@ -43,7 +43,7 @@ import java.util.Set;
 public class SchemaValidator {
   private final SchemaBuilder schemaBuilder;
   private final DataSource dataSource;
-  private final DatabaseObjectNameHandler databaseObjectNameHandler;
+  private final DatabaseVariantHandler databaseVariantHandler;
 
   public static void main(String[] args) throws SQLException {
     Flags.parse(args);
@@ -59,10 +59,10 @@ public class SchemaValidator {
   SchemaValidator(
       SchemaBuilder schemaBuilder,
       DataSource dataSource,
-      DatabaseObjectNameHandler databaseObjectNameHandler) {
+      DatabaseVariantHandler databaseVariantHandler) {
     this.schemaBuilder = schemaBuilder;
     this.dataSource = dataSource;
-    this.databaseObjectNameHandler = databaseObjectNameHandler;
+    this.databaseVariantHandler = databaseVariantHandler;
   }
 
   Iterable<SchemaDiscrepancy> validateSchema() throws SQLException {
@@ -74,19 +74,21 @@ public class SchemaValidator {
     try (Connection connection = dataSource.getConnection()) {
       DatabaseMetaData metaData = connection.getMetaData();
 
-      // Look for schema.
-      ResultSet allSchemas = metaData.getSchemas(null,
-          databaseObjectNameHandler.toDatabaseForm(SystemColumnDefs.SCHEMA));
-      if (!allSchemas.next()) {
-        schemaDiscrepancies.add(new MissingSchema(SystemColumnDefs.SCHEMA));
+      if (databaseVariantHandler.requiresSchemaCreation()) {
+        // Look for schema.
+        ResultSet allSchemas = metaData.getSchemas(null,
+            databaseVariantHandler.toDatabaseForm(SystemColumnDefs.SCHEMA));
+        if (!allSchemas.next()) {
+          schemaDiscrepancies.add(new MissingSchema(SystemColumnDefs.SCHEMA));
+        }
       }
 
       // Look for tables.
       try (ResultSet allTables = metaData.getTables(null,
-          databaseObjectNameHandler.toDatabaseForm(SystemColumnDefs.SCHEMA), null, null)) {
+          databaseVariantHandler.toDatabaseForm(SystemColumnDefs.SCHEMA), null, null)) {
         while (allTables.next()) {
           String tableName =
-              databaseObjectNameHandler.toNormalName(allTables.getString("TABLE_NAME"));
+              databaseVariantHandler.toNormalName(allTables.getString("TABLE_NAME"));
           TableDef tableDef = tableDefs.get(tableName);
           if (tableDef == null) {
             // Table that the defs do not know (and hence care) about.
@@ -99,10 +101,10 @@ public class SchemaValidator {
 
       // Look for functions.
       try (ResultSet allFunctions = metaData.getFunctions(null,
-          databaseObjectNameHandler.toDatabaseForm(SystemColumnDefs.SCHEMA), null)) {
+          databaseVariantHandler.toDatabaseForm(SystemColumnDefs.SCHEMA), null)) {
         while (allFunctions.next()) {
           String functionName =
-              databaseObjectNameHandler.toNormalName(allFunctions.getString("FUNCTION_NAME"));
+              databaseVariantHandler.toNormalName(allFunctions.getString("FUNCTION_NAME"));
           FunctionDef functionDef = functionDefs.get(functionName);
           if (functionDef == null) {
             // Function that the defs do not know (and hence care) about.
@@ -129,12 +131,12 @@ public class SchemaValidator {
   private void validateTable(DatabaseMetaData metaData, TableDef tableDef,
       ImmutableList.Builder<SchemaDiscrepancy> schemaDiscrepancies) throws SQLException {
     Set<String> seenColumns = new HashSet<>();
-    String schemaName = databaseObjectNameHandler.toDatabaseForm(SystemColumnDefs.SCHEMA);
-    String tableName = databaseObjectNameHandler.toDatabaseForm(tableDef.getName());
+    String schemaName = databaseVariantHandler.toDatabaseForm(SystemColumnDefs.SCHEMA);
+    String tableName = databaseVariantHandler.toDatabaseForm(tableDef.getName());
     try (ResultSet columns = metaData.getColumns(null, schemaName, tableName, null)) {
       while (columns.next()) {
         String columnName =
-            databaseObjectNameHandler.toNormalName(columns.getString("COLUMN_NAME"));
+            databaseVariantHandler.toNormalName(columns.getString("COLUMN_NAME"));
         ColumnDef columnDef = tableDef.getColumnDefs().get(columnName);
         if (columnDef == null) {
           schemaDiscrepancies.add(new ExtraColumn(tableDef.getFullName(), columnName));

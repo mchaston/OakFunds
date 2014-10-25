@@ -18,7 +18,8 @@ package org.chaston.oakfunds.jdbc;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface DatabaseObjectNameHandler {
+public interface DatabaseVariantHandler {
   String toDatabaseForm(String normalName);
   String toNormalName(String databaseForm);
+  boolean requiresSchemaCreation();
 }

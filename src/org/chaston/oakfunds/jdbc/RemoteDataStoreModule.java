@@ -46,7 +46,7 @@ public class RemoteDataStoreModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(DatabaseObjectNameHandler.class).to(MySqlDatabaseObjectNameHandler.class);
+    bind(DatabaseVariantHandler.class).to(MySqlDatabaseVariantHandler.class);
   }
 
   @Provides
@@ -60,7 +60,7 @@ public class RemoteDataStoreModule extends AbstractModule {
     return dataSource;
   }
 
-  private static class MySqlDatabaseObjectNameHandler implements DatabaseObjectNameHandler {
+  private static class MySqlDatabaseVariantHandler implements DatabaseVariantHandler {
     @Override
     public String toDatabaseForm(String normalName) {
       return normalName;
@@ -69,6 +69,11 @@ public class RemoteDataStoreModule extends AbstractModule {
     @Override
     public String toNormalName(String databaseForm) {
       return databaseForm;
+    }
+
+    @Override
+    public boolean requiresSchemaCreation() {
+      return false;
     }
   }
 }

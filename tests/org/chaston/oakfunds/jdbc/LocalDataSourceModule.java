@@ -36,7 +36,7 @@ public class LocalDataSourceModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(DatabaseTearDown.class).in(Singleton.class);
-    bind(DatabaseObjectNameHandler.class).to(HsqlDbDatabaseObjectNameHandler.class);
+    bind(DatabaseVariantHandler.class).to(HsqlDbDatabaseVariantHandler.class);
   }
 
   @Provides
@@ -62,7 +62,7 @@ public class LocalDataSourceModule extends AbstractModule {
     return dataSource;
   }
 
-  private static class HsqlDbDatabaseObjectNameHandler implements DatabaseObjectNameHandler {
+  private static class HsqlDbDatabaseVariantHandler implements DatabaseVariantHandler {
     @Override
     public String toDatabaseForm(String normalName) {
       return normalName.toUpperCase();
@@ -71,6 +71,11 @@ public class LocalDataSourceModule extends AbstractModule {
     @Override
     public String toNormalName(String databaseForm) {
       return databaseForm.toLowerCase();
+    }
+
+    @Override
+    public boolean requiresSchemaCreation() {
+      return true;
     }
   }
 }
