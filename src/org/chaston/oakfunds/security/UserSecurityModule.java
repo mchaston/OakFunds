@@ -26,13 +26,11 @@ public class UserSecurityModule extends AbstractModule {
   @Override
   protected void configure() {
     install(new SystemSecurityModule());
+    install(new UserManagerModule());
 
     requireBinding(BootstrappingDependency.class);
     requireBinding(SystemAuthenticationManagerImpl.class);
     requireBinding(UserAuthenticator.class);
-
-    install(new UserTypesModule());
-    bind(UserManager.class).to(UserManagerImpl.class);
 
     bind(UserAuthenticationManager.class).to(UserAuthenticationManagerImpl.class);
     bind(UserAuthenticationManagerImpl.class).in(Singleton.class);

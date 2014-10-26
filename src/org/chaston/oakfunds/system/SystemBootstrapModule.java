@@ -20,7 +20,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import org.chaston.oakfunds.bootstrap.BootstrapConfigLoader;
 import org.chaston.oakfunds.bootstrap.BootstrapTask;
@@ -48,37 +50,44 @@ public class SystemBootstrapModule extends AbstractModule {
   protected void configure() {
     requireBinding(Store.class);
     requireBinding(AuthorizationContext.class);
-    install(new SystemModule());
 
     Multibinder<BootstrapConfigLoader> bootstrapConfigLoaderBinder =
         Multibinder.newSetBinder(binder(), BootstrapConfigLoader.class);
     bootstrapConfigLoaderBinder.addBinding().to(SystemBootstrapConfigLoader.class);
     bind(SystemBootstrapConfigLoader.class).in(Singleton.class);
 
+    bind(new TypeLiteral<Iterable<SystemPropertyDef>>() {})
+        .toProvider(getSystemPropertyDefsProviderClass());
+
     Multibinder<BootstrapTask> bootstrapTaskBinder =
         Multibinder.newSetBinder(binder(), BootstrapTask.class);
     bootstrapTaskBinder.addBinding().to(SystemBootstrapTask.class);
   }
 
+  protected Class<? extends Provider<Iterable<SystemPropertyDef>>>
+      getSystemPropertyDefsProviderClass() {
+    return SystemBootstrapConfigLoader.class;
+  }
+
   private static class SystemBootstrapTask extends TransactionalBootstrapTask {
     private final AuthorizationContext authorizationContext;
-    private final SystemBootstrapConfigLoader systemBootstrapConfigLoader;
+    private final Provider<Iterable<SystemPropertyDef>> systemPropertyDefsProvider;
 
     @Inject
     SystemBootstrapTask(
         Store store,
         AuthorizationContext authorizationContext,
-        SystemBootstrapConfigLoader systemBootstrapConfigLoader) {
+        Provider<Iterable<SystemPropertyDef>> systemPropertyDefsProvider) {
       super(store);
       this.authorizationContext = authorizationContext;
-      this.systemBootstrapConfigLoader = systemBootstrapConfigLoader;
+      this.systemPropertyDefsProvider = systemPropertyDefsProvider;
     }
 
     @Override
     protected void bootstrapDuringTransaction() throws Exception {
       try (SinglePermissionAssertion singlePermissionAssertion =
                authorizationContext.assertPermission("system_property.create")) {
-        for (SystemPropertyDef systemPropertyDef : systemBootstrapConfigLoader.getUserDefs()) {
+        for (SystemPropertyDef systemPropertyDef : systemPropertyDefsProvider.get()) {
           List<? extends SearchTerm> searchTerms = ImmutableList.of(
               AttributeSearchTerm.of(SystemProperty.ATTRIBUTE_NAME,
                   SearchOperator.EQUALS, systemPropertyDef.name));
@@ -95,7 +104,8 @@ public class SystemBootstrapModule extends AbstractModule {
     }
   }
 
-  private static class SystemBootstrapConfigLoader implements BootstrapConfigLoader {
+  private static class SystemBootstrapConfigLoader
+      implements BootstrapConfigLoader, Provider<Iterable<SystemPropertyDef>> {
     private final List<SystemPropertyDef> systemPropertyDefs = new ArrayList<>();
 
     @Override
@@ -108,7 +118,8 @@ public class SystemBootstrapModule extends AbstractModule {
       return new SystemConfigHandler();
     }
 
-    List<SystemPropertyDef> getUserDefs() {
+    @Override
+    public Iterable<SystemPropertyDef> get() {
       return systemPropertyDefs;
     }
 
@@ -126,7 +137,7 @@ public class SystemBootstrapModule extends AbstractModule {
     }
   }
 
-  private abstract static class SystemPropertyDef {
+  abstract static class SystemPropertyDef {
     private final String name;
 
     protected SystemPropertyDef(String name) {
@@ -136,10 +147,10 @@ public class SystemBootstrapModule extends AbstractModule {
     public abstract Map<String, Object> getOtherAttributes();
   }
 
-  private static class IntegerSystemPropertyDef extends SystemPropertyDef {
+  static class IntegerSystemPropertyDef extends SystemPropertyDef {
     private final int value;
 
-    private IntegerSystemPropertyDef(String name, int value) {
+    IntegerSystemPropertyDef(String name, int value) {
       super(name);
       this.value = value;
     }

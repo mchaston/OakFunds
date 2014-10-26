@@ -17,17 +17,16 @@ package org.chaston.oakfunds.system;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
+import com.google.inject.BindingAnnotation;
 import com.google.inject.Inject;
 import com.google.inject.Module;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
-import org.chaston.oakfunds.bootstrap.BootstrapTask;
-import org.chaston.oakfunds.bootstrap.TransactionalBootstrapTask;
-import org.chaston.oakfunds.security.AuthorizationContext;
-import org.chaston.oakfunds.security.SinglePermissionAssertion;
-import org.chaston.oakfunds.storage.StorageException;
-import org.chaston.oakfunds.storage.Store;
+import com.google.inject.Provider;
 import org.chaston.oakfunds.storage.mgmt.SchemaDeploymentTask;
+import org.chaston.oakfunds.system.SystemBootstrapModule.IntegerSystemPropertyDef;
+import org.chaston.oakfunds.system.SystemBootstrapModule.SystemPropertyDef;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -35,6 +34,15 @@ import static com.google.common.base.Preconditions.checkState;
  * TODO(mchaston): write JavaDocs
  */
 public class TestSystemBootstrapModuleBuilder {
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @BindingAnnotation
+  private @interface CurrentYear {}
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @BindingAnnotation
+  private @interface TimeHorizon {}
+
   private Integer currentYear;
   private Integer timeHorizon;
 
@@ -55,47 +63,46 @@ public class TestSystemBootstrapModuleBuilder {
     return new AbstractModule() {
       @Override
       protected void configure() {
-        bind(new TypeLiteral<Iterable<SystemPropertyLoader>>() {})
-            .toInstance(ImmutableList.of(
-                SystemPropertyLoader.createIntegerProperty(
-                    SystemPropertiesManagerImpl.PROPERTY_CURRENT_YEAR, currentYear),
-                SystemPropertyLoader.createIntegerProperty(
-                    SystemPropertiesManagerImpl.PROPERTY_TIME_HORIZON, timeHorizon)));
+        install(new SystemBootstrapModule() {
+          @Override
+          protected void configure() {
+            super.configure();
+            bindConstant().annotatedWith(CurrentYear.class).to(currentYear);
+            bindConstant().annotatedWith(TimeHorizon.class).to(currentYear);
+          }
 
-        Multibinder<BootstrapTask> bootstrapTaskBinder =
-            Multibinder.newSetBinder(binder(), BootstrapTask.class);
-        bootstrapTaskBinder.addBinding().to(TestSystemPropertyBootstrapTask.class);
+          @Override
+          protected Class<? extends Provider<Iterable<SystemPropertyDef>>>
+              getSystemPropertyDefsProviderClass() {
+            return SystemPropertyDefsProvider.class;
+          }
+        });
       }
     };
   }
 
-  /**
-   * Used for bootstrapping system properties into tests.
-   */
-  private static class TestSystemPropertyBootstrapTask extends TransactionalBootstrapTask {
-
-    private final AuthorizationContext authorizationContext;
-    private final Iterable<SystemPropertyLoader> systemPropertyLoaders;
+  private static class SystemPropertyDefsProvider
+      implements Provider<Iterable<SystemPropertyDef>> {
+    private final int currentYear;
+    private final int timeHorizon;
 
     @Inject
-    TestSystemPropertyBootstrapTask(
-        SchemaDeploymentTask schemaDeploymentTask, // Here for dependency enforcement.
-        AuthorizationContext authorizationContext,
-        Store store,
-        Iterable<SystemPropertyLoader> systemPropertyLoaders) throws StorageException {
-      super(store);
-      this.authorizationContext = authorizationContext;
-      this.systemPropertyLoaders = systemPropertyLoaders;
+    SystemPropertyDefsProvider(
+        // Here for dependency enforcement.
+        SchemaDeploymentTask schemaDeploymentTask,
+        @CurrentYear int currentYear,
+        @TimeHorizon int timeHorizon) {
+      this.currentYear = currentYear;
+      this.timeHorizon = timeHorizon;
     }
 
     @Override
-    protected void bootstrapDuringTransaction() throws Exception {
-      try (SinglePermissionAssertion singlePermissionAssertion =
-               authorizationContext.assertPermission("system_property.create")) {
-        for (SystemPropertyLoader systemPropertyLoader : systemPropertyLoaders) {
-          systemPropertyLoader.load(getStore());
-        }
-      }
+    public Iterable<SystemPropertyDef> get() {
+      return ImmutableList.<SystemPropertyDef>of(
+          new IntegerSystemPropertyDef(
+              SystemPropertiesManagerImpl.PROPERTY_CURRENT_YEAR, currentYear),
+          new IntegerSystemPropertyDef(
+              SystemPropertiesManagerImpl.PROPERTY_TIME_HORIZON, timeHorizon));
     }
   }
 }

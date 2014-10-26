@@ -13,23 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.bootstrap;
+package org.chaston.oakfunds.security;
 
 import com.google.inject.AbstractModule;
-import org.chaston.oakfunds.security.UserBootstrapModule;
-import org.chaston.oakfunds.security.UserManagerModule;
-import org.chaston.oakfunds.system.SystemBootstrapModule;
-import org.chaston.oakfunds.system.SystemModule;
+import com.google.inject.Singleton;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-class AllBootstrapTasksModule extends AbstractModule {
+public class UserManagerModule extends AbstractModule {
   @Override
   protected void configure() {
-    install(new UserManagerModule());
-    install(new UserBootstrapModule());
-    install(new SystemModule());
-    install(new SystemBootstrapModule());
+    install(new UserTypesModule());
+    bind(UserManager.class).to(UserManagerImpl.class);
+    bind(UserManagerImpl.class).in(Singleton.class);
   }
 }

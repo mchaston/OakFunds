@@ -17,7 +17,9 @@ package org.chaston.oakfunds.security;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import org.chaston.oakfunds.bootstrap.BootstrapConfigLoader;
 import org.chaston.oakfunds.bootstrap.BootstrapTask;
@@ -40,8 +42,6 @@ public class UserBootstrapModule extends AbstractModule {
   protected void configure() {
     requireBinding(Store.class);
 
-    install(new UserTypesModule());
-    bind(UserManager.class).to(UserManagerImpl.class);
     install(new SystemSecurityModule());
 
     Multibinder<BootstrapConfigLoader> bootstrapConfigLoaderBinder =
@@ -49,28 +49,35 @@ public class UserBootstrapModule extends AbstractModule {
     bootstrapConfigLoaderBinder.addBinding().to(UserBootstrapConfigLoader.class);
     bind(UserBootstrapConfigLoader.class).in(Singleton.class);
 
+    bind(new TypeLiteral<Iterable<UserDef>>() {})
+        .toProvider(getUserDefsProviderClass());
+
     Multibinder<BootstrapTask> bootstrapTaskBinder =
         Multibinder.newSetBinder(binder(), BootstrapTask.class);
     bootstrapTaskBinder.addBinding().to(UserBootstrapTask.class);
   }
 
+  protected Class<? extends Provider<Iterable<UserDef>>> getUserDefsProviderClass() {
+    return UserBootstrapConfigLoader.class;
+  }
+
   private static class UserBootstrapTask extends TransactionalBootstrapTask {
-    private final UserBootstrapConfigLoader userBootstrapConfigLoader;
     private final UserManager userManager;
+    private final Provider<Iterable<UserDef>> userDefsProvider;
 
     @Inject
     UserBootstrapTask(
         Store store,
-        UserBootstrapConfigLoader userBootstrapConfigLoader,
+        Provider<Iterable<UserDef>> userDefsProvider,
         UserManager userManager) {
       super(store);
-      this.userBootstrapConfigLoader = userBootstrapConfigLoader;
+      this.userDefsProvider = userDefsProvider;
       this.userManager = userManager;
     }
 
     @Override
     protected void bootstrapDuringTransaction() throws Exception {
-      for (UserDef userDef : userBootstrapConfigLoader.getUserDefs()) {
+      for (UserDef userDef : userDefsProvider.get()) {
         User user = userManager.getUser(userDef.identifier);
         if (user == null) {
           user = userManager.createUser(userDef.identifier, userDef.name);
@@ -87,7 +94,8 @@ public class UserBootstrapModule extends AbstractModule {
     }
   }
 
-  private static class UserBootstrapConfigLoader implements BootstrapConfigLoader {
+  private static class UserBootstrapConfigLoader
+      implements BootstrapConfigLoader, Provider<Iterable<UserDef>> {
     private final List<UserDef> userDefs = new ArrayList<>();
 
     @Override
@@ -100,7 +108,8 @@ public class UserBootstrapModule extends AbstractModule {
       return new UserConfigHandler();
     }
 
-    List<UserDef> getUserDefs() {
+    @Override
+    public Iterable<UserDef> get() {
       return userDefs;
     }
 
@@ -133,12 +142,12 @@ public class UserBootstrapModule extends AbstractModule {
     }
   }
 
-  private static class UserDef {
+  static class UserDef {
     private final String identifier;
     private final String name;
     private final Set<String> roleGrants = new HashSet<>();
 
-    private UserDef(String identifier, String name) {
+    UserDef(String identifier, String name) {
       this.identifier = identifier;
       this.name = name;
     }

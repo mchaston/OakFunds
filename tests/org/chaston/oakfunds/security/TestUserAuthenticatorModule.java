@@ -15,12 +15,11 @@
  */
 package org.chaston.oakfunds.security;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.google.inject.multibindings.Multibinder;
-import org.chaston.oakfunds.bootstrap.BootstrapTask;
-import org.chaston.oakfunds.bootstrap.TransactionalBootstrapTask;
-import org.chaston.oakfunds.storage.Store;
+import com.google.inject.Provider;
+import org.chaston.oakfunds.security.UserBootstrapModule.UserDef;
 import org.chaston.oakfunds.storage.mgmt.SchemaDeploymentTask;
 
 /**
@@ -31,27 +30,27 @@ public class TestUserAuthenticatorModule extends AbstractModule {
   protected void configure() {
     bind(UserAuthenticator.class).to(TestUserAuthenticator.class);
 
-    Multibinder<BootstrapTask> bootstrapTaskBinder =
-        Multibinder.newSetBinder(binder(), BootstrapTask.class);
-    bootstrapTaskBinder.addBinding().to(TestUserBootstrapTask.class);
+    install(new UserBootstrapModule() {
+      @Override
+      protected Class<? extends Provider<Iterable<UserDef>>> getUserDefsProviderClass() {
+        return TestUserDefsProvider.class;
+      }
+    });
   }
 
-  private static class TestUserBootstrapTask extends TransactionalBootstrapTask {
-    private final UserManager userManager;
-
+  private static class TestUserDefsProvider implements Provider<Iterable<UserDef>> {
     @Inject
-    TestUserBootstrapTask(
-        SchemaDeploymentTask schemaDeploymentTask, // Here for dependency enforcement.
-        Store store,
-        UserManager userManager) {
-      super(store);
-      this.userManager = userManager;
+    TestUserDefsProvider(
+        // Here for dependency enforcement.
+        SchemaDeploymentTask schemaDeploymentTask) {
+      // Do nothing.
     }
 
     @Override
-    protected void bootstrapDuringTransaction() throws Exception {
-      User user = userManager.createUser(TestUserAuthenticator.TEST_USER_IDENTIFIER, "Test User");
-      userManager.grantRole(user, "admin");
+    public Iterable<UserDef> get() {
+      UserDef testUserDef = new UserDef(TestUserAuthenticator.TEST_USER_IDENTIFIER, "Test User");
+      testUserDef.addRoleGrant("admin");
+      return ImmutableList.of(testUserDef);
     }
   }
 }
