@@ -53,6 +53,8 @@ public class SchemaValidator {
         new StorageManagementModule(),
         new RemoteDataStoreModule());
     injector.getInstance(SchemaValidator.class).validateSchema();
+
+    System.out.println("** Schema validated successfully. **");
   }
 
   @Inject

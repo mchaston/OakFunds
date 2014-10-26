@@ -58,6 +58,8 @@ public class SchemaUpdater {
         new RemoteDataStoreModule());
     Flags.parse(args);
     injector.getInstance(SchemaUpdater.class).updateSchema();
+
+    System.out.println("** Schema updated successfully. **");
   }
 
   @Inject

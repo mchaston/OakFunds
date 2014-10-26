@@ -72,6 +72,8 @@ class Bootstrapper {
     // Actually do the bootstrapping.
     injector.getInstance(BootstrapConfigReader.class).read(file);
     injector.getInstance(Bootstrapper.class).bootstrap();
+
+    System.out.println("** Bootstrapping completed successfully. **");
   }
 
   @Inject
