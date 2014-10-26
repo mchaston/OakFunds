@@ -20,13 +20,13 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
-import org.chaston.oakfunds.security.AuthenticationManager;
-import org.chaston.oakfunds.security.AuthenticationScope;
+import com.google.inject.multibindings.Multibinder;
+import org.chaston.oakfunds.bootstrap.BootstrapTask;
+import org.chaston.oakfunds.bootstrap.TransactionalBootstrapTask;
 import org.chaston.oakfunds.security.AuthorizationContext;
 import org.chaston.oakfunds.security.SinglePermissionAssertion;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
-import org.chaston.oakfunds.storage.Transaction;
 import org.chaston.oakfunds.storage.mgmt.SchemaDeploymentTask;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -34,16 +34,16 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class TestSystemModuleBuilder {
+public class TestSystemBootstrapModuleBuilder {
   private Integer currentYear;
   private Integer timeHorizon;
 
-  public TestSystemModuleBuilder setCurrentYear(int currentYear) {
+  public TestSystemBootstrapModuleBuilder setCurrentYear(int currentYear) {
     this.currentYear = currentYear;
     return this;
   }
 
-  public TestSystemModuleBuilder setTimeHorizon(int timeHorizon) {
+  public TestSystemBootstrapModuleBuilder setTimeHorizon(int timeHorizon) {
     this.timeHorizon = timeHorizon;
     return this;
   }
@@ -55,14 +55,16 @@ public class TestSystemModuleBuilder {
     return new AbstractModule() {
       @Override
       protected void configure() {
-        install(new BaseSystemModule());
         bind(new TypeLiteral<Iterable<SystemPropertyLoader>>() {})
             .toInstance(ImmutableList.of(
                 SystemPropertyLoader.createIntegerProperty(
                     SystemPropertiesManagerImpl.PROPERTY_CURRENT_YEAR, currentYear),
                 SystemPropertyLoader.createIntegerProperty(
                     SystemPropertiesManagerImpl.PROPERTY_TIME_HORIZON, timeHorizon)));
-        bind(SystemPropertyBootstrapper.class).to(TestSystemPropertyBootstrapper.class);
+
+        Multibinder<BootstrapTask> bootstrapTaskBinder =
+            Multibinder.newSetBinder(binder(), BootstrapTask.class);
+        bootstrapTaskBinder.addBinding().to(TestSystemPropertyBootstrapTask.class);
       }
     };
   }
@@ -70,33 +72,28 @@ public class TestSystemModuleBuilder {
   /**
    * Used for bootstrapping system properties into tests.
    */
-  private static class TestSystemPropertyBootstrapper implements SystemPropertyBootstrapper {
+  private static class TestSystemPropertyBootstrapTask extends TransactionalBootstrapTask {
+
+    private final AuthorizationContext authorizationContext;
+    private final Iterable<SystemPropertyLoader> systemPropertyLoaders;
 
     @Inject
-    TestSystemPropertyBootstrapper(
+    TestSystemPropertyBootstrapTask(
         SchemaDeploymentTask schemaDeploymentTask, // Here for dependency enforcement.
         AuthorizationContext authorizationContext,
-        AuthenticationManager authenticationManager,
         Store store,
         Iterable<SystemPropertyLoader> systemPropertyLoaders) throws StorageException {
-      if (systemPropertyLoaders != null) {
-        Transaction transaction = store.startTransaction();
-        boolean successful = false;
-        try (AuthenticationScope authenticationScope =
-                 authenticationManager.authenticateSystem()) {
-          try (SinglePermissionAssertion singlePermissionAssertion =
-                   authorizationContext.assertPermission("system_property.create")) {
-            for (SystemPropertyLoader systemPropertyLoader : systemPropertyLoaders) {
-              systemPropertyLoader.load(store);
-            }
-            successful = true;
-          }
-        } finally {
-          if (successful) {
-            transaction.commit();
-          } else {
-            transaction.rollback();
-          }
+      super(store);
+      this.authorizationContext = authorizationContext;
+      this.systemPropertyLoaders = systemPropertyLoaders;
+    }
+
+    @Override
+    protected void bootstrapDuringTransaction() throws Exception {
+      try (SinglePermissionAssertion singlePermissionAssertion =
+               authorizationContext.assertPermission("system_property.create")) {
+        for (SystemPropertyLoader systemPropertyLoader : systemPropertyLoaders) {
+          systemPropertyLoader.load(getStore());
         }
       }
     }

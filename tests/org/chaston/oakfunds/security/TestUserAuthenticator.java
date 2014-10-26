@@ -13,10 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.system;
+package org.chaston.oakfunds.security;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface SystemPropertyBootstrapper {
+public class TestUserAuthenticator implements UserAuthenticator {
+
+  public static final String TEST_USER_IDENTIFIER = "unit_test";
+
+  @Override
+  public AuthenticatedUser getAuthenticatedUser() {
+    return new AuthenticatedUser(TEST_USER_IDENTIFIER);
+  }
 }

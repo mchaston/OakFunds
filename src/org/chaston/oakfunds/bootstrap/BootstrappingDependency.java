@@ -13,25 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.security;
+package org.chaston.oakfunds.bootstrap;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class TestUserManager implements UserManager {
-
-  private final ImmutableSet<String> allRoleNames;
-
+public class BootstrappingDependency {
   @Inject
-  TestUserManager(RoleRegistry roleRegistry) {
-    allRoleNames = roleRegistry.getRoles().keySet();
-  }
-
-  @Override
-  public User getCurrentUser() {
-    return new UserImpl(allRoleNames);
+  BootstrappingDependency(Bootstrapper bootstrapper) throws Exception {
+    // This is not how Guice should be used, but it makes things easy.
+    bootstrapper.bootstrap();
   }
 }

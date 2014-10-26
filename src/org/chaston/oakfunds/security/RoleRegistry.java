@@ -21,6 +21,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import javax.annotation.Nullable;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.InputStream;
@@ -47,16 +48,9 @@ class RoleRegistry {
     this.roles = rolesBuilder.getRoles();
   }
 
+  @Nullable
   public Role getRole(String roleName) {
-    Role role = roles.get(roleName);
-    if (role == null) {
-      throw new IllegalArgumentException("Role " + roleName + " was not found.");
-    }
-    return role;
-  }
-
-  public ImmutableMap<String, Role> getRoles() {
-    return roles;
+    return roles.get(roleName);
   }
 
   private class RoleBuilder extends DefaultHandler {

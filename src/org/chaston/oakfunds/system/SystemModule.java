@@ -16,7 +16,11 @@
 package org.chaston.oakfunds.system;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.util.Providers;
+import com.google.inject.Singleton;
+import org.chaston.oakfunds.bootstrap.BootstrappingDependency;
+import org.chaston.oakfunds.security.AuthorizationContext;
+import org.chaston.oakfunds.security.SystemAuthenticationManager;
+import org.chaston.oakfunds.storage.Store;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -24,8 +28,12 @@ import com.google.inject.util.Providers;
 public class SystemModule extends AbstractModule {
   @Override
   protected void configure() {
-    install(new BaseSystemModule());
-    bind(SystemPropertyBootstrapper.class)
-        .toProvider(Providers.<SystemPropertyBootstrapper>of(null));
+    install(new SystemTypesModule());
+    requireBinding(Store.class);
+    requireBinding(BootstrappingDependency.class);
+    requireBinding(AuthorizationContext.class);
+    requireBinding(SystemAuthenticationManager.class);
+    bind(SystemPropertiesManagerImpl.class).in(Singleton.class);
+    bind(SystemPropertiesManager.class).to(SystemPropertiesManagerImpl.class);
   }
 }

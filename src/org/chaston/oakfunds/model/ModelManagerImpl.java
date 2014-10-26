@@ -20,12 +20,12 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.ledger.BankAccountType;
 import org.chaston.oakfunds.security.ActionType;
-import org.chaston.oakfunds.security.AuthenticationManager;
 import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.AuthorizationContext;
 import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.security.PermissionAssertion;
 import org.chaston.oakfunds.security.SinglePermissionAssertion;
+import org.chaston.oakfunds.security.SystemAuthenticationManager;
 import org.chaston.oakfunds.storage.AttributeSearchTerm;
 import org.chaston.oakfunds.storage.IdentifierSearchTerm;
 import org.chaston.oakfunds.storage.OrSearchTerm;
@@ -131,7 +131,7 @@ class ModelManagerImpl implements ModelManager {
       SystemPropertiesManager systemPropertiesManager,
       Store store,
       AuthorizationContext authorizationContext,
-      AuthenticationManager authenticationManager) throws StorageException {
+      SystemAuthenticationManager authenticationManager) throws StorageException {
     this.systemPropertiesManager = systemPropertiesManager;
     this.store = store;
 

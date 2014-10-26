@@ -18,11 +18,12 @@ package org.chaston.oakfunds.account;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import org.chaston.oakfunds.bootstrap.BootstrapModule;
 import org.chaston.oakfunds.jdbc.DatabaseTearDown;
-import org.chaston.oakfunds.security.AuthenticationManager;
 import org.chaston.oakfunds.security.AuthenticationScope;
-import org.chaston.oakfunds.security.SecurityModule;
-import org.chaston.oakfunds.security.TestUserManagerModule;
+import org.chaston.oakfunds.security.TestUserAuthenticatorModule;
+import org.chaston.oakfunds.security.UserAuthenticationManager;
+import org.chaston.oakfunds.security.UserSecurityModule;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.storage.TestStorageModule;
@@ -48,7 +49,7 @@ public class AccountCodeManagerTest {
   @Inject
   private AccountCodeManager accountCodeManager;
   @Inject
-  private AuthenticationManager authenticationManager;
+  private UserAuthenticationManager userAuthenticationManager;
   @Inject
   private Store store;
   @Inject
@@ -59,14 +60,15 @@ public class AccountCodeManagerTest {
   private AuthenticationScope authenticationScope;
 
   @Before
-  public void setUp() throws SQLException {
+  public void setUp() throws Exception {
     Injector injector = Guice.createInjector(
         new AccountCodeModule(),
-        new SecurityModule(),
+        new BootstrapModule(),
+        new UserSecurityModule(),
         new TestStorageModule(),
-        new TestUserManagerModule());
+        new TestUserAuthenticatorModule());
     injector.injectMembers(this);
-    authenticationScope = authenticationManager.authenticateUser();
+    authenticationScope = userAuthenticationManager.authenticateUser();
   }
 
   @After

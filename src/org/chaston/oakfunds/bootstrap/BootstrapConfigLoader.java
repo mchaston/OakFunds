@@ -13,25 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.security;
+package org.chaston.oakfunds.bootstrap;
 
-import org.chaston.oakfunds.storage.AttributeMethod;
-import org.chaston.oakfunds.storage.Record;
-import org.chaston.oakfunds.storage.RecordType;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface User extends Record<User> {
-  RecordType<User> TYPE = RecordType.builder("user", User.class)
-      .build();
+public interface BootstrapConfigLoader {
+  /**
+   * Gets the element name that indicates that this config loader should be used.
+   */
+  String getConfigElementName();
 
-  String ATTRIBUTE_IDENTIFIER = "identifier";
-  String ATTRIBUTE_NAME = "name";
-
-  @AttributeMethod(attribute = ATTRIBUTE_IDENTIFIER, required = true)
-  String getIdentifier();
-
-  @AttributeMethod(attribute = ATTRIBUTE_NAME)
-  String getName();
+  /**
+   * Gets the {@code DefaultHandler} that should be used for handling elements for this config.
+   */
+  DefaultHandler getDefaultHandler();
 }

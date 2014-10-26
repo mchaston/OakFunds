@@ -28,12 +28,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 class AuthorizationContextImpl implements AuthorizationContext {
 
   private final PermissionRegistry permissionRegistry;
-  private final AuthenticationManagerImpl authenticationManager;
+  private final SystemAuthenticationManagerImpl authenticationManager;
 
   @Inject
   AuthorizationContextImpl(
       PermissionRegistry permissionRegistry,
-      AuthenticationManagerImpl authenticationManager) {
+      SystemAuthenticationManagerImpl authenticationManager) {
     this.permissionRegistry = permissionRegistry;
     this.authenticationManager = authenticationManager;
   }

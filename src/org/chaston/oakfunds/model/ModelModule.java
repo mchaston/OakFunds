@@ -17,6 +17,8 @@ package org.chaston.oakfunds.model;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
+import org.chaston.oakfunds.security.AuthorizationContext;
+import org.chaston.oakfunds.security.SystemAuthenticationManager;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.system.SystemPropertiesManager;
 
@@ -29,6 +31,8 @@ public class ModelModule extends AbstractModule {
     install(new ModelTypesModule());
     requireBinding(SystemPropertiesManager.class);
     requireBinding(Store.class);
+    requireBinding(AuthorizationContext.class);
+    requireBinding(SystemAuthenticationManager.class);
     bind(ModelManagerImpl.class).in(Singleton.class);
     bind(ModelManager.class).to(ModelManagerImpl.class);
   }

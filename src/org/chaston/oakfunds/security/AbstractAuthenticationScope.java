@@ -27,9 +27,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 abstract class AbstractAuthenticationScope implements AuthenticationScope {
 
   private final Map<RecordType, Map<ActionType, AtomicInteger>> accessCounterMap = new HashMap<>();
-  private final AuthenticationManagerImpl authenticationManager;
+  private final SystemAuthenticationManagerImpl authenticationManager;
 
-  protected AbstractAuthenticationScope(AuthenticationManagerImpl authenticationManager) {
+  protected AbstractAuthenticationScope(SystemAuthenticationManagerImpl authenticationManager) {
     this.authenticationManager = authenticationManager;
   }
 

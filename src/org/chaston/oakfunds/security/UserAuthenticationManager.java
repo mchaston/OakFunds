@@ -15,15 +15,11 @@
  */
 package org.chaston.oakfunds.security;
 
-import com.google.inject.AbstractModule;
+import org.chaston.oakfunds.storage.StorageException;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class TestUserManagerModule extends AbstractModule {
-  @Override
-  protected void configure() {
-    requireBinding(RoleRegistry.class);
-    bind(UserManager.class).to(TestUserManager.class);
-  }
+public interface UserAuthenticationManager {
+  AuthenticationScope authenticateUser() throws StorageException;
 }

@@ -26,7 +26,7 @@ class UserAuthenticationScope extends AbstractAuthenticationScope {
   private final ImmutableSet<String> userPermissions;
 
   UserAuthenticationScope(
-      AuthenticationManagerImpl authenticationManager, Set<String> userPermissions) {
+      SystemAuthenticationManagerImpl authenticationManager, Set<String> userPermissions) {
     super(authenticationManager);
 
     this.userPermissions = ImmutableSet.copyOf(userPermissions);

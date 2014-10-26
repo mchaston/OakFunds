@@ -1,0 +1,11 @@
+<boostrap_config>
+	<user_config>
+		<user identifier="miles.chaston@gmail.com" name="Miles Chaston">
+			<role_grant name="admin"/>
+		</user>
+	</user_config>
+	<system_config>
+		<integer_system_property name="current_year" value="2014" />
+		<integer_system_property name="time_horizon" value="10" />
+	</system_config>
+</boostrap_config>

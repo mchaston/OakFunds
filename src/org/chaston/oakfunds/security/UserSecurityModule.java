@@ -13,27 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage.mgmt;
+package org.chaston.oakfunds.security;
 
 import com.google.inject.AbstractModule;
-import org.chaston.oakfunds.account.AccountTypesModule;
-import org.chaston.oakfunds.ledger.LedgerTypesModule;
-import org.chaston.oakfunds.model.ModelTypesModule;
-import org.chaston.oakfunds.security.UserTypesModule;
-import org.chaston.oakfunds.storage.StorageTypesModule;
-import org.chaston.oakfunds.system.SystemTypesModule;
+import com.google.inject.Singleton;
+import org.chaston.oakfunds.bootstrap.BootstrappingDependency;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class AllTypesModule extends AbstractModule {
+public class UserSecurityModule extends AbstractModule {
   @Override
   protected void configure() {
-    install(new AccountTypesModule());
-    install(new LedgerTypesModule());
-    install(new ModelTypesModule());
-    install(new StorageTypesModule());
-    install(new SystemTypesModule());
+    install(new SystemSecurityModule());
+
+    requireBinding(BootstrappingDependency.class);
+    requireBinding(SystemAuthenticationManagerImpl.class);
+    requireBinding(UserAuthenticator.class);
+
     install(new UserTypesModule());
+    bind(UserManager.class).to(UserManagerImpl.class);
+
+    bind(UserAuthenticationManager.class).to(UserAuthenticationManagerImpl.class);
+    bind(UserAuthenticationManagerImpl.class).in(Singleton.class);
+
+    bind(RoleRegistry.class).in(Singleton.class);
   }
 }

@@ -17,7 +17,7 @@ package org.chaston.oakfunds.security;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
-import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -26,18 +26,16 @@ import org.aopalliance.intercept.MethodInvocation;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class SecurityModule extends AbstractModule {
+public class SystemSecurityModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    requireBinding(UserManager.class);
     bind(AuthorizationContext.class).to(AuthorizationContextImpl.class);
-    bind(AuthenticationManager.class).to(AuthenticationManagerImpl.class);
-    bind(AuthenticationManagerImpl.class).in(Scopes.SINGLETON);
 
-    bind(RoleRegistry.class).in(Scopes.SINGLETON);
+    bind(SystemAuthenticationManager.class).to(SystemAuthenticationManagerImpl.class);
+    bind(SystemAuthenticationManagerImpl.class).in(Singleton.class);
 
-    bind(PermissionRegistry.class).in(Scopes.SINGLETON);
+    bind(PermissionRegistry.class).in(Singleton.class);
 
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(PermissionAssertion.class),
         new PermissionAssertionInterceptor(getProvider(AuthorizationContext.class)));

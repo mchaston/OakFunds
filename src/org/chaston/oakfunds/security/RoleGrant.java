@@ -22,16 +22,16 @@ import org.chaston.oakfunds.storage.RecordType;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface User extends Record<User> {
-  RecordType<User> TYPE = RecordType.builder("user", User.class)
+public interface RoleGrant extends Record<RoleGrant> {
+  RecordType<RoleGrant> TYPE = RecordType.builder("role_grant", RoleGrant.class)
       .build();
 
-  String ATTRIBUTE_IDENTIFIER = "identifier";
+  String ATTRIBUTE_USER_ID = "user_id";
   String ATTRIBUTE_NAME = "name";
 
-  @AttributeMethod(attribute = ATTRIBUTE_IDENTIFIER, required = true)
-  String getIdentifier();
+  @AttributeMethod(attribute = ATTRIBUTE_USER_ID, required = true)
+  int getUserId();
 
-  @AttributeMethod(attribute = ATTRIBUTE_NAME)
+  @AttributeMethod(attribute = ATTRIBUTE_NAME, required = true)
   String getName();
 }

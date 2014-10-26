@@ -15,9 +15,17 @@
  */
 package org.chaston.oakfunds.security;
 
+import org.chaston.oakfunds.storage.StorageException;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
 public interface UserManager {
-  User getCurrentUser();
+  User getUser(String identifier) throws StorageException;
+
+  Iterable<RoleGrant> getRoleGrants(User user) throws StorageException;
+
+  User createUser(String identifier, String name) throws StorageException;
+
+  void grantRole(User user, String roleName) throws StorageException;
 }

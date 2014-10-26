@@ -15,23 +15,17 @@
  */
 package org.chaston.oakfunds.security;
 
-import org.chaston.oakfunds.storage.AttributeMethod;
-import org.chaston.oakfunds.storage.Record;
-import org.chaston.oakfunds.storage.RecordType;
-
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface User extends Record<User> {
-  RecordType<User> TYPE = RecordType.builder("user", User.class)
-      .build();
+public class AuthenticatedUser {
+  private final String identifier;
 
-  String ATTRIBUTE_IDENTIFIER = "identifier";
-  String ATTRIBUTE_NAME = "name";
+  public AuthenticatedUser(String identifier) {
+    this.identifier = identifier;
+  }
 
-  @AttributeMethod(attribute = ATTRIBUTE_IDENTIFIER, required = true)
-  String getIdentifier();
-
-  @AttributeMethod(attribute = ATTRIBUTE_NAME)
-  String getName();
+  public String getIdentifier() {
+    return identifier;
+  }
 }

@@ -13,25 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.security;
+package org.chaston.oakfunds.bootstrap;
 
-import org.chaston.oakfunds.storage.AttributeMethod;
-import org.chaston.oakfunds.storage.Record;
-import org.chaston.oakfunds.storage.RecordType;
+import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
+import org.chaston.oakfunds.security.SystemAuthenticationManager;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface User extends Record<User> {
-  RecordType<User> TYPE = RecordType.builder("user", User.class)
-      .build();
-
-  String ATTRIBUTE_IDENTIFIER = "identifier";
-  String ATTRIBUTE_NAME = "name";
-
-  @AttributeMethod(attribute = ATTRIBUTE_IDENTIFIER, required = true)
-  String getIdentifier();
-
-  @AttributeMethod(attribute = ATTRIBUTE_NAME)
-  String getName();
+public class BootstrapModule extends AbstractModule {
+  @Override
+  protected void configure() {
+    requireBinding(SystemAuthenticationManager.class);
+    bind(Bootstrapper.class).in(Singleton.class);
+    bind(BootstrappingDependency.class).in(Singleton.class);
+    // Bind at least once to always have a Set available.
+    Multibinder.newSetBinder(binder(), BootstrapTask.class);
+  }
 }

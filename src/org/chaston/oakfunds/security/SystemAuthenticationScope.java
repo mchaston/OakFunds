@@ -19,7 +19,7 @@ package org.chaston.oakfunds.security;
  * TODO(mchaston): write JavaDocs
  */
 class SystemAuthenticationScope extends AbstractAuthenticationScope {
-  SystemAuthenticationScope(AuthenticationManagerImpl authenticationManager) {
+  SystemAuthenticationScope(SystemAuthenticationManagerImpl authenticationManager) {
     super(authenticationManager);
   }
 

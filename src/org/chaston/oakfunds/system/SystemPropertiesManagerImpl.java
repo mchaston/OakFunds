@@ -17,18 +17,18 @@ package org.chaston.oakfunds.system;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import org.chaston.oakfunds.bootstrap.BootstrappingDependency;
 import org.chaston.oakfunds.security.ActionType;
-import org.chaston.oakfunds.security.AuthenticationManager;
 import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.AuthorizationContext;
 import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.security.PermissionAssertion;
 import org.chaston.oakfunds.security.SinglePermissionAssertion;
+import org.chaston.oakfunds.security.SystemAuthenticationManager;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,11 +60,10 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
 
   @Inject
   SystemPropertiesManagerImpl(
-      // Here for dependency enforcement.
-      @Nullable SystemPropertyBootstrapper systemPropertyBootstrapper,
+      BootstrappingDependency bootstrappingDependency, // Here for dependency enforcement.
       Store store,
       AuthorizationContext authorizationContext,
-      AuthenticationManager authenticationManager) throws StorageException {
+      SystemAuthenticationManager authenticationManager) throws StorageException {
     this.store = store;
 
     try (AuthenticationScope authenticationScope = authenticationManager.authenticateSystem()) {

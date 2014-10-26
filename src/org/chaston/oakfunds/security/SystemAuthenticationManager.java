@@ -18,8 +18,6 @@ package org.chaston.oakfunds.security;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface AuthenticationManager {
-  AuthenticationScope authenticateUser();
-
+public interface SystemAuthenticationManager {
   AuthenticationScope authenticateSystem();
 }

@@ -13,22 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.security;
+package org.chaston.oakfunds.bootstrap;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-class UserImpl implements User {
-  private final ImmutableSet<String> roleNames;
-
-  UserImpl(ImmutableSet<String> roleNames) {
-    this.roleNames = roleNames;
-  }
-
+class BootstrapConfigModule extends AbstractModule {
   @Override
-  public ImmutableSet<String> getGrantedRoleNames() {
-    return roleNames;
+  protected void configure() {
+    bind(BootstrapConfigReader.class).in(Singleton.class);
+    // Add this multibinder to ensure that there is always a valid Set.
+    Multibinder.newSetBinder(binder(), BootstrapConfigLoader.class);
   }
 }
