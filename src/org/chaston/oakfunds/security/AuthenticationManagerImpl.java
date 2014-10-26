@@ -79,7 +79,7 @@ class AuthenticationManagerImpl implements AuthenticationManager {
     currentAuthenticationScope.remove();
   }
 
-  public AbstractAuthenticationScope getCurrentScope() {
+  AbstractAuthenticationScope getCurrentScope() {
     AbstractAuthenticationScope currentScope = currentAuthenticationScope.get();
     if (currentScope == null) {
       throw new IllegalStateException("Not within an authentication scope.");

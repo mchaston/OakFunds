@@ -28,22 +28,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 class AuthorizationContextImpl implements AuthorizationContext {
 
   private final PermissionRegistry permissionRegistry;
-  private final AccessCounterMap accessCounterMap;
   private final AuthenticationManagerImpl authenticationManager;
 
   @Inject
   AuthorizationContextImpl(
       PermissionRegistry permissionRegistry,
-      AuthenticationManagerImpl authenticationManager,
-      AccessCounterMap accessCounterMap) {
+      AuthenticationManagerImpl authenticationManager) {
     this.permissionRegistry = permissionRegistry;
     this.authenticationManager = authenticationManager;
-    this.accessCounterMap = accessCounterMap;
   }
 
   @Override
   public SinglePermissionAssertion assertPermission(String permissionName) {
-    assertInAuthenticationScope();
     if (!currentUserHasPermission(permissionName)) {
       throw throwAuthorizationException(permissionName);
     }
@@ -51,7 +47,7 @@ class AuthorizationContextImpl implements AuthorizationContext {
     if (permission == null) {
       throw new IllegalArgumentException("Permission " + permissionName + " does not exist.");
     }
-    return new SinglePermissionAssertionImpl(accessCounterMap, permission);
+    return new SinglePermissionAssertionImpl(authenticationManager.getCurrentScope(), permission);
   }
 
   private boolean currentUserHasPermission(String permission) {
@@ -60,11 +56,9 @@ class AuthorizationContextImpl implements AuthorizationContext {
 
   @Override
   public <T extends Record> void assertAccess(RecordType<T> recordType, ActionType actionType) {
-    assertInAuthenticationScope();
-    Map<ActionType, AtomicInteger> actionTypeCounters = accessCounterMap.get(recordType);
-    if (actionTypeCounters == null) {
-      throw throwAuthorizationException(recordType, actionType);
-    }
+    AbstractAuthenticationScope authenticationScope = authenticationManager.getCurrentScope();
+    Map<ActionType, AtomicInteger> actionTypeCounters =
+        authenticationScope.getAccessCounters(recordType);
     // Check for direct access.
     AtomicInteger actionTypeCounter = actionTypeCounters.get(actionType);
     if (actionTypeCounter != null && actionTypeCounter.get() > 0) {
@@ -80,10 +74,6 @@ class AuthorizationContextImpl implements AuthorizationContext {
       }
     }
     throw throwAuthorizationException(recordType, actionType);
-  }
-
-  private void assertInAuthenticationScope() {
-    authenticationManager.getCurrentScope();
   }
 
   private <T extends Record> AuthorizationException throwAuthorizationException(

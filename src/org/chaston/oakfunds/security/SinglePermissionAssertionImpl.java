@@ -27,19 +27,16 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 class SinglePermissionAssertionImpl implements SinglePermissionAssertion {
 
-  private final AccessCounterMap accessCounterMap;
-  private final boolean firstAssertion;
   private final List<AtomicInteger> actionTypeCounts;
 
   public SinglePermissionAssertionImpl(
-      AccessCounterMap accessCounterMap,
+      AbstractAuthenticationScope authenticationScope,
       Permission permission) {
-    this.accessCounterMap = accessCounterMap;
-    firstAssertion = accessCounterMap.initialize();
 
     ImmutableList.Builder<AtomicInteger> actionTypeCounts = ImmutableList.builder();
     for (Map.Entry<RecordType, ActionType> entry : permission.getRelatedActions().entries()) {
-      Map<ActionType, AtomicInteger> actionCounters = accessCounterMap.get(entry.getKey());
+      Map<ActionType, AtomicInteger> actionCounters =
+          authenticationScope.getAccessCounters(entry.getKey());
       AtomicInteger actionTypeCount = actionCounters.get(entry.getValue());
       if (actionTypeCount == null) {
         actionTypeCount = new AtomicInteger();
@@ -55,9 +52,6 @@ class SinglePermissionAssertionImpl implements SinglePermissionAssertion {
   public void close() {
     for (AtomicInteger actionTypeCount : actionTypeCounts) {
       actionTypeCount.decrementAndGet();
-    }
-    if (firstAssertion) {
-      accessCounterMap.clear();
     }
   }
 }

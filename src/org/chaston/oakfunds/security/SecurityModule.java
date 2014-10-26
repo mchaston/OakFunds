@@ -35,7 +35,6 @@ public class SecurityModule extends AbstractModule {
     bind(AuthenticationManager.class).to(AuthenticationManagerImpl.class);
     bind(AuthenticationManagerImpl.class).in(Scopes.SINGLETON);
 
-    bind(AccessCounterMap.class).in(Scopes.SINGLETON);
     bind(RoleRegistry.class).in(Scopes.SINGLETON);
 
     bind(PermissionRegistry.class).in(Scopes.SINGLETON);

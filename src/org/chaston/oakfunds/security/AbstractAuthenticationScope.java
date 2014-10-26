@@ -15,11 +15,18 @@
  */
 package org.chaston.oakfunds.security;
 
+import org.chaston.oakfunds.storage.RecordType;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
 abstract class AbstractAuthenticationScope implements AuthenticationScope {
 
+  private final Map<RecordType, Map<ActionType, AtomicInteger>> accessCounterMap = new HashMap<>();
   private final AuthenticationManagerImpl authenticationManager;
 
   protected AbstractAuthenticationScope(AuthenticationManagerImpl authenticationManager) {
@@ -27,6 +34,15 @@ abstract class AbstractAuthenticationScope implements AuthenticationScope {
   }
 
   abstract boolean hasPermission(String permissionName);
+
+  Map<ActionType, AtomicInteger> getAccessCounters(RecordType<?> recordType) {
+    Map<ActionType, AtomicInteger> accessCounters = accessCounterMap.get(recordType);
+    if (accessCounters == null) {
+      accessCounters = new HashMap<>();
+      accessCounterMap.put(recordType, accessCounters);
+    }
+    return accessCounters;
+  }
 
   @Override
   public void close() {
