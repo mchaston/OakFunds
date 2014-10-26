@@ -16,7 +16,7 @@
 package org.chaston.oakfunds.account;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import org.chaston.oakfunds.storage.Store;
 
 /**
@@ -27,7 +27,7 @@ public class AccountCodeModule extends AbstractModule {
   protected void configure() {
     install(new AccountTypesModule());
     requireBinding(Store.class);
-    bind(AccountCodeManagerImpl.class).in(Scopes.SINGLETON);
+    bind(AccountCodeManagerImpl.class).in(Singleton.class);
     bind(AccountCodeManager.class).to(AccountCodeManagerImpl.class);
   }
 }

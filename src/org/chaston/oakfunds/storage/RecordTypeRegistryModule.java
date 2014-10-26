@@ -16,7 +16,7 @@
 package org.chaston.oakfunds.storage;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -25,6 +25,6 @@ public class RecordTypeRegistryModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(RecordTypeRegistry.class).to(RecordTypeRegistryImpl.class);
-    bind(RecordTypeRegistryImpl.class).in(Scopes.SINGLETON);
+    bind(RecordTypeRegistryImpl.class).in(Singleton.class);
   }
 }

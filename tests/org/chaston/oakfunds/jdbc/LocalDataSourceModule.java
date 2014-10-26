@@ -17,7 +17,6 @@ package org.chaston.oakfunds.jdbc;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import org.hsqldb.jdbc.JDBCDataSource;
 
@@ -36,7 +35,7 @@ public class LocalDataSourceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(DatabaseTearDown.class).in(Scopes.SINGLETON);
+    bind(DatabaseTearDown.class).in(Singleton.class);
     bind(DatabaseVariantHandler.class).to(HsqlDbDatabaseVariantHandler.class);
   }
 

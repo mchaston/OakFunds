@@ -16,7 +16,7 @@
 package org.chaston.oakfunds.storage;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import org.chaston.oakfunds.security.AuthorizationContext;
 
 import javax.sql.DataSource;
@@ -32,6 +32,6 @@ public class StorageModule extends AbstractModule {
     requireBinding(RecordTypeRegistry.class);
     requireBinding(AuthorizationContext.class);
     bind(Store.class).to(StoreImpl.class);
-    bind(StoreImpl.class).in(Scopes.SINGLETON);
+    bind(StoreImpl.class).in(Singleton.class);
   }
 }
