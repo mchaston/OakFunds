@@ -39,7 +39,9 @@ public class UserBootstrapModule extends AbstractModule {
   @Override
   protected void configure() {
     requireBinding(Store.class);
-    requireBinding(UserManager.class);
+
+    install(new UserTypesModule());
+    bind(UserManager.class).to(UserManagerImpl.class);
     install(new SystemSecurityModule());
 
     Multibinder<BootstrapConfigLoader> bootstrapConfigLoaderBinder =
