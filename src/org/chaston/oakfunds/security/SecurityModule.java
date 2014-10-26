@@ -43,9 +43,9 @@ public class SecurityModule extends AbstractModule {
   protected void configure() {
     requireBinding(UserManager.class);
     bind(AuthorizationContext.class).to(AuthorizationContextImpl.class);
-    bind(AuthenticationContext.class).to(AuthenticationContextImpl.class);
     bind(AuthenticationManager.class).to(AuthenticationManagerImpl.class);
     bind(AuthenticationManagerImpl.class).in(Scopes.SINGLETON);
+
     bind(RoleRegistry.class).in(Scopes.SINGLETON);
 
     bind(new TypeLiteral<Map<RecordType, Map<ActionType, AtomicInteger>>>() {})

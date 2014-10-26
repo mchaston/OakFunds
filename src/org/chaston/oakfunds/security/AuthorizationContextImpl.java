@@ -29,25 +29,29 @@ import java.util.concurrent.atomic.AtomicInteger;
 class AuthorizationContextImpl implements AuthorizationContext {
 
   private final Provider<Map<RecordType, Map<ActionType, AtomicInteger>>> accessCountersProvider;
+  private final AuthenticationManagerImpl authenticationManager;
   private final SinglePermissionAssertionFactory singlePermissionAssertionFactory;
-  private final AuthenticationContext authenticationContext;
 
   @Inject
   AuthorizationContextImpl(
       Provider<Map<RecordType, Map<ActionType, AtomicInteger>>> accessCountersProvider,
-      SinglePermissionAssertionFactory singlePermissionAssertionFactory,
-      AuthenticationContext authenticationContext) {
+      AuthenticationManagerImpl authenticationManager,
+      SinglePermissionAssertionFactory singlePermissionAssertionFactory) {
     this.accessCountersProvider = accessCountersProvider;
+    this.authenticationManager = authenticationManager;
     this.singlePermissionAssertionFactory = singlePermissionAssertionFactory;
-    this.authenticationContext = authenticationContext;
   }
 
   @Override
   public SinglePermissionAssertion assertPermission(String permission) {
-    if (!authenticationContext.currentUserHasPermission(permission)) {
+    if (!currentUserHasPermission(permission)) {
       throw throwAuthorizationException(permission);
     }
     return singlePermissionAssertionFactory.create(permission);
+  }
+
+  private boolean currentUserHasPermission(String permission) {
+    return authenticationManager.getCurrentScope().hasPermission(permission);
   }
 
   @Override
