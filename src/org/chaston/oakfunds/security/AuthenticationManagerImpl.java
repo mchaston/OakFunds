@@ -26,7 +26,7 @@ import java.util.Set;
  */
 class AuthenticationManagerImpl implements AuthenticationManager {
 
-  private final ThreadLocal<AbstractAuthenticationScope> CURRENT_AUTHENTICATION_SCOPE =
+  private final ThreadLocal<AbstractAuthenticationScope> currentAuthenticationScope =
       new ThreadLocal<>();
   private final UserManager userManager;
   private final RoleRegistry roleRegistry;
@@ -39,7 +39,7 @@ class AuthenticationManagerImpl implements AuthenticationManager {
 
   @Override
   public AuthenticationScope authenticateUser() {
-    if (CURRENT_AUTHENTICATION_SCOPE.get() != null) {
+    if (currentAuthenticationScope.get() != null) {
       throw new IllegalStateException("Already withing an authentication scope.");
     }
     User user = userManager.getCurrentUser();
@@ -49,7 +49,7 @@ class AuthenticationManagerImpl implements AuthenticationManager {
     Set<String> userPermissions = getUserPermissions(user);
     UserAuthenticationScope userAuthenticationScope =
         new UserAuthenticationScope(this, userPermissions);
-    CURRENT_AUTHENTICATION_SCOPE.set(userAuthenticationScope);
+    currentAuthenticationScope.set(userAuthenticationScope);
     return userAuthenticationScope;
   }
 
@@ -64,23 +64,23 @@ class AuthenticationManagerImpl implements AuthenticationManager {
 
   @Override
   public AuthenticationScope authenticateSystem() {
-    if (CURRENT_AUTHENTICATION_SCOPE.get() != null) {
+    if (currentAuthenticationScope.get() != null) {
       throw new IllegalStateException("Already withing an authentication scope.");
     }
     SystemAuthenticationScope systemAuthenticationScope = new SystemAuthenticationScope(this);
-    CURRENT_AUTHENTICATION_SCOPE.set(systemAuthenticationScope);
+    currentAuthenticationScope.set(systemAuthenticationScope);
     return systemAuthenticationScope;
   }
 
   void endAuthenticationScope(AuthenticationScope abstractAuthenticationScope) {
-    if (CURRENT_AUTHENTICATION_SCOPE.get() != abstractAuthenticationScope) {
+    if (currentAuthenticationScope.get() != abstractAuthenticationScope) {
       throw new IllegalStateException("Cannot end a scope that is currently not in use.");
     }
-    CURRENT_AUTHENTICATION_SCOPE.remove();
+    currentAuthenticationScope.remove();
   }
 
   public AbstractAuthenticationScope getCurrentScope() {
-    AbstractAuthenticationScope currentScope = CURRENT_AUTHENTICATION_SCOPE.get();
+    AbstractAuthenticationScope currentScope = currentAuthenticationScope.get();
     if (currentScope == null) {
       throw new IllegalStateException("Not within an authentication scope.");
     }

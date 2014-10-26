@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 class StoreImpl implements Store {
 
   private static final Logger logger = Logger.getLogger(StoreImpl.class.getName());
-  private final ThreadLocal<TransactionImpl> CURRENT_TRANSACTION = new ThreadLocal<>();
+  private final ThreadLocal<TransactionImpl> currentTransaction = new ThreadLocal<>();
 
   private final DataSource dataSource;
   private final RecordTypeRegistry recordTypeRegistry;
@@ -66,7 +66,7 @@ class StoreImpl implements Store {
 
   @Override
   public Transaction startTransaction() throws StorageException {
-    if (CURRENT_TRANSACTION.get() != null) {
+    if (currentTransaction.get() != null) {
       throw new IllegalStateException("Already in transaction.");
     }
     TransactionImpl newTransaction = null;
@@ -75,12 +75,12 @@ class StoreImpl implements Store {
     } catch (SQLException e) {
       logger.log(Level.WARNING, "Failed to start new transaction", e);
     }
-    CURRENT_TRANSACTION.set(newTransaction);
+    currentTransaction.set(newTransaction);
     return newTransaction;
   }
 
   void endTransaction(Connection connection) {
-    CURRENT_TRANSACTION.remove();
+    currentTransaction.remove();
     closeConnection(connection);
   }
 
@@ -89,7 +89,7 @@ class StoreImpl implements Store {
       Map<String, Object> attributes) throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.CREATE);
     recordTypeRegistry.validateRecordAttributes(recordType, attributes);
-    TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
+    TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
     }
@@ -127,7 +127,7 @@ class StoreImpl implements Store {
       throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.CREATE);
     recordTypeRegistry.validateRecordAttributes(recordType, attributes);
-    TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
+    TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
     }
@@ -215,7 +215,7 @@ class StoreImpl implements Store {
       throws StorageException {
     authorizationContext.assertAccess(record.getRecordType(), ActionType.UPDATE);
     recordTypeRegistry.validateRecordAttributes(record.getRecordType(), attributes);
-    TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
+    TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
     }
@@ -248,7 +248,7 @@ class StoreImpl implements Store {
       throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.UPDATE);
     recordTypeRegistry.validateRecordAttributes(recordType, attributes);
-    TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
+    TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
     }
@@ -371,7 +371,7 @@ class StoreImpl implements Store {
       throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.CREATE);
     recordTypeRegistry.validateRecordAttributes(recordType, attributes);
-    TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
+    TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
     }
@@ -425,7 +425,7 @@ class StoreImpl implements Store {
       throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.UPDATE);
     recordTypeRegistry.validateRecordAttributes(recordType, attributes);
-    TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
+    TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
     }
@@ -462,7 +462,7 @@ class StoreImpl implements Store {
       RecordType<T> recordType, ImmutableList<? extends SearchTerm> searchTerms)
       throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.DELETE);
-    TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
+    TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
     }
@@ -901,7 +901,7 @@ class StoreImpl implements Store {
 
     Connection getConnection() throws StorageException {
       if (localConnection == null) {
-        TransactionImpl currentTransaction = CURRENT_TRANSACTION.get();
+        TransactionImpl currentTransaction = StoreImpl.this.currentTransaction.get();
         if (currentTransaction != null) {
           return currentTransaction.getConnection();
         }

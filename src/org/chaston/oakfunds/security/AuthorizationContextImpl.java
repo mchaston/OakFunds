@@ -16,7 +16,6 @@
 package org.chaston.oakfunds.security;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import org.chaston.oakfunds.storage.Record;
 import org.chaston.oakfunds.storage.RecordType;
 
@@ -28,26 +27,31 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 class AuthorizationContextImpl implements AuthorizationContext {
 
-  private final Provider<Map<RecordType, Map<ActionType, AtomicInteger>>> accessCountersProvider;
+  private final PermissionRegistry permissionRegistry;
+  private final AccessCounterMap accessCounterMap;
   private final AuthenticationManagerImpl authenticationManager;
-  private final SinglePermissionAssertionFactory singlePermissionAssertionFactory;
 
   @Inject
   AuthorizationContextImpl(
-      Provider<Map<RecordType, Map<ActionType, AtomicInteger>>> accessCountersProvider,
+      PermissionRegistry permissionRegistry,
       AuthenticationManagerImpl authenticationManager,
-      SinglePermissionAssertionFactory singlePermissionAssertionFactory) {
-    this.accessCountersProvider = accessCountersProvider;
+      AccessCounterMap accessCounterMap) {
+    this.permissionRegistry = permissionRegistry;
     this.authenticationManager = authenticationManager;
-    this.singlePermissionAssertionFactory = singlePermissionAssertionFactory;
+    this.accessCounterMap = accessCounterMap;
   }
 
   @Override
-  public SinglePermissionAssertion assertPermission(String permission) {
-    if (!currentUserHasPermission(permission)) {
-      throw throwAuthorizationException(permission);
+  public SinglePermissionAssertion assertPermission(String permissionName) {
+    assertInAuthenticationScope();
+    if (!currentUserHasPermission(permissionName)) {
+      throw throwAuthorizationException(permissionName);
     }
-    return singlePermissionAssertionFactory.create(permission);
+    Permission permission = permissionRegistry.getPermission(permissionName);
+    if (permission == null) {
+      throw new IllegalArgumentException("Permission " + permissionName + " does not exist.");
+    }
+    return new SinglePermissionAssertionImpl(accessCounterMap, permission);
   }
 
   private boolean currentUserHasPermission(String permission) {
@@ -56,11 +60,8 @@ class AuthorizationContextImpl implements AuthorizationContext {
 
   @Override
   public <T extends Record> void assertAccess(RecordType<T> recordType, ActionType actionType) {
-    Map<RecordType, Map<ActionType, AtomicInteger>> accessCounters = accessCountersProvider.get();
-    if (accessCounters == null) {
-      throw throwAuthorizationException(recordType, actionType);
-    }
-    Map<ActionType, AtomicInteger> actionTypeCounters = accessCounters.get(recordType);
+    assertInAuthenticationScope();
+    Map<ActionType, AtomicInteger> actionTypeCounters = accessCounterMap.get(recordType);
     if (actionTypeCounters == null) {
       throw throwAuthorizationException(recordType, actionType);
     }
@@ -79,6 +80,10 @@ class AuthorizationContextImpl implements AuthorizationContext {
       }
     }
     throw throwAuthorizationException(recordType, actionType);
+  }
+
+  private void assertInAuthenticationScope() {
+    authenticationManager.getCurrentScope();
   }
 
   private <T extends Record> AuthorizationException throwAuthorizationException(
