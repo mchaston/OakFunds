@@ -59,21 +59,4 @@ public class RemoteDataStoreModule extends AbstractModule {
     dataSource.setCreateDatabaseIfNotExist(true);
     return dataSource;
   }
-
-  private static class MySqlDatabaseVariantHandler implements DatabaseVariantHandler {
-    @Override
-    public String toDatabaseForm(String normalName) {
-      return normalName;
-    }
-
-    @Override
-    public String toNormalName(String databaseForm) {
-      return databaseForm;
-    }
-
-    @Override
-    public boolean requiresSchemaCreation() {
-      return false;
-    }
-  }
 }

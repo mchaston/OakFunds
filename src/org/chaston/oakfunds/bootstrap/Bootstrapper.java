@@ -15,18 +15,10 @@
  */
 package org.chaston.oakfunds.bootstrap;
 
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
-import org.chaston.oakfunds.jdbc.RemoteDataStoreModule;
 import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.SystemAuthenticationManager;
-import org.chaston.oakfunds.storage.RecordTypeRegistryModule;
-import org.chaston.oakfunds.storage.StorageModule;
-import org.chaston.oakfunds.util.Flag;
-import org.chaston.oakfunds.util.Flags;
 
-import java.io.File;
 import java.util.Set;
 
 /**
@@ -34,47 +26,8 @@ import java.util.Set;
  */
 class Bootstrapper {
 
-  private static final Flag<String> BOOTSTRAP_CONFIG_FILENAME =
-      Flag.builder("bootstrap_config_filename", "")
-          .setShortName("f")
-          .build();
-
   private final SystemAuthenticationManager authenticationManager;
   private final Set<BootstrapTask> bootstrapTasks;
-
-  public static void main(String[] args) throws Exception {
-    Injector injector = Guice.createInjector(
-        new AllBootstrapTasksModule(),
-        new BootstrapModule(),
-        new BootstrapConfigModule(),
-        new RecordTypeRegistryModule(),
-        new RemoteDataStoreModule(),
-        new StorageModule());
-
-    Flags.parse(args);
-    if (BOOTSTRAP_CONFIG_FILENAME.get().isEmpty()) {
-      throw new IllegalArgumentException("The bootstrap_config_filename has to be specified.");
-    }
-    File file = new File(BOOTSTRAP_CONFIG_FILENAME.get());
-    if (!file.exists()) {
-      throw new IllegalArgumentException("The bootstrap config file ("
-          + file.getAbsolutePath() + ") does not exist.");
-    }
-    if (!file.isFile()) {
-      throw new IllegalArgumentException("The bootstrap config file ("
-          + file.getAbsolutePath() + ") is not a file.");
-    }
-    if (!file.canRead()) {
-      throw new IllegalArgumentException("The bootstrap config file ("
-          + file.getAbsolutePath() + ") cannot be read.");
-    }
-
-    // Actually do the bootstrapping.
-    injector.getInstance(BootstrapConfigReader.class).read(file);
-    injector.getInstance(Bootstrapper.class).bootstrap();
-
-    System.out.println("** Bootstrapping completed successfully. **");
-  }
 
   @Inject
   Bootstrapper(

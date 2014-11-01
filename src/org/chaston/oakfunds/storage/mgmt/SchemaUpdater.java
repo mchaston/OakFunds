@@ -18,16 +18,11 @@ package org.chaston.oakfunds.storage.mgmt;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import org.chaston.oakfunds.jdbc.ColumnDef;
 import org.chaston.oakfunds.jdbc.FunctionDef;
-import org.chaston.oakfunds.jdbc.RemoteDataStoreModule;
 import org.chaston.oakfunds.jdbc.TableDef;
-import org.chaston.oakfunds.storage.RecordTypeRegistryModule;
 import org.chaston.oakfunds.storage.SystemColumnDefs;
-import org.chaston.oakfunds.util.Flags;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -49,18 +44,6 @@ public class SchemaUpdater {
 
   private final SchemaValidator schemaValidator;
   private final DataSource dataSource;
-
-  public static void main(String[] args) throws SQLException {
-    Injector injector = Guice.createInjector(
-        new RecordTypeRegistryModule(),
-        new AllTypesModule(),
-        new StorageManagementModule(),
-        new RemoteDataStoreModule());
-    Flags.parse(args);
-    injector.getInstance(SchemaUpdater.class).updateSchema();
-
-    System.out.println("** Schema updated successfully. **");
-  }
 
   @Inject
   SchemaUpdater(
