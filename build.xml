@@ -1,0 +1,116 @@
+<project name="OakFunds" default="build-war">
+	<property name="appengine.sdk" location="../appengine-1.9.10/appengine-java-sdk-1.9.10" />
+	<property name="src.dir" location="src" />
+	<property name="test.dir" location="tests" />
+	<property name="classes.dir" location="build/classes" />
+	<property name="jar.file" location="build/OakFunds.jar" />
+	<property name="test-classes.dir" location="build/test_classes" />
+	<property name="war.dir" location="build/war" />
+
+	<import file="${appengine.sdk}/config/user/ant-macros.xml" />
+
+	<path id="prod-classpath">
+		<path location="libraries/appengine/appengine-api-1.0-sdk-1.9.10.jar"/>
+		<path location="libraries/commons-dbcp2/commons-dbcp2-2.0.1.jar"/>
+		<path location="libraries/commons-pool2/commons-pool2-2.2.jar"/>
+		<path location="libraries/guava/guava-18.0.jar"/>
+		<path location="libraries/guice/aopalliance.jar"/>
+		<path location="libraries/guice/guice-3.0.jar"/>
+		<path location="libraries/guice/guice-assistedinject-3.0.jar"/>
+		<path location="libraries/guice/guice-multibindings-3.0.jar"/>
+		<path location="libraries/guice/guice-servlet-3.0.jar"/>
+		<path location="libraries/guice/javax.inject.jar"/>
+		<path location="libraries/joda_time/joda-time-2.3.jar"/>
+		<path location="libraries/jsr305/jsr305.jar"/>
+	</path>
+
+	<path id="container-classpath">
+		<path refid="prod-classpath"/>
+		<path location="libraries/servlet/jsp-api.jar"/>
+		<path location="libraries/servlet/servlet-api.jar"/>
+	</path>
+
+	<path id="test-classpath">
+		<path refid="container-classpath"/>
+		<path location="libraries/hsqldb/lib/hsqldb.jar"/>
+		<path location="libraries/junit/junit-4.11.jar"/>
+		<path location="libraries/mockito/mockito-all-1.9.5.jar"/>
+	</path>
+
+	<target name="compile-src">
+		<!-- Delete this every time to ensure you have a clean build. -->
+		<delete dir="build"/>
+		<mkdir dir="${classes.dir}"/>
+		<!-- Compile the source. -->
+		<javac verbose="yes" debug="true" srcdir="${src.dir}" destdir="${classes.dir}">
+			<classpath>
+				<path refid="container-classpath"/>
+			</classpath>
+		</javac>
+		<!-- Build JAR file. -->
+		<jar destfile="${jar.file}">
+			<fileset dir="${classes.dir}"/>
+			<fileset dir="${src.dir}" excludes="**/*.java"/>
+		</jar>
+	</target>
+
+	<target name="run-tests" depends="compile-src">
+		<mkdir dir="${test-classes.dir}"/>
+		<!-- Compile the tests. -->
+		<javac verbose="yes" debug="true" srcdir="${test.dir}" destdir="${test-classes.dir}">
+			<classpath>
+				<path refid="test-classpath"/>
+				<path location="${jar.file}"/>
+			</classpath>
+		</javac>
+		<!-- Copy any non-source test resources to the test build path. -->
+		<copy todir="${test-classes.dir}">
+			<fileset dir="${test.dir}" excludes="**/*.java"/>
+		</copy>
+
+		<mkdir dir="build/test_results"/>
+		<junit printsummary="yes" haltonerror="true" haltonfailure="true" fork="true">
+			<classpath>
+				<path refid="test-classpath"/>
+				<path location="${jar.file}"/>
+				<path location="${test-classes.dir}"/>
+			</classpath>
+
+			<batchtest haltonerror="true" haltonfailure="true" fork="true" todir="build/test_results">
+				<fileset dir="${test-classes.dir}" includes="**/*Test.class"/>
+				<formatter extension=".xml" classname="org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter"/>
+			</batchtest>
+		</junit>
+	</target>
+
+	<target name="build-war" depends="compile-src">
+		<delete dir="${war.dir}" />
+		<mkdir dir="${war.dir}" />
+		<!-- Copy the raw WAR contents. -->
+		<copy todir="${war.dir}">
+			<fileset dir="war"/>
+		</copy>
+		<!-- Copy the libraries. -->
+		<mkdir dir="${war.dir}/WEB-INF/lib" />
+		<copy todir="${war.dir}/WEB-INF/lib" flatten="true">
+			<path location="${jar.file}"/>
+			<path refid="prod-classpath"/>
+		</copy>
+	</target>
+
+	<!--
+	  If the update requires another authentication to appcfg, do the following...
+	  1. Get a fresh password from:
+        https://accounts.google.com/b/0/IssuedAuthSubTokens#accesscodes
+
+	  2. Run the following command:
+	    ./Desktop/Projects/appengine-1.9.10/appengine-java-sdk-1.9.10/bin/appcfg.sh \
+	        vacuum_indexes ~/Desktop/Projects/OakFunds/build/war
+
+	-->
+	<target name="update" depends="build-war,run-tests"
+	        description="Uploads the application to App Engine.">
+		<appcfg action="update" war="${war.dir}" />
+	</target>
+
+</project>
