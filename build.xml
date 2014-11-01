@@ -101,7 +101,7 @@
 	<!--
 	  If the update requires another authentication to appcfg, do the following...
 	  1. Get a fresh password from:
-        https://accounts.google.com/b/0/IssuedAuthSubTokens#accesscodes
+        https://security.google.com/settings/security/apppasswords
 
 	  2. Run the following command:
 	    ./Desktop/Projects/appengine-1.9.10/appengine-java-sdk-1.9.10/bin/appcfg.sh \
