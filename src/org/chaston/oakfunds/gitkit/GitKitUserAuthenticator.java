@@ -67,7 +67,7 @@ class GitKitUserAuthenticator implements UserAuthenticator {
     if (!authenticationState.isAuthenticated()) {
       throw new NotAuthenticatedException("User is not authenticated.");
     }
-    throw new UnsupportedOperationException("Not implemented yet.");
+    return new AuthenticatedUser(authenticationState.getIdentifier());
   }
 
   boolean isAuthenticated(HttpServletRequest servletRequest) throws ServletException {

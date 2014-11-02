@@ -24,24 +24,28 @@ import java.io.Serializable;
  */
 class AuthenticationState implements Serializable {
   private Long userId;
-  private String localId;
+  private String identifier;
   private String email;
   private String name;
 
   void bindToken(long userId, GitkitUser gitkitUser) {
     this.userId = userId;
-    localId = gitkitUser.getLocalId();
+    identifier = gitkitUser.getLocalId();
     email = gitkitUser.getEmail();
     name = gitkitUser.getName();
   }
 
   boolean isAuthenticated() {
-    return localId != null;
+    return identifier != null;
+  }
+
+  String getIdentifier() {
+    return identifier;
   }
 
   void signout() {
     userId = null;
-    localId = null;
+    identifier = null;
     email = null;
     name = null;
   }
