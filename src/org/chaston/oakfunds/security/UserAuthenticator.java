@@ -19,5 +19,5 @@ package org.chaston.oakfunds.security;
  * TODO(mchaston): write JavaDocs
  */
 public interface UserAuthenticator {
-  AuthenticatedUser getAuthenticatedUser();
+  AuthenticatedUser getAuthenticatedUser() throws AuthenticationException;
 }

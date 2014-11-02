@@ -15,11 +15,15 @@
  */
 package org.chaston.oakfunds.security;
 
-import org.chaston.oakfunds.storage.StorageException;
-
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface UserAuthenticationManager {
-  AuthenticationScope authenticateUser() throws StorageException, AuthenticationException;
+public class NotAuthenticatedException extends AuthenticationException {
+  public NotAuthenticatedException(String message) {
+    super(message);
+  }
+
+  public NotAuthenticatedException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

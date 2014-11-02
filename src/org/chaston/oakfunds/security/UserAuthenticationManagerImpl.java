@@ -50,7 +50,7 @@ class UserAuthenticationManagerImpl implements UserAuthenticationManager {
   }
 
   @Override
-  public AuthenticationScope authenticateUser() throws StorageException {
+  public AuthenticationScope authenticateUser() throws StorageException, AuthenticationException {
     if (systemAuthenticationManager.getCurrentScope() != null) {
       throw new IllegalStateException("Already withing an authentication scope.");
     }
