@@ -18,7 +18,7 @@ package org.chaston.oakfunds.jdbc;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.dbcp.BasicDataSource;
 import org.chaston.oakfunds.storage.SystemColumnDefs;
 
 import javax.sql.DataSource;
@@ -39,7 +39,8 @@ public class AppEngineDataStoreModule extends AbstractModule {
     BasicDataSource dataSource = new BasicDataSource();
     dataSource.setDriverClassName("com.mysql.jdbc.GoogleDriver");
     dataSource.setUrl(
-        "jdbc:google:mysql://mchaston-oakfunds:oakfunds2/" + SystemColumnDefs.SCHEMA);
+        "jdbc:google:mysql://mchaston-oakfunds:oakfunds2/" + SystemColumnDefs.SCHEMA
+            + "?user=root");
     return dataSource;
   }
 }
