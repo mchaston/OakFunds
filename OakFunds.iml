@@ -23,6 +23,9 @@
     <orderEntry type="library" exported="" name="servlet" level="project" />
     <orderEntry type="library" name="commons-pool2" level="project" />
     <orderEntry type="library" name="commons-dbcp2" level="project" />
+    <orderEntry type="library" exported="" name="gitkit" level="project" />
+    <orderEntry type="library" name="json" level="project" />
+    <orderEntry type="library" name="commons-codec" level="project" />
   </component>
 </module>
 
