@@ -35,6 +35,7 @@ import java.sql.SQLException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -73,6 +74,42 @@ public class UserManagerTest {
   }
 
   @Test
+  public void createUser() throws StorageException {
+    Transaction transaction = store.startTransaction();
+    User newUser = userManager.createUser(
+        "gmail.com:miles.chaston", "miles.chaston@gmail.com", "Miles Chaston");
+    assertNotNull(newUser);
+    assertEquals("gmail.com:miles.chaston", newUser.getIdentifier());
+    assertEquals("miles.chaston@gmail.com", newUser.getEmail());
+    assertEquals("Miles Chaston", newUser.getName());
+
+    transaction.commit();
+
+    User gotUser = userManager.getUser("gmail.com:miles.chaston");
+    assertEquals("gmail.com:miles.chaston", gotUser.getIdentifier());
+    assertEquals("miles.chaston@gmail.com", gotUser.getEmail());
+    assertEquals("Miles Chaston", gotUser.getName());
+  }
+
+  @Test
+  public void createMinimalUser() throws StorageException {
+    Transaction transaction = store.startTransaction();
+    User newUser = userManager.createUser(
+        "gmail.com:miles.chaston", null , null);
+    assertNotNull(newUser);
+    assertEquals("gmail.com:miles.chaston", newUser.getIdentifier());
+    assertNull(newUser.getEmail());
+    assertNull(newUser.getName());
+
+    transaction.commit();
+
+    User gotUser = userManager.getUser("gmail.com:miles.chaston");
+    assertEquals("gmail.com:miles.chaston", gotUser.getIdentifier());
+    assertNull(gotUser.getEmail());
+    assertNull(gotUser.getName());
+  }
+
+  @Test
   public void upsertUserFromNothing() throws StorageException {
     Transaction transaction = store.startTransaction();
     User newUser = userManager.upsertUser(
@@ -93,7 +130,7 @@ public class UserManagerTest {
   @Test
   public void upsertUserIdentical() throws StorageException {
     Transaction transaction = store.startTransaction();
-    User oldUser = userManager.createUser(
+    userManager.createUser(
         "gmail.com:miles.chaston", "miles.chaston@gmail.com", "Miles Chaston");
     User newUser = userManager.upsertUser(
         "gmail.com:miles.chaston", "miles.chaston@gmail.com", "Miles Chaston");

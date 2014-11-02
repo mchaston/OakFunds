@@ -15,6 +15,7 @@
  */
 package org.chaston.oakfunds.security;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -25,6 +26,7 @@ import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -62,6 +64,7 @@ public class UserManagerImpl implements UserManager {
   @Override
   @PermissionAssertion("user.read")
   public User getUser(String identifier) throws StorageException {
+    Preconditions.checkNotNull(identifier, "identifier");
     List<? extends SearchTerm> searchTerms = ImmutableList.of(
         AttributeSearchTerm.of(User.ATTRIBUTE_IDENTIFIER, SearchOperator.EQUALS, identifier));
     Iterable<User> users = store.findRecords(User.TYPE, searchTerms);
@@ -71,26 +74,28 @@ public class UserManagerImpl implements UserManager {
   @Override
   @PermissionAssertion("user.create")
   public User createUser(String identifier, String email, String name) throws StorageException {
-    Map<String, Object> attributes = ImmutableMap.<String, Object>of(
-        User.ATTRIBUTE_IDENTIFIER, identifier,
-        User.ATTRIBUTE_EMAIL, email,
-        User.ATTRIBUTE_NAME, name);
+    Preconditions.checkNotNull(identifier, "identifier");
+    Map<String, Object> attributes = new HashMap<>();
+    attributes.put(User.ATTRIBUTE_IDENTIFIER, identifier);
+    attributes.put(User.ATTRIBUTE_EMAIL, email);
+    attributes.put(User.ATTRIBUTE_NAME, name);
     return store.createRecord(User.TYPE, attributes);
   }
 
   @Override
   @PermissionAssertion("user.upsert")
   public User upsertUser(String identifier, String email, String name) throws StorageException {
+    Preconditions.checkNotNull(identifier, "identifier");
     User oldUser = getUser(identifier);
     if (oldUser == null) {
       return createUser(identifier, email, name);
     }
     if (!Objects.equals(email, oldUser.getEmail())
         || !Objects.equals(name, oldUser.getName())) {
-      Map<String, Object> attributes = ImmutableMap.<String, Object>of(
-          User.ATTRIBUTE_IDENTIFIER, identifier,
-          User.ATTRIBUTE_EMAIL, email,
-          User.ATTRIBUTE_NAME, name);
+      Map<String, Object> attributes = new HashMap<>();
+      attributes.put(User.ATTRIBUTE_IDENTIFIER, identifier);
+      attributes.put(User.ATTRIBUTE_EMAIL, email);
+      attributes.put(User.ATTRIBUTE_NAME, name);
       return store.updateRecord(oldUser, attributes);
     } else {
       return oldUser;
@@ -100,6 +105,7 @@ public class UserManagerImpl implements UserManager {
   @Override
   @PermissionAssertion("role_grant.read")
   public Iterable<RoleGrant> getRoleGrants(User user) throws StorageException {
+    Preconditions.checkNotNull(user, "user");
     List<? extends SearchTerm> searchTerms = ImmutableList.of(
         AttributeSearchTerm.of(RoleGrant.ATTRIBUTE_USER_ID, SearchOperator.EQUALS, user.getId()));
     return store.findRecords(RoleGrant.TYPE, searchTerms);
@@ -108,6 +114,8 @@ public class UserManagerImpl implements UserManager {
   @Override
   @PermissionAssertion("role_grant.create")
   public void grantRole(User user, String roleName) throws StorageException {
+    Preconditions.checkNotNull(user, "user");
+    Preconditions.checkNotNull(roleName, "roleName");
     Map<String, Object> attributes = ImmutableMap.<String, Object>of(
         RoleGrant.ATTRIBUTE_USER_ID, user.getId(),
         RoleGrant.ATTRIBUTE_NAME, roleName);
