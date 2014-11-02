@@ -82,6 +82,9 @@ class RecordProxy {
       if (attributeMethod != null) {
         return attributes.get(attributeMethod.attribute());
       }
+      if (method.getName().equals("toString") && method.getReturnType() == String.class) {
+        return recordType.getName() + ":" + id;
+      }
       Object otherReturnValue = getOtherReturnValue(method);
       if (otherReturnValue == null) {
         throw new IllegalStateException("Method " + method.getName()
