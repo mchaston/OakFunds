@@ -11,8 +11,10 @@
 
 	<path id="prod-classpath">
 		<path location="libraries/appengine/appengine-api-1.0-sdk-1.9.10.jar"/>
+		<path location="libraries/commons-codec/commons-codec-1.6.jar"/>
 		<path location="libraries/commons-dbcp2/commons-dbcp2-2.0.1.jar"/>
 		<path location="libraries/commons-pool2/commons-pool2-2.2.jar"/>
+		<path location="libraries/gitkit/gitkit.jar"/>
 		<path location="libraries/guava/guava-18.0.jar"/>
 		<path location="libraries/guice/aopalliance.jar"/>
 		<path location="libraries/guice/guice-3.0.jar"/>
@@ -21,6 +23,9 @@
 		<path location="libraries/guice/guice-servlet-3.0.jar"/>
 		<path location="libraries/guice/javax.inject.jar"/>
 		<path location="libraries/joda_time/joda-time-2.3.jar"/>
+		<path location="libraries/json/gson-2.1.jar"/>
+		<path location="libraries/json/json.jar"/>
+		<path location="libraries/json/jsontoken-1.1.jar"/>
 		<path location="libraries/jsr305/jsr305.jar"/>
 	</path>
 
