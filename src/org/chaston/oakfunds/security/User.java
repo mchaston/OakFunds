@@ -27,10 +27,14 @@ public interface User extends Record<User> {
       .build();
 
   String ATTRIBUTE_IDENTIFIER = "identifier";
+  String ATTRIBUTE_EMAIL = "email";
   String ATTRIBUTE_NAME = "name";
 
   @AttributeMethod(attribute = ATTRIBUTE_IDENTIFIER, required = true)
   String getIdentifier();
+
+  @AttributeMethod(attribute = ATTRIBUTE_EMAIL)
+  String getEmail();
 
   @AttributeMethod(attribute = ATTRIBUTE_NAME)
   String getName();

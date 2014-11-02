@@ -27,6 +27,7 @@ import org.chaston.oakfunds.storage.Store;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -38,6 +39,10 @@ public class UserManagerImpl implements UserManager {
       .build();
   static final Permission PERMISSION_USER_CREATE = Permission.builder("user.create")
       .addRelatedAction(User.TYPE, ActionType.CREATE)
+      .build();
+  static final Permission PERMISSION_USER_UPSERT = Permission.builder("user.upsert")
+      .addRelatedAction(User.TYPE, ActionType.CREATE)
+      .addRelatedAction(User.TYPE, ActionType.UPDATE)
       .build();
 
   static final Permission PERMISSION_ROLE_GRANT_READ = Permission.builder("role_grant.read")
@@ -65,11 +70,31 @@ public class UserManagerImpl implements UserManager {
 
   @Override
   @PermissionAssertion("user.create")
-  public User createUser(String identifier, String name) throws StorageException {
+  public User createUser(String identifier, String email, String name) throws StorageException {
     Map<String, Object> attributes = ImmutableMap.<String, Object>of(
         User.ATTRIBUTE_IDENTIFIER, identifier,
+        User.ATTRIBUTE_EMAIL, email,
         User.ATTRIBUTE_NAME, name);
     return store.createRecord(User.TYPE, attributes);
+  }
+
+  @Override
+  @PermissionAssertion("user.upsert")
+  public User upsertUser(String identifier, String email, String name) throws StorageException {
+    User oldUser = getUser(identifier);
+    if (oldUser == null) {
+      return createUser(identifier, email, name);
+    }
+    if (!Objects.equals(email, oldUser.getEmail())
+        || !Objects.equals(name, oldUser.getName())) {
+      Map<String, Object> attributes = ImmutableMap.<String, Object>of(
+          User.ATTRIBUTE_IDENTIFIER, identifier,
+          User.ATTRIBUTE_EMAIL, email,
+          User.ATTRIBUTE_NAME, name);
+      return store.updateRecord(oldUser, attributes);
+    } else {
+      return oldUser;
+    }
   }
 
   @Override

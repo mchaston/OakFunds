@@ -25,7 +25,9 @@ public interface UserManager {
 
   Iterable<RoleGrant> getRoleGrants(User user) throws StorageException;
 
-  User createUser(String identifier, String name) throws StorageException;
+  User createUser(String identifier, String email, String name) throws StorageException;
+
+  User upsertUser(String identifier, String email, String name) throws StorageException;
 
   void grantRole(User user, String roleName) throws StorageException;
 }

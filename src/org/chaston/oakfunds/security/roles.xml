@@ -34,4 +34,8 @@
 	<permission name="monthly_recurring_event.update"/>
 
 	<permission name="annual_recurring_event.update"/>
+
+	<permission name="user.read"/>
+	<permission name="user.create"/>
+	<permission name="user.upsert"/>
 </role>

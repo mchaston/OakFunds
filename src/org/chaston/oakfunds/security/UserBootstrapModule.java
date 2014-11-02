@@ -80,7 +80,7 @@ public class UserBootstrapModule extends AbstractModule {
       for (UserDef userDef : userDefsProvider.get()) {
         User user = userManager.getUser(userDef.identifier);
         if (user == null) {
-          user = userManager.createUser(userDef.identifier, userDef.name);
+          user = userManager.createUser(userDef.identifier, userDef.email, userDef.name);
         }
         Set<String> missingRoleGrants = new HashSet<>(userDef.getRoleGrants());
         Iterable<RoleGrant> existingRoleGrants = userManager.getRoleGrants(user);
@@ -123,7 +123,8 @@ public class UserBootstrapModule extends AbstractModule {
           if (userDef != null) {
             throw new SAXException("Unexpected user element while previous user is being handed.");
           }
-          userDef = new UserDef(attributes.getValue("identifier"), attributes.getValue("name"));
+          userDef = new UserDef(attributes.getValue("identifier"),
+              attributes.getValue("email"), attributes.getValue("name"));
           userDefs.add(userDef);
         } else if (qName.equals("role_grant")) {
           if (userDef == null) {
@@ -144,11 +145,13 @@ public class UserBootstrapModule extends AbstractModule {
 
   static class UserDef {
     private final String identifier;
+    private final String email;
     private final String name;
     private final Set<String> roleGrants = new HashSet<>();
 
-    UserDef(String identifier, String name) {
+    UserDef(String identifier, String email, String name) {
       this.identifier = identifier;
+      this.email = email;
       this.name = name;
     }
 

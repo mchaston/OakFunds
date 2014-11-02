@@ -48,7 +48,8 @@ public class TestUserAuthenticatorModule extends AbstractModule {
 
     @Override
     public Iterable<UserDef> get() {
-      UserDef testUserDef = new UserDef(TestUserAuthenticator.TEST_USER_IDENTIFIER, "Test User");
+      UserDef testUserDef = new UserDef(TestUserAuthenticator.TEST_USER_IDENTIFIER,
+          "test@test.org", "Test User");
       testUserDef.addRoleGrant("admin");
       return ImmutableList.of(testUserDef);
     }
