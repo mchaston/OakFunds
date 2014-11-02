@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <!-- Content downloaded from GitKit page in devconsole. -->
+    <script type="text/javascript" src="//www.gstatic.com/authtoolkit/js/gitkit.js"></script>
+    <link type="text/css" rel="stylesheet" href="//www.gstatic.com/authtoolkit/css/gitkit.css" />
+    <script type="text/javascript">
+      var config = {
+          apiKey: 'AIzaSyA8ZmhjWBuNxJL0DZiys2TK7iCZeRHJwK4',
+          signInSuccessUrl: 'https://mchaston-oakfunds.appspot.com',
+          idps: ["google", "yahoo"],
+          oobActionUrl: 'https://mchaston-oakfunds.appspot.com/gitkit_email',
+          siteName: 'OakFunds'
+      };
+      // The HTTP POST body should be escaped by the server to prevent XSS
+      window.google.identitytoolkit.start(
+          '#gitkitWidgetDiv', // accepts any CSS selector
+          config,
+          'JAVASCRIPT_ESCAPED_POST_BODY');
+    </script>
+    <!-- End of downloaded content. -->
+</head>
+<body>
+
+<div id="gitkitWidgetDiv"></div>
+
+</body>
+</html>

@@ -5,11 +5,12 @@
 
 	<static-files>
 		<include path="/*.css" />
-		<include path="/*.html" />
 		<include path="/robots.txt" expiration="8d" />
 	</static-files>
 
 	<threadsafe>true</threadsafe>
+	<sessions-enabled>true</sessions-enabled>
+	<use-google-connector-j>true</use-google-connector-j>
 	<system-properties>
 		<property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
 	</system-properties>

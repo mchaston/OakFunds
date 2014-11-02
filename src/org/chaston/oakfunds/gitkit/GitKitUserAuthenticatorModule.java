@@ -17,6 +17,8 @@ package org.chaston.oakfunds.gitkit;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
+import com.google.inject.servlet.ServletModule;
+import com.google.inject.servlet.ServletScopes;
 import org.chaston.oakfunds.security.UserAuthenticator;
 
 /**
@@ -27,5 +29,21 @@ public class GitKitUserAuthenticatorModule extends AbstractModule {
   protected void configure() {
     bind(UserAuthenticator.class).to(GitKitUserAuthenticator.class);
     bind(GitKitUserAuthenticator.class).in(Singleton.class);
+    bind(AuthenticationState.class).in(ServletScopes.SESSION);
+    install(new GitKitServletModule());
+  }
+
+  private class GitKitServletModule extends ServletModule {
+    @Override
+    protected void configureServlets() {
+      serve("/signout").with(SignoutServlet.class);
+      bind(SignoutServlet.class).in(Singleton.class);
+
+      serve("/gitkit_email").with(EmailRequestHandlerServlet.class);
+      bind(EmailRequestHandlerServlet.class).in(Singleton.class);
+
+      filter("/*").through(AuthenticationFilter.class);
+      bind(AuthenticationFilter.class).in(Singleton.class);
+    }
   }
 }
