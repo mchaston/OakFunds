@@ -19,6 +19,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import org.chaston.oakfunds.account.AccountCodeModule;
+import org.chaston.oakfunds.appengine.AppEngineModule;
 import org.chaston.oakfunds.bootstrap.BootstrapModule;
 import org.chaston.oakfunds.gitkit.GitKitUserAuthenticatorModule;
 import org.chaston.oakfunds.jdbc.AppEngineDataStoreModule;
@@ -38,6 +39,7 @@ public class AppContextListener extends GuiceServletContextListener {
     return Guice.createInjector(
         new AccountCodeModule(),
         new AppEngineDataStoreModule(),
+        new AppEngineModule(),
         new BootstrapModule(),
         new LedgerModule(),
         new GitKitUserAuthenticatorModule(),
