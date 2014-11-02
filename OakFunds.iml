@@ -26,6 +26,7 @@
     <orderEntry type="library" exported="" name="gitkit" level="project" />
     <orderEntry type="library" name="json" level="project" />
     <orderEntry type="library" name="commons-codec" level="project" />
+    <orderEntry type="library" name="commons-logging" level="project" />
   </component>
 </module>
 
