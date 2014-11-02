@@ -21,12 +21,12 @@
     <orderEntry type="library" exported="" name="mysql" level="project" />
     <orderEntry type="library" exported="" name="appengine" level="project" />
     <orderEntry type="library" exported="" name="servlet" level="project" />
-    <orderEntry type="library" name="commons-pool2" level="project" />
-    <orderEntry type="library" name="commons-dbcp2" level="project" />
     <orderEntry type="library" exported="" name="gitkit" level="project" />
-    <orderEntry type="library" name="json" level="project" />
-    <orderEntry type="library" name="commons-codec" level="project" />
-    <orderEntry type="library" name="commons-logging" level="project" />
+    <orderEntry type="library" exported="" name="json" level="project" />
+    <orderEntry type="library" exported="" name="commons-codec" level="project" />
+    <orderEntry type="library" exported="" name="commons-logging" level="project" />
+    <orderEntry type="library" exported="" name="commons-dbcp" level="project" />
+    <orderEntry type="library" exported="" name="commons-pool" level="project" />
   </component>
 </module>
 
