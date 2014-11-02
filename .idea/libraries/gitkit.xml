@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="gitkit">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/libraries/gitkit/gitkit.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
