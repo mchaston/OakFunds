@@ -6,6 +6,7 @@
 	<static-files>
 		<include path="/*.css" />
 		<include path="/robots.txt" expiration="8d" />
+		<include path="/lib/**.js" />
 	</static-files>
 
 	<threadsafe>true</threadsafe>
