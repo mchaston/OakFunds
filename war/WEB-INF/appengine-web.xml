@@ -6,6 +6,26 @@
 	<static-files>
 		<include path="/*.css" />
 		<include path="/robots.txt" expiration="8d" />
+
+		<!-- static application files -->
+		<include path="/app.js" />
+
+		<include path="/account/*.js" />
+		<include path="/account/*.ng" />
+
+		<include path="/ledger/*.js" />
+		<include path="/ledger/*.ng" />
+
+		<include path="/model/*.js" />
+		<include path="/model/*.ng" />
+
+		<include path="/security/*.js" />
+		<include path="/security/*.ng" />
+
+		<include path="/system/*.js" />
+		<include path="/system/*.ng" />
+
+		<!-- static javascript libraries -->
 		<include path="/lib/**.js" />
 	</static-files>
 

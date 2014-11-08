@@ -1,5 +1,25 @@
-<html>
+<html lang="en" ng-app="oakFundsApp">
   <head>
+    <meta charset="utf-8">
+    <title>OakFunds</title>
+
+    <!-- Angular libraries. -->
+    <script src="lib/angular/angular.js"></script>
+    <script src="lib/angular/angular-cookies.js"></script>
+    <script src="lib/angular/angular-loader.js"></script>
+    <script src="lib/angular/angular-resource.js"></script>
+    <script src="lib/angular/angular-route.js"></script>
+    <script src="lib/angular/angular-sanitize.js"></script>
+    <script src="lib/angular/angular-scenario.js"></script>
+
+    <!-- App-specific libraries. -->
+    <script src="app.js"></script>
+    <script src="account/controllers.js"></script>
+    <script src="ledger/controllers.js"></script>
+    <script src="model/controllers.js"></script>
+    <script src="security/controllers.js"></script>
+    <script src="system/controllers.js"></script>
+
     <script type="text/javascript" src="//www.gstatic.com/authtoolkit/js/gitkit.js"></script>
     <link type=text/css rel=stylesheet href="//www.gstatic.com/authtoolkit/css/gitkit.css" />
     <script type=text/javascript>
@@ -14,6 +34,36 @@
   </head>
   <body>
     <div id="navbar"></div>
-    <p>You should only see this when logged in.
+
+    <table>
+      <tr>
+        <td>
+          <a href="#/account_codes">Manage account codes</a>
+        </td>
+        <td rowspan="5">
+          <div ng-view></div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <a href="#/accounts">Manage accounts</a>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <a href="#/model_accounts">Manage model accounts</a>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <a href="#/users">Manage users</a>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <a href="#/system_properties">Manage system properties</a>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
