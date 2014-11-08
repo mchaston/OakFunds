@@ -65,7 +65,7 @@
 		</jar>
 	</target>
 
-	<target name="compile-local-src">
+	<target name="compile-local-src"  depends="compile-src">
 		<mkdir dir="${local-classes.dir}"/>
 		<!-- Compile the source. -->
 		<javac verbose="yes" debug="true" srcdir="${local-src.dir}" destdir="${local-classes.dir}">
@@ -83,7 +83,7 @@
 		</jar>
 	</target>
 
-	<target name="run-tests" depends="compile-src, compile-local-src">
+	<target name="run-tests" depends="compile-local-src">
 		<mkdir dir="${test-classes.dir}"/>
 		<!-- Compile the tests. -->
 		<javac verbose="yes" debug="true" srcdir="${test.dir}" destdir="${test-classes.dir}">
