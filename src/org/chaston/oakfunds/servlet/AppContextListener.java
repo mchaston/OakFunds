@@ -32,6 +32,7 @@ import org.chaston.oakfunds.security.UserSecurityModule;
 import org.chaston.oakfunds.storage.RecordTypeRegistryModule;
 import org.chaston.oakfunds.storage.StorageModule;
 import org.chaston.oakfunds.system.SystemModule;
+import org.chaston.oakfunds.xsrf.XsrfModule;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -67,6 +68,7 @@ public class AppContextListener extends GuiceServletContextListener {
         new UserSecurityModule(),
         new RecordTypeRegistryModule(),
         new StorageModule(),
-        new SystemModule());
+        new SystemModule(),
+        new XsrfModule());
   }
 }
