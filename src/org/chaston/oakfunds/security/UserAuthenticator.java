@@ -20,4 +20,5 @@ package org.chaston.oakfunds.security;
  */
 public interface UserAuthenticator {
   AuthenticatedUser getAuthenticatedUser() throws AuthenticationException;
+  boolean isUserLoggedIn();
 }

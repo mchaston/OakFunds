@@ -26,4 +26,9 @@ public class TestUserAuthenticator implements UserAuthenticator {
   public AuthenticatedUser getAuthenticatedUser() {
     return new AuthenticatedUser(TEST_USER_IDENTIFIER);
   }
+
+  @Override
+  public boolean isUserLoggedIn() {
+    return true;
+  }
 }

@@ -70,6 +70,12 @@ class GitKitUserAuthenticator implements UserAuthenticator {
     return new AuthenticatedUser(authenticationState.getIdentifier());
   }
 
+  @Override
+  public boolean isUserLoggedIn() {
+    AuthenticationState authenticationState = authenticationStateProvider.get();
+    return authenticationState.isAuthenticated();
+  }
+
   boolean isAuthenticated(HttpServletRequest servletRequest) throws ServletException {
     AuthenticationState authenticationState = authenticationStateProvider.get();
     if (authenticationState.isAuthenticated()) {
@@ -121,7 +127,7 @@ class GitKitUserAuthenticator implements UserAuthenticator {
 
   private InputStream getKeyStream() {
     return getClass().getClassLoader()
-        .getResourceAsStream("META-INF/secrets/OakFunds.p12");
+        .getResourceAsStream("META-INF/secrets/ServiceAccountPrivateKey.p12");
   }
 
   void signout(HttpServletRequest servletRequest) {

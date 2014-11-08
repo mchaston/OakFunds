@@ -26,4 +26,9 @@ public class LocalUserAuthenticator implements UserAuthenticator {
   public AuthenticatedUser getAuthenticatedUser() throws AuthenticationException {
     return new AuthenticatedUser(LOCAL_USER_IDENTIFIER);
   }
+
+  @Override
+  public boolean isUserLoggedIn() {
+    return true;
+  }
 }
