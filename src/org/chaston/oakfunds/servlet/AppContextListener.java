@@ -15,9 +15,12 @@
  */
 package org.chaston.oakfunds.servlet;
 
+import com.google.appengine.api.utils.SystemProperty;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.google.inject.util.Modules;
 import org.chaston.oakfunds.account.AccountCodeModule;
 import org.chaston.oakfunds.appengine.AppEngineModule;
 import org.chaston.oakfunds.bootstrap.BootstrapModule;
@@ -36,13 +39,30 @@ import org.chaston.oakfunds.system.SystemModule;
 public class AppContextListener extends GuiceServletContextListener {
   @Override
   protected Injector getInjector() {
+    Module environmentModule;
+    if (SystemProperty.environment.value() == SystemProperty.Environment.Value.Production) {
+      environmentModule = Modules.combine(
+          new AppEngineDataStoreModule(),
+          new GitKitUserAuthenticatorModule());
+    } else {
+      try {
+        @SuppressWarnings("unchecked") // Generic cast
+        Class<? extends Module> devEnvironmentModuleClass =
+            (Class<? extends Module>)
+                Class.forName("org.chaston.oakfunds.servlet.DevEnvironmentModule");
+        environmentModule = devEnvironmentModuleClass.newInstance();
+      } catch (ClassNotFoundException e) {
+        throw new NoClassDefFoundError(e.getMessage());
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw new IllegalStateException("DevEnvironmentModule was inaccessible", e);
+      }
+    }
     return Guice.createInjector(
+        environmentModule,
         new AccountCodeModule(),
-        new AppEngineDataStoreModule(),
         new AppEngineModule(),
         new BootstrapModule(),
         new LedgerModule(),
-        new GitKitUserAuthenticatorModule(),
         new ModelModule(),
         new UserSecurityModule(),
         new RecordTypeRegistryModule(),

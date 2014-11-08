@@ -13,21 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage.mgmt;
-
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-
-import java.sql.SQLException;
-
-import static org.junit.Assert.assertTrue;
+package org.chaston.oakfunds.security;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class SchemaDeploymentTask {
-  @Inject
-  SchemaDeploymentTask(SchemaUpdater schemaUpdater) throws SQLException {
-    assertTrue(Iterables.isEmpty(schemaUpdater.updateSchema()));
+public class LocalUserAuthenticator implements UserAuthenticator {
+
+  public static final String LOCAL_USER_IDENTIFIER = "gmail.com:miles.chaston";
+
+  @Override
+  public AuthenticatedUser getAuthenticatedUser() throws AuthenticationException {
+    return new AuthenticatedUser(LOCAL_USER_IDENTIFIER);
   }
 }

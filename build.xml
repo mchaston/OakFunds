@@ -1,9 +1,12 @@
 <project name="OakFunds" default="build-war">
 	<property name="appengine.sdk" location="../appengine-1.9.10/appengine-java-sdk-1.9.10" />
 	<property name="src.dir" location="src" />
+	<property name="local-src.dir" location="local-src" />
 	<property name="test.dir" location="tests" />
 	<property name="classes.dir" location="build/classes" />
+	<property name="local-classes.dir" location="build/local_classes" />
 	<property name="jar.file" location="build/OakFunds.jar" />
+	<property name="local-jar.file" location="build/OakFundsLocal.jar" />
 	<property name="test-classes.dir" location="build/test_classes" />
 	<property name="war.dir" location="build/war" />
 
@@ -31,14 +34,15 @@
 	</path>
 
 	<path id="container-classpath">
-		<path refid="prod-classpath"/>
 		<path location="libraries/servlet/jsp-api.jar"/>
 		<path location="libraries/servlet/servlet-api.jar"/>
 	</path>
 
-	<path id="test-classpath">
-		<path refid="container-classpath"/>
+	<path id="local-classpath">
 		<path location="libraries/hsqldb/lib/hsqldb.jar"/>
+	</path>
+
+	<path id="test-classpath">
 		<path location="libraries/junit/junit-4.11.jar"/>
 		<path location="libraries/mockito/mockito-all-1.9.5.jar"/>
 	</path>
@@ -50,6 +54,7 @@
 		<!-- Compile the source. -->
 		<javac verbose="yes" debug="true" srcdir="${src.dir}" destdir="${classes.dir}">
 			<classpath>
+				<path refid="prod-classpath"/>
 				<path refid="container-classpath"/>
 			</classpath>
 		</javac>
@@ -60,13 +65,35 @@
 		</jar>
 	</target>
 
-	<target name="run-tests" depends="compile-src">
+	<target name="compile-local-src">
+		<mkdir dir="${local-classes.dir}"/>
+		<!-- Compile the source. -->
+		<javac verbose="yes" debug="true" srcdir="${local-src.dir}" destdir="${local-classes.dir}">
+			<classpath>
+				<path refid="prod-classpath"/>
+				<path refid="container-classpath"/>
+				<path refid="local-classpath"/>
+				<path location="${jar.file}"/>
+			</classpath>
+		</javac>
+		<!-- Build JAR file. -->
+		<jar destfile="${local-jar.file}">
+			<fileset dir="${local-classes.dir}"/>
+			<fileset dir="${local-src.dir}" excludes="**/*.java"/>
+		</jar>
+	</target>
+
+	<target name="run-tests" depends="compile-src, compile-local-src">
 		<mkdir dir="${test-classes.dir}"/>
 		<!-- Compile the tests. -->
 		<javac verbose="yes" debug="true" srcdir="${test.dir}" destdir="${test-classes.dir}">
 			<classpath>
+				<path refid="prod-classpath"/>
+				<path refid="container-classpath"/>
+				<path refid="local-classpath"/>
 				<path refid="test-classpath"/>
 				<path location="${jar.file}"/>
+				<path location="${local-jar.file}"/>
 			</classpath>
 		</javac>
 		<!-- Copy any non-source test resources to the test build path. -->
@@ -77,8 +104,12 @@
 		<mkdir dir="build/test_results"/>
 		<junit printsummary="yes" haltonerror="true" haltonfailure="true" fork="true">
 			<classpath>
+				<path refid="prod-classpath"/>
+				<path refid="container-classpath"/>
+				<path refid="local-classpath"/>
 				<path refid="test-classpath"/>
 				<path location="${jar.file}"/>
+				<path location="${local-jar.file}"/>
 				<path location="${test-classes.dir}"/>
 			</classpath>
 
@@ -87,6 +118,36 @@
 				<formatter extension=".xml" classname="org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter"/>
 			</batchtest>
 		</junit>
+	</target>
+
+
+	<target name="build-local-war" depends="compile-local-src">
+		<delete dir="${war.dir}" />
+		<mkdir dir="${war.dir}" />
+		<!-- Copy the raw WAR contents. -->
+		<copy todir="${war.dir}">
+			<fileset dir="war"/>
+		</copy>
+		<!-- Copy the libraries. -->
+		<mkdir dir="${war.dir}/WEB-INF/lib" />
+		<copy todir="${war.dir}/WEB-INF/lib" flatten="true">
+			<path location="${jar.file}"/>
+			<path location="${local-jar.file}"/>
+			<path refid="prod-classpath"/>
+			<path refid="local-classpath"/>
+		</copy>
+	</target>
+
+	<target name="runserver" depends="build-local-war"
+	        description="Starts the development server.">
+		<property name="generated.path" location="appengine-generated"/>
+		<mkdir dir="${generated.path}" />
+		<dev_appserver war="${war.dir}">
+			<options>
+				<arg value="--generated_dir=${generated.path}"/>
+				<arg value="--jvm_flag=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"/>
+			</options>
+		</dev_appserver>
 	</target>
 
 	<target name="build-war" depends="compile-src">
