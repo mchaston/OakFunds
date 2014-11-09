@@ -47,4 +47,9 @@ class IdentifiableTypeHandler extends JdbcTypeHandler {
   void set(PreparedStatement stmt, int index, Object value) throws SQLException {
     stmt.setByte(index, ((Identifiable) value).identifier());
   }
+
+  @Override
+  Object toJson(Object value) {
+    return ((Identifiable) value).toJson();
+  }
 }

@@ -20,4 +20,6 @@ package org.chaston.oakfunds.storage;
  */
 public interface IdentifiableSource {
   Identifiable lookup(byte identifier);
+
+  Identifiable fromJson(String json);
 }

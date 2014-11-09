@@ -40,4 +40,9 @@ class InstantTypeHandler extends JdbcTypeHandler {
   void set(PreparedStatement stmt, int index, Object value) throws SQLException {
     stmt.setTimestamp(index, new Timestamp(((Instant) value).getMillis()));
   }
+
+  @Override
+  Object toJson(Object value) {
+    return RecordProxy.JSON_DATE_FORMAT.print((Instant) value);
+  }
 }

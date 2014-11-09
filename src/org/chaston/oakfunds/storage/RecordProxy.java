@@ -16,6 +16,9 @@
 package org.chaston.oakfunds.storage;
 
 import org.joda.time.Instant;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+import org.json.simple.JSONObject;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.InvocationHandler;
@@ -27,6 +30,9 @@ import java.util.Map;
  * TODO(mchaston): write JavaDocs
  */
 class RecordProxy {
+
+  static final DateTimeFormatter JSON_DATE_FORMAT = ISODateTimeFormat.dateTime();
+
   static <T extends Record> T proxyRecord(
       RecordType<T> recordType, @Nullable Record<?> parent, int id, Map<String, Object> attributes) {
     return (T) Proxy.newProxyInstance(
@@ -74,6 +80,9 @@ class RecordProxy {
       if (method.getName().equals("getId")) {
         return id;
       }
+      if (method.getName().equals("toJSONObject")) {
+        return toJSONObject();
+      }
       ParentIdMethod parentIdMethod = method.getAnnotation(ParentIdMethod.class);
       if (parentIdMethod != null) {
         return parentId;
@@ -91,6 +100,25 @@ class RecordProxy {
             + " was called on " + recordType.getRecordTypeClass() + " but was not supported.");
       }
       return otherReturnValue;
+    }
+
+    protected JSONObject toJSONObject() {
+      JSONObject jsonObject = new JSONObject();
+      jsonObject.put("id", id);
+      jsonObject.put("type", recordType.getName());
+      if (parentId != null) {
+        jsonObject.put("parent_id", parentId);
+      }
+
+      JSONObject jsonAttributes = new JSONObject();
+      for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+        jsonAttributes.put(entry.getKey(),
+            recordType.getJdbcTypeHandler(entry.getKey())
+                .toJson(entry.getValue()));
+      }
+      jsonObject.put("attributes", jsonAttributes);
+
+      return jsonObject;
     }
 
     Object getOtherReturnValue(Method method) {
@@ -116,6 +144,13 @@ class RecordProxy {
       }
       return null;
     }
+
+    @Override
+    protected JSONObject toJSONObject() {
+      JSONObject jsonObject = super.toJSONObject();
+      jsonObject.put("instant", JSON_DATE_FORMAT.print(instant));
+      return jsonObject;
+    }
   }
 
   private static class IntervalRecordProxyInvocationHandler<T extends IntervalRecord>
@@ -140,6 +175,14 @@ class RecordProxy {
         return end;
       }
       return null;
+    }
+
+    @Override
+    protected JSONObject toJSONObject() {
+      JSONObject jsonObject = super.toJSONObject();
+      jsonObject.put("start", JSON_DATE_FORMAT.print(start));
+      jsonObject.put("end", JSON_DATE_FORMAT.print(end));
+      return jsonObject;
     }
   }
 }

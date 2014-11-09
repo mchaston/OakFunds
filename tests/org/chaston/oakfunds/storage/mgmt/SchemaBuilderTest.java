@@ -191,15 +191,30 @@ public class SchemaBuilderTest {
       public byte identifier() {
         return 1;
       }
+
+      @Override
+      public String toJson() {
+        return "first";
+      }
     }, SECOND {
       @Override
       public byte identifier() {
         return 2;
       }
+
+      @Override
+      public String toJson() {
+        return "second";
+      }
     }, THIRD {
       @Override
       public byte identifier() {
         return 3;
+      }
+
+      @Override
+      public String toJson() {
+        return "third";
       }
     };
 

@@ -37,4 +37,8 @@ abstract class JdbcTypeHandler {
   abstract Object get(ResultSet rs) throws SQLException;
 
   abstract void set(PreparedStatement stmt, int index, Object value) throws SQLException;
+
+  Object toJson(Object value) {
+    return value;
+  }
 }

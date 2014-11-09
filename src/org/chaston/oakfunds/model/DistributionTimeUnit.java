@@ -28,11 +28,21 @@ public enum DistributionTimeUnit implements Identifiable {
     public byte identifier() {
       return 1;
     }
+
+    @Override
+    public String toJson() {
+      return "months";
+    }
   },
   YEARS {
     @Override
     public byte identifier() {
       return 2;
+    }
+
+    @Override
+    public String toJson() {
+      return "years";
     }
   };
 

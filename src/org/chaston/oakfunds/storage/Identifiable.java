@@ -25,4 +25,6 @@ package org.chaston.oakfunds.storage;
  */
 public interface Identifiable {
   byte identifier();
+
+  String toJson();
 }

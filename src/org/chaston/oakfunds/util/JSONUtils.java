@@ -13,17 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
+package org.chaston.oakfunds.util;
 
-import org.json.simple.JSONObject;
+import org.chaston.oakfunds.storage.Record;
+import org.json.simple.JSONArray;
+
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface Record<T extends Record> {
-  int getId();
+public class JSONUtils {
+  public static void writeJSONString(PrintWriter writer, Iterable<? extends Record> records)
+      throws IOException {
+    JSONArray jsonArray = new JSONArray();
+    for (Record record : records) {
+      jsonArray.add(record.toJSONObject());
+    }
+    jsonArray.writeJSONString(writer);
+  }
 
-  RecordType<T> getRecordType();
-
-  JSONObject toJSONObject();
+  public static void writeJSONString(PrintWriter writer, Record record) throws IOException {
+    record.toJSONObject().writeJSONString(writer);
+  }
 }

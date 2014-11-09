@@ -47,4 +47,10 @@ class BigDecimalTypeHandler extends JdbcTypeHandler {
     }
     stmt.setLong(index, bigDecimal.unscaledValue().longValue());
   }
+
+  @Override
+  Object toJson(Object value) {
+    BigDecimal bigDecimal = (BigDecimal) value;
+    return bigDecimal.toPlainString();
+  }
 }

@@ -28,11 +28,21 @@ public enum BankAccountType implements Identifiable {
     public byte identifier() {
       return 1;
     }
+
+    @Override
+    public String toJson() {
+      return "operating";
+    }
   },
   RESERVE {
     @Override
     public byte identifier() {
       return 2;
+    }
+
+    @Override
+    public String toJson() {
+      return "reserve";
     }
   };
 

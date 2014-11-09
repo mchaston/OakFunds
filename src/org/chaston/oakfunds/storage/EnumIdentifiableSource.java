@@ -25,25 +25,39 @@ import java.util.EnumSet;
 public class EnumIdentifiableSource<E extends Enum & Identifiable> implements IdentifiableSource {
 
   private final Class<E> enumClass;
-  private final ImmutableMap<Byte, E> values;
+  private final ImmutableMap<Byte, E> valuesByIdentifier;
+  private final ImmutableMap<String, E> valuesByJson;
 
   public EnumIdentifiableSource(Class<E> enumClass) {
     this.enumClass = enumClass;
-    ImmutableMap.Builder<Byte, E> valuesBuilders = ImmutableMap.builder();
+    ImmutableMap.Builder<Byte, E> valuesByIdentifierBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, E> valuesByJsonBuilder = ImmutableMap.builder();
     EnumSet<? extends E> enumSet = EnumSet.allOf(enumClass);
     for (E enumValue : enumSet) {
-      valuesBuilders.put(enumValue.identifier(), enumValue);
+      valuesByIdentifierBuilder.put(enumValue.identifier(), enumValue);
+      valuesByJsonBuilder.put(enumValue.toJson(), enumValue);
     }
-    values = valuesBuilders.build();
+    valuesByIdentifier = valuesByIdentifierBuilder.build();
+    valuesByJson = valuesByJsonBuilder.build();
   }
 
   @Override
   public Identifiable lookup(byte identifier) {
-    Identifiable identifiable = values.get(identifier);
+    Identifiable identifiable = valuesByIdentifier.get(identifier);
     if (identifiable != null) {
       return identifiable;
     }
     throw new IllegalArgumentException(
         "No such " + enumClass.getSimpleName() + " identifier: " + identifier);
+  }
+
+  @Override
+  public Identifiable fromJson(String json) {
+    Identifiable identifiable = valuesByJson.get(json);
+    if (identifiable != null) {
+      return identifiable;
+    }
+    throw new IllegalArgumentException(
+        "No such " + enumClass.getSimpleName() + " json value: " + json);
   }
 }
