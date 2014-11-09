@@ -44,7 +44,7 @@ public class XsrfUtil {
     this.xsrfSigner = xsrfSigner;
   }
 
-  public void addXsrfToken(HttpServletResponse response)
+  void addXsrfToken(HttpServletResponse response)
       throws IOException, ServletException {
     PrintWriter writer = response.getWriter();
     if (userAuthenticator.isUserLoggedIn()) {
