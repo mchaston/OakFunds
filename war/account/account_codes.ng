@@ -1,2 +1,25 @@
 <h2>Manage account codes</h2>
-<p>TODO: Account code list here.</p>
+<form ng-submit="create()">
+    <table>
+        <tbody>
+        <tr><td>Number:</td>
+            <td><input type="text" ng-model="account_code.number"/></td></tr>
+        <tr><td>Title:</td>
+            <td><input type="text" ng-model="account_code.title"/></td></tr>
+        </tbody>
+    </table>
+    <input type="submit" name="Create" value="Create"/>
+</form>
+
+<table>
+    <thead>
+    <td>Number</td>
+    <td>Title</td>
+    </thead>
+    <tbody>
+    <tr ng-repeat="account_code in account_codes">
+        <td>{{account_code.id}}</a></td>
+        <td>{{account_code.attributes.title}}</td>
+    </tr>
+    </tbody>
+</table>

@@ -15,10 +15,12 @@
  */
 package org.chaston.oakfunds.account;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.security.ActionType;
 import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.security.PermissionAssertion;
+import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 
@@ -57,5 +59,11 @@ class AccountCodeManagerImpl implements AccountCodeManager {
   @PermissionAssertion("account_code.read")
   public AccountCode getAccountCode(int accountCodeNumber) throws StorageException {
     return store.getRecord(AccountCode.TYPE, accountCodeNumber);
+  }
+
+  @Override
+  @PermissionAssertion("account_code.read")
+  public Iterable<AccountCode> getAccountCodes() throws StorageException {
+    return store.findRecords(AccountCode.TYPE, ImmutableList.<SearchTerm>of());
   }
 }
