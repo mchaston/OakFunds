@@ -17,8 +17,15 @@ package org.chaston.oakfunds.util;
 
 import org.chaston.oakfunds.storage.Record;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
 /**
@@ -36,5 +43,16 @@ public class JSONUtils {
 
   public static void writeJSONString(PrintWriter writer, Record record) throws IOException {
     record.toJSONObject().writeJSONString(writer);
+  }
+
+  public static JSONObject readRequest(HttpServletRequest request, String requestType)
+      throws ServletException, IOException {
+    ServletInputStream in = request.getInputStream();
+    InputStreamReader reader = new InputStreamReader(in, request.getCharacterEncoding());
+    try {
+      return  (JSONObject) new JSONParser().parse(reader);
+    } catch (ParseException e) {
+      throw new ServletException("Failure to parse " + requestType + " request.", e);
+    }
   }
 }
