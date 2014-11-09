@@ -30,6 +30,7 @@
 		<path location="libraries/json/gson-2.1.jar"/>
 		<path location="libraries/json/json.jar"/>
 		<path location="libraries/json/jsontoken-1.1.jar"/>
+		<path location="libraries/json_simple/json-simple-1.1.1.jar"/>
 		<path location="libraries/jsr305/jsr305.jar"/>
 	</path>
 
