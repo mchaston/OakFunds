@@ -28,5 +28,6 @@
     <orderEntry type="library" exported="" name="commons-logging" level="project" />
     <orderEntry type="library" exported="" name="commons-dbcp" level="project" />
     <orderEntry type="library" exported="" name="commons-pool" level="project" />
+    <orderEntry type="library" exported="" name="json-simple" level="project" />
   </component>
 </module>
