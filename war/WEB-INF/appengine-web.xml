@@ -4,7 +4,7 @@
 	<version>beta</version>
 
 	<static-files>
-		<include path="/*.css" />
+		<include path="/**.css" />
 		<include path="/robots.txt" expiration="8d" />
 
 		<!-- static application files -->
