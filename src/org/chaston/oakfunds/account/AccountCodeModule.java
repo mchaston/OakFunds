@@ -36,10 +36,12 @@ public class AccountCodeModule extends AbstractModule {
   private class AccountCodeServletModule extends ServletModule {
     @Override
     protected void configureServlets() {
-      serve("/account/create_account_code").with(AccountCodeCreateServlet.class);
+      serve("/account/account_code/create").with(AccountCodeCreateServlet.class);
       bind(AccountCodeCreateServlet.class).in(Singleton.class);
       serve("/account/account_codes").with(AccountCodeListServlet.class);
       bind(AccountCodeListServlet.class).in(Singleton.class);
+      serveRegex(AccountCodeUpdateServlet.URI_REGEX).with(AccountCodeUpdateServlet.class);
+      bind(AccountCodeUpdateServlet.class).in(Singleton.class);
     }
   }
 }

@@ -1,4 +1,5 @@
 <h2>Manage account codes</h2>
+<div ng-show="createFormVisible">
 <form ng-submit="create()">
     <table>
         <tbody>
@@ -9,7 +10,24 @@
         </tbody>
     </table>
     <input type="submit" name="Create" value="Create"/>
+    <a href="" ng-click="hideCreateForm()">Cancel</a>
 </form>
+</div>
+
+<div ng-show="updateFormVisible">
+    <form ng-submit="update()">
+        <table>
+            <tbody>
+            <tr><td>Number:</td>
+                <td><input type="hidden" ng-model="account_code.number"/>{{account_code.number}}</td></tr>
+            <tr><td>Title:</td>
+                <td><input type="text" ng-model="account_code.title"/></td></tr>
+            </tbody>
+        </table>
+        <input type="submit" name="Update" value="Update"/>
+        <a href="" ng-click="hideUpdateForm()">Cancel</a>
+    </form>
+</div>
 
 <table>
     <thead>
@@ -17,8 +35,11 @@
     <td>Title</td>
     </thead>
     <tbody>
+    <tr>
+        <td colspan="2"><a href="" ng-click="showCreateForm()">Create account code...</a></td>
+    </tr>
     <tr ng-repeat="account_code in account_codes">
-        <td>{{account_code.id}}</a></td>
+        <td><a href="" ng-click="showUpdateForm(account_code)">{{account_code.id}}</a></td>
         <td>{{account_code.attributes.title}}</td>
     </tr>
     </tbody>

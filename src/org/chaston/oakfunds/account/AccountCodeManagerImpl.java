@@ -38,6 +38,9 @@ class AccountCodeManagerImpl implements AccountCodeManager {
   static final Permission PERMISSION_ACCOUNT_CODE_READ =
       Permission.builder("account_code.read")
           .addRelatedAction(AccountCode.TYPE, ActionType.READ).build();
+  static final Permission PERMISSION_ACCOUNT_CODE_UPDATE =
+      Permission.builder("account_code.update")
+          .addRelatedAction(AccountCode.TYPE, ActionType.UPDATE).build();
 
   private final Store store;
 
@@ -65,5 +68,15 @@ class AccountCodeManagerImpl implements AccountCodeManager {
   @PermissionAssertion("account_code.read")
   public Iterable<AccountCode> getAccountCodes() throws StorageException {
     return store.findRecords(AccountCode.TYPE, ImmutableList.<SearchTerm>of());
+  }
+
+  @Override
+  @PermissionAssertion("account_code.update")
+  public AccountCode updateAccountCode(int accountCodeNumber, String title)
+      throws StorageException {
+    AccountCode accountCode = getAccountCode(accountCodeNumber);
+    Map<String, Object> attributes = new HashMap<>();
+    attributes.put(AccountCode.ATTRIBUTE_TITLE, title);
+    return store.updateRecord(accountCode, attributes);
   }
 }

@@ -38,5 +38,7 @@ public class AccountTypesModule extends AbstractModule {
         .toInstance(AccountCodeManagerImpl.PERMISSION_ACCOUNT_CODE_CREATE);
     permissionMultibinder.addBinding()
         .toInstance(AccountCodeManagerImpl.PERMISSION_ACCOUNT_CODE_READ);
+    permissionMultibinder.addBinding()
+        .toInstance(AccountCodeManagerImpl.PERMISSION_ACCOUNT_CODE_UPDATE);
   }
 }

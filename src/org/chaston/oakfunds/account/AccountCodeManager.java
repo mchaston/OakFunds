@@ -26,4 +26,6 @@ public interface AccountCodeManager {
   AccountCode getAccountCode(int accountCodeNumber) throws StorageException;
 
   Iterable<AccountCode> getAccountCodes() throws StorageException;
+
+  AccountCode updateAccountCode(int accountCodeNumber, String title) throws StorageException;
 }

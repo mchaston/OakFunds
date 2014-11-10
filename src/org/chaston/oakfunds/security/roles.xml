@@ -1,6 +1,7 @@
 <role name="admin">
 	<permission name="account_code.create"/>
 	<permission name="account_code.read"/>
+	<permission name="account_code.update"/>
 
 	<permission name="bank_account.read"/>
 	<permission name="bank_account.create"/>
