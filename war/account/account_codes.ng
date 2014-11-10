@@ -1,5 +1,5 @@
 <h2>Manage account codes</h2>
-<div ng-show="createFormVisible">
+<modal-dialog show="createFormVisible" width='500px' dialog-title='Create Account Code' on-close='hideCreateForm()'>
 <form ng-submit="create()">
     <table>
         <tbody>
@@ -12,9 +12,9 @@
     <input type="submit" name="Create" value="Create"/>
     <a href="" ng-click="hideCreateForm()">Cancel</a>
 </form>
-</div>
+</modal-dialog>
 
-<div ng-show="updateFormVisible">
+<modal-dialog show="updateFormVisible" width='500px' dialog-title='Update Account Code' on-close='hideUpdateForm()'>
     <form ng-submit="update()">
         <table>
             <tbody>
@@ -27,7 +27,7 @@
         <input type="submit" name="Update" value="Update"/>
         <a href="" ng-click="hideUpdateForm()">Cancel</a>
     </form>
-</div>
+</modal-dialog>
 
 <table>
     <thead>

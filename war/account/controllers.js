@@ -1,4 +1,4 @@
-var accountControllers = angular.module('accountControllers', ['ngRoute']);
+var accountControllers = angular.module('accountControllers', ['ngRoute', 'ngModal']);
 
 accountControllers.config(['$routeProvider',
   function($routeProvider) {
