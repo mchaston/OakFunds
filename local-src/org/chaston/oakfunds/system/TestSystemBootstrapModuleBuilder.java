@@ -68,7 +68,7 @@ public class TestSystemBootstrapModuleBuilder {
           protected void configure() {
             super.configure();
             bindConstant().annotatedWith(CurrentYear.class).to(currentYear);
-            bindConstant().annotatedWith(TimeHorizon.class).to(currentYear);
+            bindConstant().annotatedWith(TimeHorizon.class).to(timeHorizon);
           }
 
           @Override
