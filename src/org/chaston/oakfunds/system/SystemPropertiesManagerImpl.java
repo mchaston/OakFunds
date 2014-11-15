@@ -90,6 +90,12 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
   }
 
   @Override
+  @PermissionAssertion("system_property.read")
+  public Iterable<SystemProperty> getSystemProperties() throws StorageException {
+    return store.findRecords(SystemProperty.TYPE, ImmutableList.<SearchTerm>of());
+  }
+
+  @Override
   public int getCurrentYear() {
     return currentYear.getIntegerValue();
   }

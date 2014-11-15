@@ -11,5 +11,16 @@ systemControllers.config(['$routeProvider',
 
 systemControllers.controller('SystemPropertiesCtrl', ['$scope', '$http', '$window',
   function ($scope, $http, $window) {
-    // TODO: load system properties
+    $scope.refreshTable = function() {
+      // refresh the system properties table
+      $http.get('/system/system_properties')
+          .success(function(data) {
+            $scope.system_properties = data;
+          })
+          .error(function(data, status, headers) {
+            handleRequestErrors($window, data, status, headers);
+          });
+    }
+
+    $scope.refreshTable();
   }]);

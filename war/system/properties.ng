@@ -1,2 +1,14 @@
 <h2>Manage system properties</h2>
-<p>TODO: System property list here.</p>
+
+<table>
+    <thead>
+    <td>Name</td>
+    <td>Value</td>
+    </thead>
+    <tbody>
+    <tr ng-repeat="system_property in system_properties">
+        <td>{{system_property.attributes.name}}</a></td>
+        <td>{{system_property.attributes.integer_value}}</td>
+    </tr>
+    </tbody>
+</table>

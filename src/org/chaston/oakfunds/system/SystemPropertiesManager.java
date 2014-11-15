@@ -44,4 +44,6 @@ public interface SystemPropertiesManager {
    * <p>This may be an expensive operation as it will make the models update.
    */
   void setTimeHorizon(int years) throws StorageException;
+
+  Iterable<SystemProperty> getSystemProperties() throws StorageException;
 }
