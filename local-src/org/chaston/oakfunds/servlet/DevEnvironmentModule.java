@@ -17,6 +17,7 @@ package org.chaston.oakfunds.servlet;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
+import org.chaston.oakfunds.data.DataBootstrapModule;
 import org.chaston.oakfunds.jdbc.LocalDataSourceModule;
 import org.chaston.oakfunds.security.LocalUserAuthenticatorModule;
 import org.chaston.oakfunds.storage.mgmt.SchemaDeploymentTask;
@@ -29,6 +30,7 @@ import org.chaston.oakfunds.system.TestSystemBootstrapModuleBuilder;
 public class DevEnvironmentModule extends AbstractModule {
   @Override
   protected void configure() {
+    install(new DataBootstrapModule());
     install(new LocalDataSourceModule());
     install(new LocalUserAuthenticatorModule());
     install(new TestSystemBootstrapModuleBuilder()
