@@ -29,7 +29,11 @@ public interface Account<T extends Account<T>> extends Record<T> {
           .build();
 
   String ATTRIBUTE_TITLE = "title";
+  String ATTRIBUTE_ACCOUNT_CODE_ID = "account_code_id";
 
   @AttributeMethod(attribute = ATTRIBUTE_TITLE, required = true)
   String getTitle();
+
+  @AttributeMethod(attribute = ATTRIBUTE_ACCOUNT_CODE_ID, required = true)
+  Integer getAccountCodeId();
 }

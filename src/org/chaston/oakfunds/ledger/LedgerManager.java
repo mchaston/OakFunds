@@ -46,6 +46,8 @@ public interface LedgerManager {
   RevenueAccount createRevenueAccount(AccountCode accountCode, String title,
       BankAccount defaultDepositAccount) throws StorageException;
 
+  Iterable<Account> getAccounts() throws StorageException;
+
   void recordTransaction(Account account, Instant date, BigDecimal amount) throws StorageException;
 
   void recordTransaction(Account account, Instant date, BigDecimal amount, String comment)

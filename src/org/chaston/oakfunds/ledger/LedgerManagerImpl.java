@@ -40,6 +40,14 @@ import java.util.Map;
  */
 class LedgerManagerImpl implements LedgerManager {
 
+  static final Permission PERMISSION_ACCOUNT_READ =
+      Permission.builder("account.read")
+          .addRelatedAction(Account.TYPE, ActionType.READ)
+          .addRelatedAction(BankAccount.TYPE, ActionType.READ)
+          .addRelatedAction(RevenueAccount.TYPE, ActionType.READ)
+          .addRelatedAction(ExpenseAccount.TYPE, ActionType.READ)
+          .build();
+
   static final Permission PERMISSION_BANK_ACCOUNT_READ =
       Permission.builder("bank_account.read")
           .addRelatedAction(BankAccount.TYPE, ActionType.READ).build();
@@ -91,6 +99,7 @@ class LedgerManagerImpl implements LedgerManager {
       BankAccountType bankAccountType) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(Account.ATTRIBUTE_TITLE, title);
+    attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
     attributes.put(BankAccount.ATTRIBUTE_BANK_ACCOUNT_TYPE, bankAccountType);
     return store.createRecord(BankAccount.TYPE, attributes);
   }
@@ -138,6 +147,7 @@ class LedgerManagerImpl implements LedgerManager {
       BankAccount defaultSourceAccount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(Account.ATTRIBUTE_TITLE, title);
+    attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
     attributes.put(ExpenseAccount.ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID, defaultSourceAccount.getId());
     return store.createRecord(ExpenseAccount.TYPE, attributes);
   }
@@ -148,8 +158,15 @@ class LedgerManagerImpl implements LedgerManager {
       BankAccount defaultDepositAccount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(Account.ATTRIBUTE_TITLE, title);
+    attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
     attributes.put(RevenueAccount.ATTRIBUTE_DEFAULT_DEPOSIT_ACCOUNT_ID, defaultDepositAccount.getId());
     return store.createRecord(RevenueAccount.TYPE, attributes);
+  }
+
+  @Override
+  @PermissionAssertion("account.read")
+  public Iterable<Account> getAccounts() throws StorageException {
+    return store.findRecords(Account.TYPE, ImmutableList.<SearchTerm>of());
   }
 
   @Override
