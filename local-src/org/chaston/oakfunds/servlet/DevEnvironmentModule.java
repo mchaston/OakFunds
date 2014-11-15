@@ -20,15 +20,21 @@ import com.google.inject.Singleton;
 import org.chaston.oakfunds.jdbc.LocalDataSourceModule;
 import org.chaston.oakfunds.security.LocalUserAuthenticatorModule;
 import org.chaston.oakfunds.storage.mgmt.SchemaDeploymentTask;
+import org.chaston.oakfunds.system.TestSystemBootstrapModuleBuilder;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
+@SuppressWarnings("UnusedDeclaration") // Used via reflection.
 public class DevEnvironmentModule extends AbstractModule {
   @Override
   protected void configure() {
     install(new LocalDataSourceModule());
     install(new LocalUserAuthenticatorModule());
+    install(new TestSystemBootstrapModuleBuilder()
+        .setCurrentYear(2014)
+        .setTimeHorizon(15)
+        .build());
 
     bind(SchemaDeploymentTask.class).in(Singleton.class);
   }
