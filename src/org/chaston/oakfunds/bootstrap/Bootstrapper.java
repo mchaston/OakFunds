@@ -19,12 +19,18 @@ import com.google.inject.Inject;
 import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.SystemAuthenticationManager;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
 class Bootstrapper {
+
+  private static final Logger logger = Logger.getLogger(Bootstrapper.class.getName());
 
   private final SystemAuthenticationManager authenticationManager;
   private final Set<BootstrapTask> bootstrapTasks;
@@ -38,11 +44,28 @@ class Bootstrapper {
   }
 
   void bootstrap() throws Exception {
+    List<BootstrapTask> bootstrapTaskList = new LinkedList<>(bootstrapTasks);
+    Collections.sort(bootstrapTaskList, new BootstrapTaskOrderingComparator());
     try (AuthenticationScope authenticationScope =
              authenticationManager.authenticateSystem()) {
-      for (BootstrapTask bootstrapTask : bootstrapTasks) {
+      for (BootstrapTask bootstrapTask : bootstrapTaskList) {
+        logger.info("Bootstrapping " + bootstrapTask.getName() + "...");
         bootstrapTask.bootstrap();
       }
+      logger.info("Bootstrapping complete.");
+    }
+  }
+
+  private class BootstrapTaskOrderingComparator
+      implements java.util.Comparator<BootstrapTask> {
+    @Override
+    public int compare(BootstrapTask bootstrapTask1, BootstrapTask bootstrapTask2) {
+      int order = bootstrapTask1.getPriority() - bootstrapTask2.getPriority();
+      if (order == 0) {
+        // Arbitrary but deterministic tie breaker.
+        order = bootstrapTask1.hashCode() - bootstrapTask2.hashCode();
+      }
+      return order;
     }
   }
 }

@@ -38,6 +38,9 @@ import java.util.Set;
  * TODO(mchaston): write JavaDocs
  */
 public class UserBootstrapModule extends AbstractModule {
+
+  public static final int BOOTSTRAP_TASK_PRIORITY = 20;
+
   @Override
   protected void configure() {
     requireBinding(Store.class);
@@ -76,6 +79,11 @@ public class UserBootstrapModule extends AbstractModule {
     }
 
     @Override
+    public String getName() {
+      return "users";
+    }
+
+    @Override
     protected void bootstrapDuringTransaction() throws Exception {
       for (UserDef userDef : userDefsProvider.get()) {
         User user = userManager.getUser(userDef.identifier);
@@ -91,6 +99,11 @@ public class UserBootstrapModule extends AbstractModule {
           userManager.grantRole(user, roleGrant);
         }
       }
+    }
+
+    @Override
+    public int getPriority() {
+      return BOOTSTRAP_TASK_PRIORITY;
     }
   }
 

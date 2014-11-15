@@ -46,6 +46,9 @@ import java.util.Map;
  * TODO(mchaston): write JavaDocs
  */
 public class SystemBootstrapModule extends AbstractModule {
+
+  public static final int BOOTSTRAP_TASK_PRIORITY = 0;
+
   @Override
   protected void configure() {
     requireBinding(Store.class);
@@ -84,6 +87,11 @@ public class SystemBootstrapModule extends AbstractModule {
     }
 
     @Override
+    public String getName() {
+      return "system properties";
+    }
+
+    @Override
     protected void bootstrapDuringTransaction() throws Exception {
       try (SinglePermissionAssertion singlePermissionAssertion =
                authorizationContext.assertPermission("system_property.create")) {
@@ -101,6 +109,11 @@ public class SystemBootstrapModule extends AbstractModule {
           }
         }
       }
+    }
+
+    @Override
+    public int getPriority() {
+      return BOOTSTRAP_TASK_PRIORITY;
     }
   }
 

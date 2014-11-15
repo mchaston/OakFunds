@@ -19,5 +19,7 @@ package org.chaston.oakfunds.bootstrap;
  * TODO(mchaston): write JavaDocs
  */
 public interface BootstrapTask {
+  String getName();
   void bootstrap() throws Exception;
+  int getPriority();
 }
