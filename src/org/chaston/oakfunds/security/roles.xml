@@ -36,6 +36,10 @@
 
 	<permission name="annual_recurring_event.update"/>
 
+	<permission name="system_property.read"/>
+	<permission name="current_year.update"/>
+	<permission name="time_horizon.update"/>
+
 	<permission name="user.read"/>
 	<permission name="user.create"/>
 	<permission name="user.upsert"/>
