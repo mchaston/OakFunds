@@ -29,7 +29,7 @@ import java.io.IOException;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class AccountCodeListServlet extends HttpServlet {
+class AccountCodeListServlet extends HttpServlet {
 
   private final RequestHandler requestHandler;
   private final AccountCodeManager accountCodeManager;

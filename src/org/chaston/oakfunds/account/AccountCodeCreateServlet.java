@@ -31,7 +31,7 @@ import java.io.IOException;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class AccountCodeCreateServlet extends HttpServlet {
+class AccountCodeCreateServlet extends HttpServlet {
 
   private static final ParameterHandler<Integer> PARAMETER_NUMBER =
       ParameterHandler.intParameter("number")

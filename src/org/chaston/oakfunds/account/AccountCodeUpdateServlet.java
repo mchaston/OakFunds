@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class AccountCodeUpdateServlet extends HttpServlet {
+class AccountCodeUpdateServlet extends HttpServlet {
 
   static final String URI_REGEX = "/account/account_code/([0-9]+)/update";
   private static final Pattern URI_PATTERN = Pattern.compile(URI_REGEX);

@@ -29,7 +29,7 @@ import java.io.IOException;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class SystemPropertyListServlet extends HttpServlet {
+class SystemPropertyListServlet extends HttpServlet {
 
   private final RequestHandler requestHandler;
   private final SystemPropertiesManager systemPropertiesManager;
