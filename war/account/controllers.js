@@ -84,23 +84,3 @@ accountControllers.controller('AccountCodesCtrl', ['$scope', '$http', '$window',
 
     $scope.refreshTable();
   }]);
-
-function handleRequestErrors($window, data, status, headers) {
-  if (status == 401) {
-    // not logged in
-    if (headers('next_url') != null) {
-      $window.location.href = headers('next_url');
-    } else {
-      alert('unauthenticated: please log in');
-    }
-  } else if (status == 403) {
-    // not logged in as admin
-    alert('unauthorized: please log in as an admin');
-    if (headers('next_url') != null) {
-      $window.location.href = headers('next_url');
-    }
-  } else {
-    // some other error occurred
-    alert('error occurred: ' + status);
-  }
-}
