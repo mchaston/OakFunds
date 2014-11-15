@@ -41,6 +41,8 @@ public class LedgerTypesModule extends AbstractModule {
         = Multibinder.newSetBinder(binder(), Permission.class);
 
     permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_ACCOUNT_READ);
+    permissionMultibinder.addBinding()
         .toInstance(LedgerManagerImpl.PERMISSION_BANK_ACCOUNT_READ);
     permissionMultibinder.addBinding()
         .toInstance(LedgerManagerImpl.PERMISSION_BANK_ACCOUNT_CREATE);

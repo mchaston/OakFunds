@@ -3,6 +3,8 @@
 	<permission name="account_code.read"/>
 	<permission name="account_code.update"/>
 
+	<permission name="account.read"/>
+
 	<permission name="bank_account.read"/>
 	<permission name="bank_account.create"/>
 
