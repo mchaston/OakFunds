@@ -1,2 +1,17 @@
 <h2>Manage accounts</h2>
-<p>TODO: Account list here.</p>
+
+<table>
+    <thead>
+    <td>Title</td>
+    <td>Account Code</td>
+    <td>Type</td>
+    </thead>
+    <tbody>
+    <tr ng-repeat="account in accounts">
+        <td>{{account.attributes.title}}</a></td>
+        <td>{{account.attributes.account_code_id}} ({{accountCodeTitle(account.attributes.account_code_id)}})</td>
+        <td>{{accountType(account.type)}}</td>
+    </tr>
+    </tbody>
+</table>
+

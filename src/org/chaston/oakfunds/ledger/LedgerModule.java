@@ -17,6 +17,7 @@ package org.chaston.oakfunds.ledger;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
+import com.google.inject.servlet.ServletModule;
 import org.chaston.oakfunds.storage.Store;
 
 /**
@@ -29,5 +30,15 @@ public class LedgerModule extends AbstractModule {
     requireBinding(Store.class);
     bind(LedgerManagerImpl.class).in(Singleton.class);
     bind(LedgerManager.class).to(LedgerManagerImpl.class);
+
+    install(new LedgerServletModule());
+  }
+
+  private class LedgerServletModule extends ServletModule {
+    @Override
+    protected void configureServlets() {
+      serve("/ledger/accounts").with(AccountListServlet.class);
+      bind(AccountListServlet.class).in(Singleton.class);
+    }
   }
 }
