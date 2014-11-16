@@ -25,6 +25,7 @@ import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.security.PermissionAssertion;
 import org.chaston.oakfunds.security.SinglePermissionAssertion;
 import org.chaston.oakfunds.security.SystemAuthenticationManager;
+import org.chaston.oakfunds.storage.OrderingTerm;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
@@ -70,7 +71,8 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
       try (SinglePermissionAssertion singlePermissionAssertion =
                authorizationContext.assertPermission("system_property.read")) {
         Iterable<SystemProperty> properties =
-            store.findRecords(SystemProperty.TYPE, ImmutableList.<SearchTerm>of());
+            store.findRecords(SystemProperty.TYPE, ImmutableList.<SearchTerm>of(),
+                ImmutableList.<OrderingTerm>of());
         for (SystemProperty property : properties) {
           if (PROPERTY_CURRENT_YEAR.equals(property.getName())) {
             currentYear = property;
@@ -92,7 +94,8 @@ class SystemPropertiesManagerImpl implements SystemPropertiesManager {
   @Override
   @PermissionAssertion("system_property.read")
   public Iterable<SystemProperty> getSystemProperties() throws StorageException {
-    return store.findRecords(SystemProperty.TYPE, ImmutableList.<SearchTerm>of());
+    return store.findRecords(SystemProperty.TYPE, ImmutableList.<SearchTerm>of(),
+        ImmutableList.<OrderingTerm>of());
   }
 
   @Override

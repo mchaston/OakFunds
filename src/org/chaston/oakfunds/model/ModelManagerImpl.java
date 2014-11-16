@@ -29,6 +29,7 @@ import org.chaston.oakfunds.security.SystemAuthenticationManager;
 import org.chaston.oakfunds.storage.AttributeSearchTerm;
 import org.chaston.oakfunds.storage.IdentifierSearchTerm;
 import org.chaston.oakfunds.storage.OrSearchTerm;
+import org.chaston.oakfunds.storage.OrderingTerm;
 import org.chaston.oakfunds.storage.Report;
 import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.SearchOperator;
@@ -142,7 +143,8 @@ class ModelManagerImpl implements ModelManager {
     try (AuthenticationScope authenticationScope = authenticationManager.authenticateSystem()) {
       try (SinglePermissionAssertion singlePermissionAssertion =
                authorizationContext.assertPermission("model.create")) {
-        Iterable<Model> baseModels = store.findRecords(Model.TYPE, searchTerms);
+        Iterable<Model> baseModels = store.findRecords(Model.TYPE, searchTerms,
+            ImmutableList.<OrderingTerm>of());
         if (Iterables.isEmpty(baseModels)) {
           Map<String, Object> attributes = new HashMap<>();
           attributes.put(Model.ATTRIBUTE_TITLE, "[base]");

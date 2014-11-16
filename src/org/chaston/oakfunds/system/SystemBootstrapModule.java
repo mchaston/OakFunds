@@ -30,6 +30,7 @@ import org.chaston.oakfunds.bootstrap.TransactionalBootstrapTask;
 import org.chaston.oakfunds.security.AuthorizationContext;
 import org.chaston.oakfunds.security.SinglePermissionAssertion;
 import org.chaston.oakfunds.storage.AttributeSearchTerm;
+import org.chaston.oakfunds.storage.OrderingTerm;
 import org.chaston.oakfunds.storage.SearchOperator;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.Store;
@@ -100,7 +101,8 @@ public class SystemBootstrapModule extends AbstractModule {
               AttributeSearchTerm.of(SystemProperty.ATTRIBUTE_NAME,
                   SearchOperator.EQUALS, systemPropertyDef.name));
           Iterable<SystemProperty> existingValues =
-              getStore().findRecords(SystemProperty.TYPE, searchTerms);
+              getStore().findRecords(SystemProperty.TYPE, searchTerms,
+                  ImmutableList.<OrderingTerm>of());
           if (Iterables.isEmpty(existingValues)) {
             Map<String, Object> attributes = new HashMap<>();
             attributes.put(SystemProperty.ATTRIBUTE_NAME, systemPropertyDef.name);

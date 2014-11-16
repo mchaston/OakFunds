@@ -22,7 +22,9 @@ import org.chaston.oakfunds.model.ModelAccount;
 import org.chaston.oakfunds.security.ActionType;
 import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.security.PermissionAssertion;
+import org.chaston.oakfunds.storage.AttributeOrderingTerm;
 import org.chaston.oakfunds.storage.ContainerIdentifierSearchTerm;
+import org.chaston.oakfunds.storage.OrderingTerm;
 import org.chaston.oakfunds.storage.Report;
 import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.SearchTerm;
@@ -166,7 +168,9 @@ class LedgerManagerImpl implements LedgerManager {
   @Override
   @PermissionAssertion("account.read")
   public Iterable<Account> getAccounts() throws StorageException {
-    return store.findRecords(Account.TYPE, ImmutableList.<SearchTerm>of());
+    return store.findRecords(Account.TYPE, ImmutableList.<SearchTerm>of(),
+        ImmutableList.of(
+            AttributeOrderingTerm.of(Account.ATTRIBUTE_TITLE, OrderingTerm.Order.ASC)));
   }
 
   @Override

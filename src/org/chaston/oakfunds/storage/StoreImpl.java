@@ -459,7 +459,7 @@ class StoreImpl implements Store {
 
   @Override
   public <T extends InstantRecord> void deleteInstantRecords(Record containingRecord,
-      RecordType<T> recordType, ImmutableList<? extends SearchTerm> searchTerms)
+      RecordType<T> recordType, List<? extends SearchTerm> searchTerms)
       throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.DELETE);
     TransactionImpl currentTransaction = this.currentTransaction.get();
@@ -605,12 +605,13 @@ class StoreImpl implements Store {
 
   @Override
   public <T extends Record> Iterable<T> findRecords(RecordType<T> recordType,
-      List<? extends SearchTerm> searchTerms) throws StorageException {
+      List<? extends SearchTerm> searchTerms, List<? extends OrderingTerm> orderingTerms)
+      throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.READ);
     try(ReadingDataSource readingDataSource = new ReadingDataSource()) {
       // TODO(mchaston): add ordering
       Iterable<RawRecord<T>> rawRecords =
-          findRecords(readingDataSource.getConnection(), recordType, searchTerms);
+          findRecords(readingDataSource.getConnection(), recordType, searchTerms, orderingTerms);
       ImmutableList.Builder<T> resultList = ImmutableList.builder();
       for (RawRecord<T> rawRecord : rawRecords) {
         T record = RecordProxy.proxyRecord(rawRecord.getRecordType(),
@@ -622,12 +623,13 @@ class StoreImpl implements Store {
   }
 
   private <T extends Record> Iterable<RawRecord<T>> findRecords(Connection connection,
-      RecordType<T> recordType, List<? extends SearchTerm> searchTerms)
-      throws StorageException {
+      RecordType<T> recordType, List<? extends SearchTerm> searchTerms,
+      List<? extends OrderingTerm> orderingTerms) throws StorageException {
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("SELECT * FROM ").append(recordType.getTableName());
     SearchTermHandler searchTermHandler = new SearchTermHandler(recordType, searchTerms);
     searchTermHandler.appendWhereClause(stringBuilder);
+    appendOrderByClause(stringBuilder, recordType, orderingTerms);
     stringBuilder.append(";");
 
     ImmutableList.Builder<RawRecord<T>> records = ImmutableList.builder();
@@ -893,6 +895,29 @@ class StoreImpl implements Store {
   private static void appendAttributeColumnNames(StringBuilder stringBuilder,
       RecordType<?> recordType, Map<String, Object> attributes) {
     Joiner.on(", ").appendTo(stringBuilder, prefixColumnNames(recordType, attributes.keySet()));
+  }
+
+  private <T extends Record> void appendOrderByClause(StringBuilder stringBuilder,
+      final RecordType<T> recordType, List<? extends OrderingTerm> orderingTerms) {
+    if (orderingTerms.isEmpty()) {
+      return;
+    }
+    stringBuilder.append(" ORDER BY ");
+    Joiner.on(", ").appendTo(stringBuilder, Iterables.transform(orderingTerms,
+        new Function<OrderingTerm, String>() {
+          @Override
+          public String apply(OrderingTerm orderingTerm) {
+            String columnName;
+            if (orderingTerm instanceof AttributeOrderingTerm) {
+              AttributeOrderingTerm attributeOrderingTerm = (AttributeOrderingTerm) orderingTerm;
+              columnName = prefixColumnName(recordType, attributeOrderingTerm.getAttribute());
+            } else {
+              throw new UnsupportedOperationException(
+                  "Ordering term " + orderingTerm.getClass().getName() + " is not supported.");
+            }
+            return columnName + " " + orderingTerm.getOrder();
+          }
+        }));
   }
 
   private class ReadingDataSource implements AutoCloseable {

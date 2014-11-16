@@ -15,7 +15,6 @@
  */
 package org.chaston.oakfunds.storage;
 
-import com.google.common.collect.ImmutableList;
 import org.joda.time.Instant;
 
 import javax.annotation.Nullable;
@@ -53,7 +52,7 @@ public interface Store {
       throws StorageException;
 
   <T extends InstantRecord> void deleteInstantRecords(Record containingRecord,
-      RecordType<T> recordType, ImmutableList<? extends SearchTerm> searchTerms)
+      RecordType<T> recordType, List<? extends SearchTerm> searchTerms)
       throws StorageException;
 
   <T extends InstantRecord> Iterable<T> findInstantRecords(Record containingRecord,
@@ -64,7 +63,8 @@ public interface Store {
       RecordType<T> recordType, Instant date) throws StorageException;
 
   <T extends Record> Iterable<T> findRecords(RecordType<T> recordType,
-      List<? extends SearchTerm> searchTerms) throws StorageException;
+      List<? extends SearchTerm> searchTerms, List<? extends OrderingTerm> orderingTerms)
+      throws StorageException;
 
   <T extends IntervalRecord> Iterable<T> findIntervalRecords(Record containingRecord,
       RecordType<T> recordType, Instant start, Instant end, List<? extends SearchTerm> searchTerms)

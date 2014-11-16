@@ -20,7 +20,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
+import org.chaston.oakfunds.storage.AttributeOrderingTerm;
 import org.chaston.oakfunds.storage.AttributeSearchTerm;
+import org.chaston.oakfunds.storage.OrderingTerm;
 import org.chaston.oakfunds.storage.SearchOperator;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
@@ -67,7 +69,8 @@ public class UserManagerImpl implements UserManager {
     Preconditions.checkNotNull(identifier, "identifier");
     List<? extends SearchTerm> searchTerms = ImmutableList.of(
         AttributeSearchTerm.of(User.ATTRIBUTE_IDENTIFIER, SearchOperator.EQUALS, identifier));
-    Iterable<User> users = store.findRecords(User.TYPE, searchTerms);
+    Iterable<User> users = store.findRecords(User.TYPE, searchTerms,
+        ImmutableList.<OrderingTerm>of());
     return Iterables.getOnlyElement(users, null);
   }
 
@@ -108,7 +111,9 @@ public class UserManagerImpl implements UserManager {
     Preconditions.checkNotNull(user, "user");
     List<? extends SearchTerm> searchTerms = ImmutableList.of(
         AttributeSearchTerm.of(RoleGrant.ATTRIBUTE_USER_ID, SearchOperator.EQUALS, user.getId()));
-    return store.findRecords(RoleGrant.TYPE, searchTerms);
+    return store.findRecords(RoleGrant.TYPE, searchTerms,
+        ImmutableList.of(
+            AttributeOrderingTerm.of(RoleGrant.ATTRIBUTE_NAME, OrderingTerm.Order.ASC)));
   }
 
   @Override
