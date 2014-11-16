@@ -51,6 +51,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -142,7 +143,14 @@ public class LedgerManagerTest {
     Iterable<Account> accounts = ledgerManager.getAccounts();
     assertEquals(2, Iterables.size(accounts));
     assertEquals(electricityExpenseAccount.getId(), Iterables.get(accounts, 0).getId());
+    assertTrue(Iterables.get(accounts, 0) instanceof ExpenseAccount);
+    electricityExpenseAccount = (ExpenseAccount) Iterables.get(accounts, 0);
+    assertEquals(bankAccount.getId(), electricityExpenseAccount.getDefaultSourceAccountId());
+
     assertEquals(bankAccount.getId(), Iterables.get(accounts, 1).getId());
+    assertTrue(Iterables.get(accounts, 1) instanceof BankAccount);
+    bankAccount = (BankAccount) Iterables.get(accounts, 1);
+    assertEquals(BankAccountType.OPERATING, bankAccount.getBankAccountType());
   }
 
   @Test
