@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import org.chaston.oakfunds.security.ActionType;
 import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.security.PermissionAssertion;
+import org.chaston.oakfunds.storage.IdentifierOrderingTerm;
 import org.chaston.oakfunds.storage.OrderingTerm;
 import org.chaston.oakfunds.storage.SearchTerm;
 import org.chaston.oakfunds.storage.StorageException;
@@ -69,7 +70,7 @@ class AccountCodeManagerImpl implements AccountCodeManager {
   @PermissionAssertion("account_code.read")
   public Iterable<AccountCode> getAccountCodes() throws StorageException {
     return store.findRecords(AccountCode.TYPE, ImmutableList.<SearchTerm>of(),
-        ImmutableList.<OrderingTerm>of());
+        ImmutableList.of(IdentifierOrderingTerm.of(OrderingTerm.Order.ASC)));
   }
 
   @Override

@@ -911,6 +911,8 @@ class StoreImpl implements Store {
             if (orderingTerm instanceof AttributeOrderingTerm) {
               AttributeOrderingTerm attributeOrderingTerm = (AttributeOrderingTerm) orderingTerm;
               columnName = prefixColumnName(recordType, attributeOrderingTerm.getAttribute());
+            } else if (orderingTerm instanceof IdentifierOrderingTerm) {
+              columnName = SystemColumnDefs.ID_COLUMN_NAME;
             } else {
               throw new UnsupportedOperationException(
                   "Ordering term " + orderingTerm.getClass().getName() + " is not supported.");

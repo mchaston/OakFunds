@@ -15,6 +15,7 @@
  */
 package org.chaston.oakfunds.account;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -92,5 +93,18 @@ public class AccountCodeManagerTest {
     assertNotNull(accountCode);
     assertEquals(80000, accountCode.getId());
     assertEquals("Operating", accountCode.getTitle());
+  }
+
+  @Test
+  public void getAccountCodes() throws StorageException {
+    Transaction transaction = store.startTransaction();
+    accountCodeManager.createAccountCode(80000, "Operating");
+    accountCodeManager.createAccountCode(50000, "Electricity");
+    transaction.commit();
+
+    Iterable<AccountCode> accountCodes = accountCodeManager.getAccountCodes();
+    assertEquals(2, Iterables.size(accountCodes));
+    assertEquals(50000, Iterables.get(accountCodes, 0).getId());
+    assertEquals(80000, Iterables.get(accountCodes, 1).getId());
   }
 }

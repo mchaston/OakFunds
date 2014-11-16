@@ -127,6 +127,25 @@ public class LedgerManagerTest {
   }
 
   @Test
+  public void getAccounts() throws StorageException {
+    Transaction transaction = store.startTransaction();
+    AccountCode operatingAccountCode = accountCodeManager.createAccountCode(80000, "Operating");
+    BankAccount bankAccount = ledgerManager.createBankAccount(operatingAccountCode, "SF bank", BankAccountType.OPERATING);
+    transaction.commit();
+
+    transaction = store.startTransaction();
+    AccountCode electricityAccountCode = accountCodeManager.createAccountCode(50000, "Electricity");
+    ExpenseAccount electricityExpenseAccount =
+        ledgerManager.createExpenseAccount(electricityAccountCode, "PG&E", bankAccount);
+    transaction.commit();
+
+    Iterable<Account> accounts = ledgerManager.getAccounts();
+    assertEquals(2, Iterables.size(accounts));
+    assertEquals(electricityExpenseAccount.getId(), Iterables.get(accounts, 0).getId());
+    assertEquals(bankAccount.getId(), Iterables.get(accounts, 1).getId());
+  }
+
+  @Test
   public void payExpense() throws StorageException {
     Transaction transaction = store.startTransaction();
     AccountCode operatingAccountCode = accountCodeManager.createAccountCode(80000, "Operating");
