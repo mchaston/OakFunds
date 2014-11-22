@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.system;
+package org.chaston.oakfunds.account.ui;
 
 import com.google.inject.Inject;
+import org.chaston.oakfunds.account.AccountCode;
+import org.chaston.oakfunds.account.AccountCodeManager;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.util.JSONUtils;
 import org.chaston.oakfunds.util.RequestHandler;
@@ -29,33 +31,33 @@ import java.io.IOException;
 /**
  * TODO(mchaston): write JavaDocs
  */
-class SystemPropertyListServlet extends HttpServlet {
+class AccountCodeListServlet extends HttpServlet {
 
   private final RequestHandler requestHandler;
-  private final SystemPropertiesManager systemPropertiesManager;
+  private final AccountCodeManager accountCodeManager;
 
   @Inject
-  SystemPropertyListServlet(RequestHandler requestHandler,
-      SystemPropertiesManager systemPropertiesManager) {
+  AccountCodeListServlet(RequestHandler requestHandler,
+      AccountCodeManager accountCodeManager) {
     this.requestHandler = requestHandler;
-    this.systemPropertiesManager = systemPropertiesManager;
+    this.accountCodeManager = accountCodeManager;
   }
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-    Iterable<SystemProperty> systemProperties =
+    Iterable<AccountCode> accountCodes =
         requestHandler.handle(request, response,
-            new RequestHandler.Action<Iterable<SystemProperty>>() {
+            new RequestHandler.Action<Iterable<AccountCode>>() {
               @Override
-              public Iterable<SystemProperty> doAction(HttpServletRequest request)
+              public Iterable<AccountCode> doAction(HttpServletRequest request)
                   throws StorageException, ServletException {
-                return systemPropertiesManager.getSystemProperties();
+                return accountCodeManager.getAccountCodes();
               }
             });
 
     // Write result to response.
     response.setContentType("application/json");
-    JSONUtils.writeJSONString(response.getWriter(), systemProperties);
+    JSONUtils.writeJSONString(response.getWriter(), accountCodes);
   }
 }

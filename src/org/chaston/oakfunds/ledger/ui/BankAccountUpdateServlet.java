@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.ledger;
+package org.chaston.oakfunds.ledger.ui;
 
 import com.google.inject.Inject;
 import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.account.AccountCodeManager;
+import org.chaston.oakfunds.ledger.BankAccount;
+import org.chaston.oakfunds.ledger.BankAccountType;
+import org.chaston.oakfunds.ledger.LedgerManager;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.util.JSONUtils;
 import org.chaston.oakfunds.util.ParameterHandler;
@@ -35,9 +38,9 @@ import java.util.regex.Pattern;
 /**
  * TODO(mchaston): write JavaDocs
  */
-class RevenueAccountUpdateServlet extends HttpServlet {
+class BankAccountUpdateServlet extends HttpServlet {
 
-  static final String URI_REGEX = "/ledger/revenue_account/([0-9]+)/update";
+  static final String URI_REGEX = "/ledger/bank_account/([0-9]+)/update";
   private static final Pattern URI_PATTERN = Pattern.compile(URI_REGEX);
 
   private static final ParameterHandler<String> PARAMETER_TITLE =
@@ -50,8 +53,10 @@ class RevenueAccountUpdateServlet extends HttpServlet {
           .required("An account code must be supplied.")
           .build();
 
-  private static final ParameterHandler<Integer> PARAMETER_DEFAULT_DEPOSIT_ACCOUNT_ID =
-      ParameterHandler.intParameter("default_deposit_account_id")
+  private static final ParameterHandler<BankAccountType> PARAMETER_BANK_ACCOUNT_TYPE =
+      ParameterHandler.identifiableParameter("bank_account_type",
+          BankAccountType.getIdentifiableSource())
+          .required("A bank account type must be supplied.")
           .build();
 
   private final RequestHandler requestHandler;
@@ -59,7 +64,7 @@ class RevenueAccountUpdateServlet extends HttpServlet {
   private final LedgerManager ledgerManager;
 
   @Inject
-  RevenueAccountUpdateServlet(RequestHandler requestHandler,
+  BankAccountUpdateServlet(RequestHandler requestHandler,
       AccountCodeManager accountCodeManager, LedgerManager ledgerManager) {
     this.requestHandler = requestHandler;
     this.accountCodeManager = accountCodeManager;
@@ -69,7 +74,7 @@ class RevenueAccountUpdateServlet extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-    // Read the requestURI to determine the revenue account to update.
+    // Read the requestURI to determine the bank account to update.
     Matcher matcher = URI_PATTERN.matcher(request.getRequestURI());
     if (!matcher.matches()) {
       // This should never happen as the servlet is only invoked on a match of the same pattern.
@@ -80,31 +85,25 @@ class RevenueAccountUpdateServlet extends HttpServlet {
     }
 
     final int id = Integer.parseInt(matcher.group(1));
-    final JSONObject jsonRequest = JSONUtils.readRequest(request, "update revenue account");
-    final RevenueAccount revenueAccount =
+    final JSONObject jsonRequest = JSONUtils.readRequest(request, "update bank account");
+    final BankAccount bankAccount =
         requestHandler.handleTransaction(request, response,
-            new RequestHandler.Action<RevenueAccount>() {
+            new RequestHandler.Action<BankAccount>() {
               @Override
-              public RevenueAccount doAction(HttpServletRequest request)
+              public BankAccount doAction(HttpServletRequest request)
                   throws StorageException, ServletException {
                 AccountCode accountCode =
                     accountCodeManager.getAccountCode(
                         PARAMETER_ACCOUNT_CODE_ID.parse(jsonRequest));
-                Integer defaultDepositAccountId =
-                    PARAMETER_DEFAULT_DEPOSIT_ACCOUNT_ID.parse(jsonRequest);
-                BankAccount defaultDepositAccount = null;
-                if (defaultDepositAccountId != null) {
-                  defaultDepositAccount = ledgerManager.getBankAccount(defaultDepositAccountId);
-                }
-                RevenueAccount revenueAccount = ledgerManager.getRevenueAccount(id);
-                return ledgerManager.updateRevenueAccount(revenueAccount, accountCode,
+                BankAccount bankAccount = ledgerManager.getBankAccount(id);
+                return ledgerManager.updateBankAccount(bankAccount, accountCode,
                     PARAMETER_TITLE.parse(jsonRequest),
-                    defaultDepositAccount);
+                    PARAMETER_BANK_ACCOUNT_TYPE.parse(jsonRequest));
               }
             });
 
     // Write result to response.
     response.setContentType("application/json");
-    JSONUtils.writeJSONString(response.getWriter(), revenueAccount);
+    JSONUtils.writeJSONString(response.getWriter(), bankAccount);
   }
 }

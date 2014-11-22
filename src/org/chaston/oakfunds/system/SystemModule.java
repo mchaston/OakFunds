@@ -17,11 +17,11 @@ package org.chaston.oakfunds.system;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
-import com.google.inject.servlet.ServletModule;
 import org.chaston.oakfunds.bootstrap.BootstrappingDependency;
 import org.chaston.oakfunds.security.AuthorizationContext;
 import org.chaston.oakfunds.security.SystemAuthenticationManager;
 import org.chaston.oakfunds.storage.Store;
+import org.chaston.oakfunds.system.ui.SystemServletModule;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -37,13 +37,5 @@ public class SystemModule extends AbstractModule {
     bind(SystemPropertiesManagerImpl.class).in(Singleton.class);
     bind(SystemPropertiesManager.class).to(SystemPropertiesManagerImpl.class);
     install(new SystemServletModule());
-  }
-
-  private class SystemServletModule extends ServletModule {
-    @Override
-    protected void configureServlets() {
-      serve("/system/system_properties").with(SystemPropertyListServlet.class);
-      bind(SystemPropertyListServlet.class).in(Singleton.class);
-    }
   }
 }

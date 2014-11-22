@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.ledger;
+package org.chaston.oakfunds.ledger.ui;
 
 import com.google.inject.Inject;
 import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.account.AccountCodeManager;
+import org.chaston.oakfunds.ledger.BankAccount;
+import org.chaston.oakfunds.ledger.LedgerManager;
+import org.chaston.oakfunds.ledger.RevenueAccount;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.util.JSONUtils;
 import org.chaston.oakfunds.util.ParameterHandler;
@@ -33,7 +36,7 @@ import java.io.IOException;
 /**
  * TODO(mchaston): write JavaDocs
  */
-class BankAccountCreateServlet extends HttpServlet {
+class RevenueAccountCreateServlet extends HttpServlet {
 
   private static final ParameterHandler<String> PARAMETER_TITLE =
       ParameterHandler.stringParameter("title")
@@ -45,10 +48,8 @@ class BankAccountCreateServlet extends HttpServlet {
           .required("An account code must be supplied.")
           .build();
 
-  private static final ParameterHandler<BankAccountType> PARAMETER_BANK_ACCOUNT_TYPE =
-      ParameterHandler.identifiableParameter("bank_account_type",
-              BankAccountType.getIdentifiableSource())
-          .required("A bank account type must be supplied.")
+  private static final ParameterHandler<Integer> PARAMETER_DEFAULT_DEPOSIT_ACCOUNT_ID =
+      ParameterHandler.intParameter("default_deposit_account_id")
           .build();
 
   private final RequestHandler requestHandler;
@@ -56,7 +57,7 @@ class BankAccountCreateServlet extends HttpServlet {
   private final LedgerManager ledgerManager;
 
   @Inject
-  BankAccountCreateServlet(RequestHandler requestHandler,
+  RevenueAccountCreateServlet(RequestHandler requestHandler,
       AccountCodeManager accountCodeManager, LedgerManager ledgerManager) {
     this.requestHandler = requestHandler;
     this.accountCodeManager = accountCodeManager;
@@ -66,24 +67,30 @@ class BankAccountCreateServlet extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-    final JSONObject jsonRequest = JSONUtils.readRequest(request, "create bank account");
-    BankAccount bankAccount =
+    final JSONObject jsonRequest = JSONUtils.readRequest(request, "create revenue account");
+    RevenueAccount revenueAccount =
         requestHandler.handleTransaction(request, response,
-            new RequestHandler.Action<BankAccount>() {
+            new RequestHandler.Action<RevenueAccount>() {
               @Override
-              public BankAccount doAction(HttpServletRequest request)
+              public RevenueAccount doAction(HttpServletRequest request)
                   throws StorageException, ServletException {
                 AccountCode accountCode =
                     accountCodeManager.getAccountCode(
                         PARAMETER_ACCOUNT_CODE_ID.parse(jsonRequest));
-                return ledgerManager.createBankAccount(accountCode,
+                Integer defaultDepositAccountId =
+                    PARAMETER_DEFAULT_DEPOSIT_ACCOUNT_ID.parse(jsonRequest);
+                BankAccount defaultDepositAccount = null;
+                if (defaultDepositAccountId != null) {
+                  defaultDepositAccount = ledgerManager.getBankAccount(defaultDepositAccountId);
+                }
+                return ledgerManager.createRevenueAccount(accountCode,
                     PARAMETER_TITLE.parse(jsonRequest),
-                    PARAMETER_BANK_ACCOUNT_TYPE.parse(jsonRequest));
+                    defaultDepositAccount);
               }
             });
 
     // Write result to response.
     response.setContentType("application/json");
-    JSONUtils.writeJSONString(response.getWriter(), bankAccount);
+    JSONUtils.writeJSONString(response.getWriter(), revenueAccount);
   }
 }

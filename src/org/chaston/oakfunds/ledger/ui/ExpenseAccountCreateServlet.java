@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.ledger;
+package org.chaston.oakfunds.ledger.ui;
 
 import com.google.inject.Inject;
 import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.account.AccountCodeManager;
+import org.chaston.oakfunds.ledger.BankAccount;
+import org.chaston.oakfunds.ledger.ExpenseAccount;
+import org.chaston.oakfunds.ledger.LedgerManager;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.util.JSONUtils;
 import org.chaston.oakfunds.util.ParameterHandler;

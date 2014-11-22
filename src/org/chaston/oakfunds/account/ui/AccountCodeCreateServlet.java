@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.account;
+package org.chaston.oakfunds.account.ui;
 
 import com.google.inject.Inject;
+import org.chaston.oakfunds.account.AccountCode;
+import org.chaston.oakfunds.account.AccountCodeManager;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.util.JSONUtils;
 import org.chaston.oakfunds.util.ParameterHandler;

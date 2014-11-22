@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.ledger;
+package org.chaston.oakfunds.ledger.ui;
 
 import com.google.inject.Inject;
 import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.account.AccountCodeManager;
+import org.chaston.oakfunds.ledger.BankAccount;
+import org.chaston.oakfunds.ledger.ExpenseAccount;
+import org.chaston.oakfunds.ledger.LedgerManager;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.util.JSONUtils;
 import org.chaston.oakfunds.util.ParameterHandler;
@@ -35,9 +38,9 @@ import java.util.regex.Pattern;
 /**
  * TODO(mchaston): write JavaDocs
  */
-class BankAccountUpdateServlet extends HttpServlet {
+class ExpenseAccountUpdateServlet extends HttpServlet {
 
-  static final String URI_REGEX = "/ledger/bank_account/([0-9]+)/update";
+  static final String URI_REGEX = "/ledger/expense_account/([0-9]+)/update";
   private static final Pattern URI_PATTERN = Pattern.compile(URI_REGEX);
 
   private static final ParameterHandler<String> PARAMETER_TITLE =
@@ -50,10 +53,8 @@ class BankAccountUpdateServlet extends HttpServlet {
           .required("An account code must be supplied.")
           .build();
 
-  private static final ParameterHandler<BankAccountType> PARAMETER_BANK_ACCOUNT_TYPE =
-      ParameterHandler.identifiableParameter("bank_account_type",
-          BankAccountType.getIdentifiableSource())
-          .required("A bank account type must be supplied.")
+  private static final ParameterHandler<Integer> PARAMETER_DEFAULT_SOURCE_ACCOUNT_ID =
+      ParameterHandler.intParameter("default_source_account_id")
           .build();
 
   private final RequestHandler requestHandler;
@@ -61,7 +62,7 @@ class BankAccountUpdateServlet extends HttpServlet {
   private final LedgerManager ledgerManager;
 
   @Inject
-  BankAccountUpdateServlet(RequestHandler requestHandler,
+  ExpenseAccountUpdateServlet(RequestHandler requestHandler,
       AccountCodeManager accountCodeManager, LedgerManager ledgerManager) {
     this.requestHandler = requestHandler;
     this.accountCodeManager = accountCodeManager;
@@ -71,7 +72,7 @@ class BankAccountUpdateServlet extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-    // Read the requestURI to determine the bank account to update.
+    // Read the requestURI to determine the expense account to update.
     Matcher matcher = URI_PATTERN.matcher(request.getRequestURI());
     if (!matcher.matches()) {
       // This should never happen as the servlet is only invoked on a match of the same pattern.
@@ -82,25 +83,31 @@ class BankAccountUpdateServlet extends HttpServlet {
     }
 
     final int id = Integer.parseInt(matcher.group(1));
-    final JSONObject jsonRequest = JSONUtils.readRequest(request, "update bank account");
-    final BankAccount bankAccount =
+    final JSONObject jsonRequest = JSONUtils.readRequest(request, "update expense account");
+    final ExpenseAccount expenseAccount =
         requestHandler.handleTransaction(request, response,
-            new RequestHandler.Action<BankAccount>() {
+            new RequestHandler.Action<ExpenseAccount>() {
               @Override
-              public BankAccount doAction(HttpServletRequest request)
+              public ExpenseAccount doAction(HttpServletRequest request)
                   throws StorageException, ServletException {
                 AccountCode accountCode =
                     accountCodeManager.getAccountCode(
                         PARAMETER_ACCOUNT_CODE_ID.parse(jsonRequest));
-                BankAccount bankAccount = ledgerManager.getBankAccount(id);
-                return ledgerManager.updateBankAccount(bankAccount, accountCode,
+                Integer defaultSourceAccountId =
+                    PARAMETER_DEFAULT_SOURCE_ACCOUNT_ID.parse(jsonRequest);
+                BankAccount defaultSourceAccount = null;
+                if (defaultSourceAccountId != null) {
+                  defaultSourceAccount = ledgerManager.getBankAccount(defaultSourceAccountId);
+                }
+                ExpenseAccount expenseAccount = ledgerManager.getExpenseAccount(id);
+                return ledgerManager.updateExpenseAccount(expenseAccount, accountCode,
                     PARAMETER_TITLE.parse(jsonRequest),
-                    PARAMETER_BANK_ACCOUNT_TYPE.parse(jsonRequest));
+                    defaultSourceAccount);
               }
             });
 
     // Write result to response.
     response.setContentType("application/json");
-    JSONUtils.writeJSONString(response.getWriter(), bankAccount);
+    JSONUtils.writeJSONString(response.getWriter(), expenseAccount);
   }
 }

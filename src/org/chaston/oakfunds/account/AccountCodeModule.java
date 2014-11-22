@@ -17,7 +17,7 @@ package org.chaston.oakfunds.account;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
-import com.google.inject.servlet.ServletModule;
+import org.chaston.oakfunds.account.ui.AccountCodeServletModule;
 import org.chaston.oakfunds.storage.Store;
 
 /**
@@ -31,17 +31,5 @@ public class AccountCodeModule extends AbstractModule {
     bind(AccountCodeManagerImpl.class).in(Singleton.class);
     bind(AccountCodeManager.class).to(AccountCodeManagerImpl.class);
     install(new AccountCodeServletModule());
-  }
-
-  private class AccountCodeServletModule extends ServletModule {
-    @Override
-    protected void configureServlets() {
-      serve("/account/account_code/create").with(AccountCodeCreateServlet.class);
-      bind(AccountCodeCreateServlet.class).in(Singleton.class);
-      serve("/account/account_codes").with(AccountCodeListServlet.class);
-      bind(AccountCodeListServlet.class).in(Singleton.class);
-      serveRegex(AccountCodeUpdateServlet.URI_REGEX).with(AccountCodeUpdateServlet.class);
-      bind(AccountCodeUpdateServlet.class).in(Singleton.class);
-    }
   }
 }

@@ -13,24 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.ledger;
+package org.chaston.oakfunds.account.ui;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
-import org.chaston.oakfunds.ledger.ui.LedgerServletModule;
-import org.chaston.oakfunds.storage.Store;
+import com.google.inject.servlet.ServletModule;
 
 /**
- * TODO(mchaston): write JavaDocs
- */
-public class LedgerModule extends AbstractModule {
+* TODO(mchaston): write JavaDocs
+*/
+public class AccountCodeServletModule extends ServletModule {
   @Override
-  protected void configure() {
-    install(new LedgerTypesModule());
-    requireBinding(Store.class);
-    bind(LedgerManagerImpl.class).in(Singleton.class);
-    bind(LedgerManager.class).to(LedgerManagerImpl.class);
-
-    install(new LedgerServletModule());
+  protected void configureServlets() {
+    serve("/account/account_code/create").with(AccountCodeCreateServlet.class);
+    bind(AccountCodeCreateServlet.class).in(Singleton.class);
+    serve("/account/account_codes").with(AccountCodeListServlet.class);
+    bind(AccountCodeListServlet.class).in(Singleton.class);
+    serveRegex(AccountCodeUpdateServlet.URI_REGEX).with(AccountCodeUpdateServlet.class);
+    bind(AccountCodeUpdateServlet.class).in(Singleton.class);
   }
 }
