@@ -16,6 +16,9 @@
 package org.chaston.oakfunds.storage;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.inject.Inject;
 
 import java.util.HashMap;
@@ -29,11 +32,14 @@ public class RecordTypeRegistryImpl implements RecordTypeRegistry {
 
   private final ImmutableMap<String, RecordType> recordTypes;
   private final ImmutableMap<String, RecordValidator> recordValidators;
+  private final ImmutableMultimap<String, RecordType> assignableRecordTypes;
 
   @Inject
   RecordTypeRegistryImpl(Set<RecordType> recordTypes) {
     Map<String, RecordType> recordTypesBuilder = new HashMap<>();
     Map<String, RecordValidator> recordValidatorsBuilder = new HashMap<>();
+    Multimap<String, RecordType> assignableRecordTypesBuilder =
+        MultimapBuilder.hashKeys().hashSetValues().build();
     for (RecordType recordType : recordTypes) {
       if (recordTypesBuilder.containsKey(recordType.getName())) {
         throw new IllegalStateException(
@@ -41,9 +47,16 @@ public class RecordTypeRegistryImpl implements RecordTypeRegistry {
       }
       recordTypesBuilder.put(recordType.getName(), recordType);
       recordValidatorsBuilder.put(recordType.getName(), new RecordValidator(recordType));
+      assignableRecordTypesBuilder.put(recordType.getName(), recordType);
+      RecordType parentType = recordType.getParentType();
+      while (parentType != null) {
+        assignableRecordTypesBuilder.put(parentType.getName(), recordType);
+        parentType = parentType.getParentType();
+      }
     }
     this.recordTypes = ImmutableMap.copyOf(recordTypesBuilder);
     this.recordValidators = ImmutableMap.copyOf(recordValidatorsBuilder);
+    this.assignableRecordTypes = ImmutableMultimap.copyOf(assignableRecordTypesBuilder);
   }
 
   @Override
@@ -65,6 +78,11 @@ public class RecordTypeRegistryImpl implements RecordTypeRegistry {
     }
     throw new IllegalArgumentException("RecordType " + name
         + " is not a subtype of " + parentRecordType.getName() + ".");
+  }
+
+  @Override
+  public Iterable<RecordType> getAssignableTypes(RecordType recordType) {
+    return assignableRecordTypes.get(recordType.getName());
   }
 
   private static class RecordValidator {

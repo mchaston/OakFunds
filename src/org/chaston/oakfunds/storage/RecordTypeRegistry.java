@@ -25,4 +25,6 @@ public interface RecordTypeRegistry {
       throws StorageException;
 
   <T extends Record> RecordType<T> getType(String name, RecordType<T> recordType);
+
+  Iterable<RecordType> getAssignableTypes(RecordType recordType);
 }

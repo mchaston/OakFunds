@@ -469,7 +469,7 @@ class StoreImpl implements Store {
 
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("DELETE FROM ").append(recordType.getTableName());
-    SearchTermHandler searchTermHandler = new SearchTermHandler(recordType, searchTerms);
+    SearchTermHandler<T> searchTermHandler = new SearchTermHandler<>(recordType, searchTerms);
     searchTermHandler.appendWhereClause(stringBuilder);
     stringBuilder.append(";");
 
@@ -525,7 +525,7 @@ class StoreImpl implements Store {
             SearchOperator.LESS_THAN,
             end))
         .build();
-    SearchTermHandler searchTermHandler = new SearchTermHandler(recordType, searchTerms);
+    SearchTermHandler<T> searchTermHandler = new SearchTermHandler<>(recordType, searchTerms);
     searchTermHandler.appendWhereClause(stringBuilder);
     stringBuilder.append(" ORDER BY ").append(SystemColumnDefs.INSTANT.getName()).append(" ASC ;");
 
@@ -627,7 +627,7 @@ class StoreImpl implements Store {
       List<? extends OrderingTerm> orderingTerms) throws StorageException {
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("SELECT * FROM ").append(recordType.getTableName());
-    SearchTermHandler searchTermHandler = new SearchTermHandler(recordType, searchTerms);
+    SearchTermHandler<T> searchTermHandler = new SearchTermHandler<>(recordType, searchTerms);
     searchTermHandler.appendWhereClause(stringBuilder);
     appendOrderByClause(stringBuilder, recordType, orderingTerms);
     stringBuilder.append(";");
@@ -689,7 +689,7 @@ class StoreImpl implements Store {
             SearchOperator.LESS_THAN,
             end))
         .build();
-    SearchTermHandler searchTermHandler = new SearchTermHandler(recordType, searchTerms);
+    SearchTermHandler<T> searchTermHandler = new SearchTermHandler<>(recordType, searchTerms);
     searchTermHandler.appendWhereClause(stringBuilder);
     stringBuilder.append(" ORDER BY ")
         .append(SystemColumnDefs.START_TIME.getName()).append(" ASC ;");
@@ -756,7 +756,7 @@ class StoreImpl implements Store {
               SearchOperator.LESS_THAN,
               DateUtil.endOfYear(endYear)))
           .build();
-      SearchTermHandler searchTermHandler = new SearchTermHandler(recordType, searchTerms);
+      SearchTermHandler<T> searchTermHandler = new SearchTermHandler<>(recordType, searchTerms);
       searchTermHandler.appendWhereClause(stringBuilder);
       // Group by the date  and container ID.
       stringBuilder.append(" GROUP BY ").append(SystemColumnDefs.INSTANT.getName());
@@ -946,23 +946,40 @@ class StoreImpl implements Store {
     }
   }
 
-  private class SearchTermHandler {
-    private final RecordType<?> recordType;
+  private class SearchTermHandler<T extends Record> {
+    private final RecordType<T> recordType;
     private final List<? extends SearchTerm> searchTerms;
     // This is linked to ensure that they are set in the same order as they need to be written.
     private final List<ParameterValue> parameterValues = new LinkedList<>();
 
-    public SearchTermHandler(RecordType<?> recordType, List<? extends SearchTerm> searchTerms) {
+    public SearchTermHandler(RecordType<T> recordType, List<? extends SearchTerm> searchTerms) {
       this.recordType = recordType;
       this.searchTerms = searchTerms;
     }
 
     public void appendWhereClause(StringBuilder stringBuilder) {
-      if (searchTerms.isEmpty()) {
+      if (searchTerms.isEmpty() && recordType.getParentType() == null) {
         return;
       }
       stringBuilder.append(" WHERE ");
-      writeAndClause(stringBuilder, searchTerms);
+      if (recordType.getParentType() != null) {
+        stringBuilder.append(SystemColumnDefs.TYPE.getName()).append(" IN ('");
+        Joiner.on("', '").appendTo(stringBuilder,
+            Iterables.transform(recordTypeRegistry.getAssignableTypes(recordType),
+                new Function<RecordType, String>() {
+                  @Override
+                  public String apply(RecordType assignableRecordType) {
+                    return assignableRecordType.getName();
+                  }
+                }));
+        stringBuilder.append("')");
+        if (!searchTerms.isEmpty()) {
+          stringBuilder.append(" AND ");
+        }
+      }
+      if (!searchTerms.isEmpty()) {
+        writeAndClause(stringBuilder, searchTerms);
+      }
     }
 
     private void writeAndClause(StringBuilder stringBuilder,
