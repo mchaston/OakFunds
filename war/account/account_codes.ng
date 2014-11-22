@@ -38,8 +38,9 @@
     </thead>
     <tbody>
     <tr ng-repeat="account_code in account_codes">
-        <td><a href="" ng-click="showUpdateForm(account_code)">{{account_code.id}}</a></td>
+        <td>{{account_code.id}}</td>
         <td>{{account_code.attributes.title}}</td>
+        <td><a href="" ng-click="showUpdateForm(account_code)">edit</a></td>
     </tr>
     </tbody>
 </table>
