@@ -39,6 +39,23 @@ public class LedgerModule extends AbstractModule {
     protected void configureServlets() {
       serve("/ledger/accounts").with(AccountListServlet.class);
       bind(AccountListServlet.class).in(Singleton.class);
+      serve("/ledger/bank_accounts").with(BankAccountListServlet.class);
+      bind(BankAccountListServlet.class).in(Singleton.class);
+
+      serve("/ledger/bank_account/create").with(BankAccountCreateServlet.class);
+      bind(BankAccountCreateServlet.class).in(Singleton.class);
+      serveRegex(BankAccountUpdateServlet.URI_REGEX).with(BankAccountUpdateServlet.class);
+      bind(BankAccountUpdateServlet.class).in(Singleton.class);
+
+      serve("/ledger/expense_account/create").with(ExpenseAccountCreateServlet.class);
+      bind(ExpenseAccountCreateServlet.class).in(Singleton.class);
+      serveRegex(ExpenseAccountUpdateServlet.URI_REGEX).with(ExpenseAccountUpdateServlet.class);
+      bind(ExpenseAccountUpdateServlet.class).in(Singleton.class);
+
+      serve("/ledger/revenue_account/create").with(RevenueAccountCreateServlet.class);
+      bind(RevenueAccountCreateServlet.class).in(Singleton.class);
+      serveRegex(RevenueAccountUpdateServlet.URI_REGEX).with(RevenueAccountUpdateServlet.class);
+      bind(RevenueAccountUpdateServlet.class).in(Singleton.class);
     }
   }
 }

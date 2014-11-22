@@ -1,5 +1,9 @@
 <h2>Manage accounts</h2>
 
+<button ng-click="showCreateBankAccountForm()">Create bank account...</button>
+<button ng-click="showCreateRevenueAccountForm()">Create revenue account...</button>
+<button ng-click="showCreateExpenseAccountForm()">Create expense account...</button>
+</select>
 <table>
     <thead>
     <td>Title</td>
@@ -8,10 +12,142 @@
     </thead>
     <tbody>
     <tr ng-repeat="account in accounts">
-        <td>{{account.attributes.title}}</a></td>
-        <td>{{account.attributes.account_code_id}} ({{accountCodeTitle(account.attributes.account_code_id)}})</td>
+        <td><a href="" ng-click="showUpdateForm(account)">{{account.attributes.title}}</a></td>
+        <td>{{accountCodeTitle(account.attributes.account_code_id)}}</td>
         <td>{{accountType(account.type)}}</td>
     </tr>
     </tbody>
 </table>
 
+<modal-dialog show="createBankAccountFormVisible" width='500px' dialog-title='Create Bank Account' on-close='hideCreateBankAccountForm()'>
+    <form ng-submit="createBankAccount()">
+        <table>
+            <tbody>
+            <tr><td>Title:</td>
+                <td><input type="text" ng-model="bank_account.title"/></td></tr>
+            <tr><td>Account Code:</td>
+                <td><select ng-model="bank_account.account_code_id"
+                            ng-options="account_code.id as accountCodeTitle(account_code.id) for account_code in account_codes">
+                            </select></td></tr>
+            <tr><td>Bank Account Type:</td>
+                <td><select ng-model="bank_account.bank_account_type"
+                            ng-options="bank_account_type.id as bank_account_type.title for bank_account_type in bank_account_types">
+                </select></td></tr>
+            </tbody>
+        </table>
+        <input type="submit" name="Create" value="Create"/>
+        <a href="" ng-click="hideCreateBankAccountForm()">Cancel</a>
+    </form>
+</modal-dialog>
+
+<modal-dialog show="updateBankAccountFormVisible" width='500px' dialog-title='Update Bank Account' on-close='hideUpdateBankAccountForm()'>
+    <form ng-submit="updateBankAccount()">
+        <table>
+            <tbody>
+            <input type="hidden" ng-model="bank_account.id"/>
+            <tr><td>Title:</td>
+                <td><input type="text" ng-model="bank_account.title"/></td></tr>
+            <tr><td>Account Code:</td>
+                <td><select ng-model="bank_account.account_code_id"
+                            ng-options="account_code.id as accountCodeTitle(account_code.id) for account_code in account_codes">
+                            </select></td></tr>
+            <tr><td>Bank Account Type:</td>
+                <td><select ng-model="bank_account.bank_account_type"
+                            ng-options="bank_account_type.id as bank_account_type.title for bank_account_type in bank_account_types">
+                </select></td></tr>
+            </tbody>
+        </table>
+        <input type="submit" name="Update" value="Update"/>
+        <a href="" ng-click="hideUpdateBankAccountForm()">Cancel</a>
+    </form>
+</modal-dialog>
+
+<modal-dialog show="createRevenueAccountFormVisible" width='500px' dialog-title='Create Revenue Account' on-close='hideCreateRevenueAccountForm()'>
+    <form ng-submit="createRevenueAccount()">
+        <table>
+            <tbody>
+            <tr><td>Title:</td>
+                <td><input type="text" ng-model="revenue_account.title"/></td></tr>
+            <tr><td>Account Code:</td>
+                <td><select ng-model="revenue_account.account_code_id"
+                            ng-options="account_code.id as accountCodeTitle(account_code.id) for account_code in account_codes">
+                            </select></td></tr>
+            <tr><td>Default Deposit Account:</td>
+                <td><select ng-model="revenue_account.default_deposit_account_id"
+                            ng-options="bank_account.id as bank_account.attributes.title for bank_account in bank_accounts">
+                    <option value="">[none]</option>
+                </select></td></tr>
+            </tbody>
+        </table>
+        <input type="submit" name="Create" value="Create"/>
+        <a href="" ng-click="hideCreateRevenueAccountForm()">Cancel</a>
+    </form>
+</modal-dialog>
+
+<modal-dialog show="updateRevenueAccountFormVisible" width='500px' dialog-title='Update Revenue Account' on-close='hideUpdateRevenueAccountForm()'>
+    <form ng-submit="updateRevenueAccount()">
+        <table>
+            <tbody>
+            <input type="hidden" ng-model="revenue_account.id"/>
+            <tr><td>Title:</td>
+                <td><input type="text" ng-model="revenue_account.title"/></td></tr>
+            <tr><td>Account Code:</td>
+                <td><select ng-model="revenue_account.account_code_id"
+                            ng-options="account_code.id as accountCodeTitle(account_code.id) for account_code in account_codes">
+                            </select></td></tr>
+            <tr><td>Default Deposit Account:</td>
+                <td><select ng-model="revenue_account.default_deposit_account_id"
+                            ng-options="bank_account.id as bank_account.attributes.title for bank_account in bank_accounts">
+                    <option value="">[none]</option>
+                </select></td></tr>
+            </tbody>
+        </table>
+        <input type="submit" name="Update" value="Update"/>
+        <a href="" ng-click="hideUpdateRevenueAccountForm()">Cancel</a>
+    </form>
+</modal-dialog>
+
+<modal-dialog show="createExpenseAccountFormVisible" width='500px' dialog-title='Create Expense Account' on-close='hideCreateExpenseAccountForm()'>
+    <form ng-submit="createExpenseAccount()">
+        <table>
+            <tbody>
+            <tr><td>Title:</td>
+                <td><input type="text" ng-model="expense_account.title"/></td></tr>
+            <tr><td>Account Code:</td>
+                <td><select ng-model="expense_account.account_code_id"
+                            ng-options="account_code.id as accountCodeTitle(account_code.id) for account_code in account_codes">
+                            </select></td></tr>
+            <tr><td>Default Source Account:</td>
+                <td><select ng-model="expense_account.default_source_account_id"
+                            ng-options="bank_account.id as bank_account.attributes.title for bank_account in bank_accounts">
+                    <option value="">[none]</option>
+                </select></td></tr>
+            </tbody>
+        </table>
+        <input type="submit" name="Create" value="Create"/>
+        <a href="" ng-click="hideCreateExpenseAccountForm()">Cancel</a>
+    </form>
+</modal-dialog>
+
+<modal-dialog show="updateExpenseAccountFormVisible" width='500px' dialog-title='Update Expense Account' on-close='hideUpdateExpenseAccountForm()'>
+    <form ng-submit="updateExpenseAccount()">
+        <table>
+            <tbody>
+            <input type="hidden" ng-model="expense_account.id"/>
+            <tr><td>Title:</td>
+                <td><input type="text" ng-model="expense_account.title"/></td></tr>
+            <tr><td>Account Code:</td>
+                <td><select ng-model="expense_account.account_code_id"
+                            ng-options="account_code.id as accountCodeTitle(account_code.id) for account_code in account_codes">
+                            </select></td></tr>
+            <tr><td>Default Source Account:</td>
+                <td><select ng-model="expense_account.default_source_account_id"
+                            ng-options="bank_account.id as bank_account.attributes.title for bank_account in bank_accounts">
+                    <option value="">[none]</option>
+                </select></td></tr>
+            </tbody>
+        </table>
+        <input type="submit" name="Update" value="Update"/>
+        <a href="" ng-click="hideUpdateExpenseAccountForm()">Cancel</a>
+    </form>
+</modal-dialog>
