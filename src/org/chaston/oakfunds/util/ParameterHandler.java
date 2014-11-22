@@ -15,6 +15,8 @@
  */
 package org.chaston.oakfunds.util;
 
+import org.chaston.oakfunds.storage.Identifiable;
+import org.chaston.oakfunds.storage.IdentifiableSource;
 import org.json.simple.JSONObject;
 
 import javax.servlet.ServletException;
@@ -88,6 +90,9 @@ public class ParameterHandler<T> {
             if (jsonValue instanceof Integer) {
               return (Integer) jsonValue;
             }
+            if (jsonValue instanceof Long) {
+              return ((Long) jsonValue).intValue();
+            }
             if (jsonValue instanceof String) {
               try {
                 return Integer.parseInt((String) jsonValue);
@@ -114,6 +119,28 @@ public class ParameterHandler<T> {
           @Override
           public String parse(Object jsonValue) throws ServletException {
             return (String) jsonValue;
+          }
+        });
+  }
+
+  public static <T extends Identifiable> Builder<T> identifiableParameter(final String parameter,
+      final IdentifiableSource<T> identifiableSource) {
+    return new Builder<>(parameter,
+        new StringValueParser<T>() {
+          @Override
+          public T parse(String stringValue) throws ServletException {
+            return identifiableSource.fromJson(stringValue);
+          }
+        },
+        new JSONValueParser<T>() {
+          @Override
+          public T parse(Object jsonValue) throws ServletException {
+            if (jsonValue instanceof String) {
+              return identifiableSource.fromJson((String) jsonValue);
+            }
+            throw new ServletException(
+                "Could not process " + identifiableSource.getTypeName() + " request attribute "
+                    + parameter + ": " + jsonValue);
           }
         });
   }
