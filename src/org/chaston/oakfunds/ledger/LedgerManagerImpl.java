@@ -56,6 +56,9 @@ class LedgerManagerImpl implements LedgerManager {
   static final Permission PERMISSION_BANK_ACCOUNT_CREATE =
       Permission.builder("bank_account.create")
           .addRelatedAction(BankAccount.TYPE, ActionType.CREATE).build();
+  static final Permission PERMISSION_BANK_ACCOUNT_UPDATE =
+      Permission.builder("bank_account.update")
+          .addRelatedAction(BankAccount.TYPE, ActionType.UPDATE).build();
 
   static final Permission PERMISSION_EXPENSE_ACCOUNT_READ =
       Permission.builder("expense_account.read")
@@ -63,6 +66,9 @@ class LedgerManagerImpl implements LedgerManager {
   static final Permission PERMISSION_EXPENSE_ACCOUNT_CREATE =
       Permission.builder("expense_account.create")
           .addRelatedAction(ExpenseAccount.TYPE, ActionType.CREATE).build();
+  static final Permission PERMISSION_EXPENSE_ACCOUNT_UPDATE =
+      Permission.builder("expense_account.update")
+          .addRelatedAction(ExpenseAccount.TYPE, ActionType.UPDATE).build();
 
   static final Permission PERMISSION_REVENUE_ACCOUNT_READ =
       Permission.builder("revenue_account.read")
@@ -70,6 +76,9 @@ class LedgerManagerImpl implements LedgerManager {
   static final Permission PERMISSION_REVENUE_ACCOUNT_CREATE =
       Permission.builder("revenue_account.create")
           .addRelatedAction(RevenueAccount.TYPE, ActionType.CREATE).build();
+  static final Permission PERMISSION_REVENUE_ACCOUNT_UPDATE =
+      Permission.builder("revenue_account.update")
+          .addRelatedAction(RevenueAccount.TYPE, ActionType.UPDATE).build();
 
   static final Permission PERMISSION_BANK_ACCOUNT_INTEREST_READ =
       Permission.builder("bank_account_interest.read")
@@ -104,6 +113,17 @@ class LedgerManagerImpl implements LedgerManager {
     attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
     attributes.put(BankAccount.ATTRIBUTE_BANK_ACCOUNT_TYPE, bankAccountType);
     return store.createRecord(BankAccount.TYPE, attributes);
+  }
+
+  @Override
+  @PermissionAssertion("bank_account.update")
+  public BankAccount updateBankAccount(BankAccount bankAccount, AccountCode accountCode,
+      String title, BankAccountType bankAccountType) throws StorageException {
+    Map<String, Object> attributes = new HashMap<>();
+    attributes.put(Account.ATTRIBUTE_TITLE, title);
+    attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
+    attributes.put(BankAccount.ATTRIBUTE_BANK_ACCOUNT_TYPE, bankAccountType);
+    return store.updateRecord(bankAccount, attributes);
   }
 
   @Override
@@ -144,14 +164,45 @@ class LedgerManagerImpl implements LedgerManager {
   }
 
   @Override
+  @PermissionAssertion("expense_account.read")
+  public ExpenseAccount getExpenseAccount(int id) throws StorageException {
+    return store.getRecord(ExpenseAccount.TYPE, id);
+  }
+
+  @Override
   @PermissionAssertion("expense_account.create")
   public ExpenseAccount createExpenseAccount(AccountCode accountCode, String title,
       BankAccount defaultSourceAccount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(Account.ATTRIBUTE_TITLE, title);
     attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
-    attributes.put(ExpenseAccount.ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID, defaultSourceAccount.getId());
+    Integer defaultSourceAccountId = null;
+    if (defaultSourceAccount != null) {
+      defaultSourceAccountId = defaultSourceAccount.getId();
+    }
+    attributes.put(ExpenseAccount.ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID, defaultSourceAccountId);
     return store.createRecord(ExpenseAccount.TYPE, attributes);
+  }
+
+  @Override
+  @PermissionAssertion("expense_account.update")
+  public ExpenseAccount updateExpenseAccount(ExpenseAccount expenseAccount, AccountCode accountCode,
+      String title, BankAccount defaultSourceAccount) throws StorageException {
+    Map<String, Object> attributes = new HashMap<>();
+    attributes.put(Account.ATTRIBUTE_TITLE, title);
+    attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
+    Integer defaultSourceAccountId = null;
+    if (defaultSourceAccount != null) {
+      defaultSourceAccountId = defaultSourceAccount.getId();
+    }
+    attributes.put(ExpenseAccount.ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID, defaultSourceAccountId);
+    return store.updateRecord(expenseAccount, attributes);
+  }
+
+  @Override
+  @PermissionAssertion("revenue_account.read")
+  public RevenueAccount getRevenueAccount(int id) throws StorageException {
+    return store.getRecord(RevenueAccount.TYPE, id);
   }
 
   @Override
@@ -161,14 +212,41 @@ class LedgerManagerImpl implements LedgerManager {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(Account.ATTRIBUTE_TITLE, title);
     attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
-    attributes.put(RevenueAccount.ATTRIBUTE_DEFAULT_DEPOSIT_ACCOUNT_ID, defaultDepositAccount.getId());
+    Integer defaultDepositAccountId = null;
+    if (defaultDepositAccount != null) {
+      defaultDepositAccountId = defaultDepositAccount.getId();
+    }
+    attributes.put(RevenueAccount.ATTRIBUTE_DEFAULT_DEPOSIT_ACCOUNT_ID, defaultDepositAccountId);
     return store.createRecord(RevenueAccount.TYPE, attributes);
+  }
+
+  @Override
+  @PermissionAssertion("revenue_account.update")
+  public RevenueAccount updateRevenueAccount(RevenueAccount expenseAccount, AccountCode accountCode,
+      String title, BankAccount defaultDepositAccount) throws StorageException {
+    Map<String, Object> attributes = new HashMap<>();
+    attributes.put(Account.ATTRIBUTE_TITLE, title);
+    attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
+    Integer defaultDepositAccountId = null;
+    if (defaultDepositAccount != null) {
+      defaultDepositAccountId = defaultDepositAccount.getId();
+    }
+    attributes.put(RevenueAccount.ATTRIBUTE_DEFAULT_DEPOSIT_ACCOUNT_ID, defaultDepositAccountId);
+    return store.updateRecord(expenseAccount, attributes);
   }
 
   @Override
   @PermissionAssertion("account.read")
   public Iterable<Account> getAccounts() throws StorageException {
     return store.findRecords(Account.TYPE, ImmutableList.<SearchTerm>of(),
+        ImmutableList.of(
+            AttributeOrderingTerm.of(Account.ATTRIBUTE_TITLE, OrderingTerm.Order.ASC)));
+  }
+
+  @Override
+  @PermissionAssertion("bank_account.read")
+  public Iterable<BankAccount> getBankAccounts() throws StorageException {
+    return store.findRecords(BankAccount.TYPE, ImmutableList.<SearchTerm>of(),
         ImmutableList.of(
             AttributeOrderingTerm.of(Account.ATTRIBUTE_TITLE, OrderingTerm.Order.ASC)));
   }

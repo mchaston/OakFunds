@@ -33,6 +33,10 @@ public interface LedgerManager {
   BankAccount createBankAccount(AccountCode accountCode, String title,
       BankAccountType bankAccountType) throws StorageException;
 
+  BankAccount updateBankAccount(BankAccount bankAccount,
+      AccountCode accountCode, String title, BankAccountType bankAccountType)
+      throws StorageException;
+
   void setInterestRate(BankAccount bankAccount, BigDecimal interestRate, Instant start, Instant end)
       throws StorageException;
 
@@ -40,13 +44,27 @@ public interface LedgerManager {
 
   BigDecimal getBalance(BankAccount bankAccount, Instant date) throws StorageException;
 
+  ExpenseAccount getExpenseAccount(int id) throws StorageException;
+
   ExpenseAccount createExpenseAccount(AccountCode accountCode, String title,
       BankAccount defaultSourceAccount) throws StorageException;
+
+  ExpenseAccount updateExpenseAccount(ExpenseAccount expenseAccount,
+      AccountCode accountCode, String title, BankAccount defaultSourceAccount)
+      throws StorageException;
+
+  RevenueAccount getRevenueAccount(int id) throws StorageException;
 
   RevenueAccount createRevenueAccount(AccountCode accountCode, String title,
       BankAccount defaultDepositAccount) throws StorageException;
 
+  RevenueAccount updateRevenueAccount(RevenueAccount expenseAccount,
+      AccountCode accountCode, String title, BankAccount defaultDepositAccount)
+      throws StorageException;
+
   Iterable<Account> getAccounts() throws StorageException;
+
+  Iterable<BankAccount> getBankAccounts() throws StorageException;
 
   void recordTransaction(Account account, Instant date, BigDecimal amount) throws StorageException;
 

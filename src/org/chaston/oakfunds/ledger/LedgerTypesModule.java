@@ -47,13 +47,19 @@ public class LedgerTypesModule extends AbstractModule {
     permissionMultibinder.addBinding()
         .toInstance(LedgerManagerImpl.PERMISSION_BANK_ACCOUNT_CREATE);
     permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_BANK_ACCOUNT_UPDATE);
+    permissionMultibinder.addBinding()
         .toInstance(LedgerManagerImpl.PERMISSION_EXPENSE_ACCOUNT_READ);
     permissionMultibinder.addBinding()
         .toInstance(LedgerManagerImpl.PERMISSION_EXPENSE_ACCOUNT_CREATE);
     permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_EXPENSE_ACCOUNT_UPDATE);
+    permissionMultibinder.addBinding()
         .toInstance(LedgerManagerImpl.PERMISSION_REVENUE_ACCOUNT_READ);
     permissionMultibinder.addBinding()
         .toInstance(LedgerManagerImpl.PERMISSION_REVENUE_ACCOUNT_CREATE);
+    permissionMultibinder.addBinding()
+        .toInstance(LedgerManagerImpl.PERMISSION_REVENUE_ACCOUNT_UPDATE);
     permissionMultibinder.addBinding()
         .toInstance(LedgerManagerImpl.PERMISSION_BANK_ACCOUNT_INTEREST_READ);
     permissionMultibinder.addBinding()
