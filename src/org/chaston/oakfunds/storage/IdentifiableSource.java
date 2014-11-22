@@ -18,8 +18,10 @@ package org.chaston.oakfunds.storage;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface IdentifiableSource {
-  Identifiable lookup(byte identifier);
+public interface IdentifiableSource<T extends Identifiable> {
+  T lookup(byte identifier);
 
-  Identifiable fromJson(String json);
+  T fromJson(String json);
+
+  String getTypeName();
 }

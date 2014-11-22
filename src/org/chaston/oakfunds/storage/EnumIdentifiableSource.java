@@ -22,7 +22,8 @@ import java.util.EnumSet;
 /**
  * TODO(mchaston): write JavaDocs
  */
-public class EnumIdentifiableSource<E extends Enum & Identifiable> implements IdentifiableSource {
+public class EnumIdentifiableSource<E extends Enum & Identifiable>
+    implements IdentifiableSource<E> {
 
   private final Class<E> enumClass;
   private final ImmutableMap<Byte, E> valuesByIdentifier;
@@ -42,8 +43,8 @@ public class EnumIdentifiableSource<E extends Enum & Identifiable> implements Id
   }
 
   @Override
-  public Identifiable lookup(byte identifier) {
-    Identifiable identifiable = valuesByIdentifier.get(identifier);
+  public E lookup(byte identifier) {
+    E identifiable = valuesByIdentifier.get(identifier);
     if (identifiable != null) {
       return identifiable;
     }
@@ -52,12 +53,17 @@ public class EnumIdentifiableSource<E extends Enum & Identifiable> implements Id
   }
 
   @Override
-  public Identifiable fromJson(String json) {
-    Identifiable identifiable = valuesByJson.get(json);
+  public E fromJson(String json) {
+    E identifiable = valuesByJson.get(json);
     if (identifiable != null) {
       return identifiable;
     }
     throw new IllegalArgumentException(
         "No such " + enumClass.getSimpleName() + " json value: " + json);
+  }
+
+  @Override
+  public String getTypeName() {
+    return enumClass.getSimpleName();
   }
 }

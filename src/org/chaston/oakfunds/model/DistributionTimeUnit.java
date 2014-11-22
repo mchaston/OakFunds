@@ -46,13 +46,13 @@ public enum DistributionTimeUnit implements Identifiable {
     }
   };
 
-  private static final IdentifiableSource IDENTIFIABLE_SOURCE =
+  private static final IdentifiableSource<DistributionTimeUnit> IDENTIFIABLE_SOURCE =
       new EnumIdentifiableSource<>(DistributionTimeUnit.class);
 
   /**
    * Supports the Identifiable type contract.
    */
-  public static IdentifiableSource getIdentifiableSource() {
+  public static IdentifiableSource<DistributionTimeUnit> getIdentifiableSource() {
     return IDENTIFIABLE_SOURCE;
   }
 }

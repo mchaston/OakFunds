@@ -46,13 +46,13 @@ public enum BankAccountType implements Identifiable {
     }
   };
 
-  private static final IdentifiableSource IDENTIFIABLE_SOURCE =
+  private static final IdentifiableSource<BankAccountType> IDENTIFIABLE_SOURCE =
       new EnumIdentifiableSource<>(BankAccountType.class);
 
   /**
    * Supports the Identifiable type contract.
    */
-  public static IdentifiableSource getIdentifiableSource() {
+  public static IdentifiableSource<BankAccountType> getIdentifiableSource() {
     return IDENTIFIABLE_SOURCE;
   }
 }

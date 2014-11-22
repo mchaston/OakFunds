@@ -124,13 +124,13 @@ public class ProxyTest {
       }
     };
 
-    private static final IdentifiableSource IDENTIFIABLE_SOURCE =
+    private static final IdentifiableSource<CustomEnum> IDENTIFIABLE_SOURCE =
         new EnumIdentifiableSource<>(CustomEnum.class);
 
     /**
      * Supports the Identifiable type contract.
      */
-    public static IdentifiableSource getIdentifiableSource() {
+    public static IdentifiableSource<CustomEnum> getIdentifiableSource() {
       return IDENTIFIABLE_SOURCE;
     }
   }
