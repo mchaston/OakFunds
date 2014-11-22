@@ -18,6 +18,7 @@ package org.chaston.oakfunds.storage;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -35,6 +36,10 @@ class StringTypeHandler extends JdbcTypeHandler {
 
   @Override
   void set(PreparedStatement stmt, int index, Object value) throws SQLException {
-    stmt.setString(index, (String) value);
+    if (value == null) {
+      stmt.setNull(index, Types.VARCHAR);
+    } else {
+      stmt.setString(index, (String) value);
+    }
   }
 }

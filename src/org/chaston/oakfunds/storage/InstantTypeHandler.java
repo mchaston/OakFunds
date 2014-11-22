@@ -21,6 +21,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -38,7 +39,11 @@ class InstantTypeHandler extends JdbcTypeHandler {
 
   @Override
   void set(PreparedStatement stmt, int index, Object value) throws SQLException {
-    stmt.setTimestamp(index, new Timestamp(((Instant) value).getMillis()));
+    if (value == null) {
+      stmt.setNull(index, Types.TIMESTAMP);
+    } else {
+      stmt.setTimestamp(index, new Timestamp(((Instant) value).getMillis()));
+    }
   }
 
   @Override

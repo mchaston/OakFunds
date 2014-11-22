@@ -22,6 +22,7 @@ import java.math.RoundingMode;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -41,11 +42,15 @@ class BigDecimalTypeHandler extends JdbcTypeHandler {
 
   @Override
   void set(PreparedStatement stmt, int index, Object value) throws SQLException {
-    BigDecimal bigDecimal = (BigDecimal) value;
-    if (bigDecimal.scale() != SCALE) {
-      bigDecimal = bigDecimal.setScale(SCALE, RoundingMode.HALF_UP);
+    if (value == null) {
+      stmt.setNull(index, Types.BIGINT);
+    } else {
+      BigDecimal bigDecimal = (BigDecimal) value;
+      if (bigDecimal.scale() != SCALE) {
+        bigDecimal = bigDecimal.setScale(SCALE, RoundingMode.HALF_UP);
+      }
+      stmt.setLong(index, bigDecimal.unscaledValue().longValue());
     }
-    stmt.setLong(index, bigDecimal.unscaledValue().longValue());
   }
 
   @Override
