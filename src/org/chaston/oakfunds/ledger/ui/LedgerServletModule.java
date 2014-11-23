@@ -43,5 +43,12 @@ public class LedgerServletModule extends ServletModule {
     bind(RevenueAccountCreateServlet.class).in(Singleton.class);
     serveRegex(RevenueAccountUpdateServlet.URI_REGEX).with(RevenueAccountUpdateServlet.class);
     bind(RevenueAccountUpdateServlet.class).in(Singleton.class);
+
+    serveRegex(AccountReadServlet.URI_REGEX).with(AccountReadServlet.class);
+    bind(AccountReadServlet.class).in(Singleton.class);
+    serveRegex(AccountTransactionListServlet.URI_REGEX).with(AccountTransactionListServlet.class);
+    bind(AccountTransactionListServlet.class).in(Singleton.class);
+    serveRegex(AccountTransactionCreateServlet.URI_REGEX).with(AccountTransactionCreateServlet.class);
+    bind(AccountTransactionCreateServlet.class).in(Singleton.class);
   }
 }

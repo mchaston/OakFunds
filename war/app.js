@@ -39,3 +39,18 @@ function handleRequestErrors($window, data, status, headers) {
     alert('error occurred: ' + status);
   }
 }
+
+function formatDate(dateString) {
+  var date = new Date(dateString);
+  return date.ddmmmyyyy();
+}
+
+var monthNames = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
+
+Date.prototype.ddmmmyyyy = function() {
+  var dd  = this.getDate().toString();
+  return (dd[1]?dd:"0"+dd[0]) +
+      ' ' + monthNames[this.getMonth()] +
+      ' ' + this.getFullYear();
+};

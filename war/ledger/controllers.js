@@ -6,6 +6,10 @@ ledgerControllers.config(['$routeProvider',
       when('/accounts', {
         templateUrl: '/ledger/accounts.ng',
         controller: 'LedgerAccountsCtrl'
+      }).
+      when('/account/:accountId/transactions', {
+        templateUrl: '/ledger/transactions.ng',
+        controller: 'LedgerTransactionsCtrl'
       });
   }]);
 
@@ -280,4 +284,63 @@ ledgerControllers.controller('LedgerAccountsCtrl', ['$scope', '$http', '$window'
           return 'Other';
       }
     }
+  }]);
+
+ledgerControllers.controller('LedgerTransactionsCtrl', ['$scope', '$http', '$routeParams', '$window',
+  function ($scope, $http, $routeParams, $window) {
+    // Bind the common formatDate function.
+    $scope.formatDate = formatDate;
+    // load the account
+    $http.get('/ledger/account/' + $routeParams.accountId)
+        .success(function(data) {
+          $scope.account = data;
+        })
+        .error(function(data, status, headers) {
+          handleRequestErrors($window, data, status, headers);
+        });
+
+    $scope.account_transaction = {};
+    $scope.createAccountTransactionFormVisible = false;
+
+    $scope.showCreateAccountTransactionForm = function() {
+      $scope.account_transaction = {
+        'date': new Date(),
+        'amount': 0,
+      };
+      $scope.createAccountTransactionFormVisible = true;
+    }
+
+    $scope.hideCreateAccountTransactionForm = function() {
+      $scope.createAccountTransactionFormVisible = false;
+      $scope.account_transaction = {};
+    }
+
+    $scope.createAccountTransaction = function() {
+      var createRequest = {
+        'date': $scope.account_transaction.date,
+        'amount': $scope.account_transaction.amount,
+        'comment': $scope.account_transaction.comment,
+      };
+      $http.post('/ledger/account/' + $routeParams.accountId + '/create_transaction', createRequest)
+          .success(function(data) {
+            $scope.hideCreateAccountTransactionForm();
+            $scope.refreshTable();
+          })
+          .error(function(data, status, headers) {
+            handleRequestErrors($window, data, status, headers);
+          });
+    }
+
+    $scope.refreshTable = function() {
+      // refresh the accounts table
+      $http.get('/ledger/account/' + $routeParams.accountId + '/transactions')
+          .success(function(data) {
+            $scope.transactions = data;
+          })
+          .error(function(data, status, headers) {
+            handleRequestErrors($window, data, status, headers);
+          });
+    }
+
+    $scope.refreshTable();
   }]);
