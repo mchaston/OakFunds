@@ -1,4 +1,4 @@
-<h2>Manage account {{account.attributes.title}} transactions</h2>
+<h2>Manage transactions for {{account.attributes.title}}</h2>
 
 <button ng-click="showCreateAccountTransactionForm()">Create transaction...</button>
 <table>
