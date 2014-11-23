@@ -17,15 +17,32 @@ package org.chaston.oakfunds.util;
 
 import org.chaston.oakfunds.storage.Identifiable;
 import org.chaston.oakfunds.storage.IdentifiableSource;
+import org.joda.time.Instant;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
 import org.json.simple.JSONObject;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
 public class ParameterHandler<T> {
+
+  private static final DateTimeFormatter DATE_TIME_FORMAT = new DateTimeFormatterBuilder()
+      .appendYear(4, 4)
+      .appendLiteral('-').appendMonthOfYear(2)
+      .appendLiteral('-').appendDayOfMonth(2)
+      .appendLiteral('T')
+      .appendHourOfDay(2)
+      .appendLiteral(':').appendMinuteOfHour(2)
+      .appendLiteral(':').appendSecondOfMinute(2)
+      .appendLiteral('.').appendMillisOfSecond(3)
+      .appendTimeZoneOffset("Z", true, 2, 4)
+      .toFormatter();
+
   private final String parameter;
   private final StringValueParser<T> stringValueParser;
   private final JSONValueParser<T> jsonValueParser;
@@ -119,6 +136,67 @@ public class ParameterHandler<T> {
           @Override
           public String parse(Object jsonValue) throws ServletException {
             return (String) jsonValue;
+          }
+        });
+  }
+
+  public static ParameterHandler.Builder<Instant> instantParameter(final String parameter) {
+    return new Builder<>(parameter,
+        new StringValueParser<Instant>() {
+          @Override
+          public Instant parse(String stringValue) throws ServletException {
+            try {
+              return DATE_TIME_FORMAT.parseDateTime(stringValue).toInstant();
+            } catch (IllegalArgumentException e) {
+              throw new ServletException(
+                  "Could not process date request parameter " + parameter + ": " + stringValue);
+            }
+          }
+        },
+        new JSONValueParser<Instant>() {
+          @Override
+          public Instant parse(Object jsonValue) throws ServletException {
+            try {
+              return DATE_TIME_FORMAT.parseDateTime((String) jsonValue).toInstant();
+            } catch (IllegalArgumentException e) {
+              throw new ServletException(
+                  "Could not process date request parameter " + parameter + ": " + jsonValue);
+            }
+          }
+        });
+  }
+
+  public static ParameterHandler.Builder<BigDecimal> bigDecimalParameter(final String parameter) {
+    return new Builder<>(parameter,
+        new StringValueParser<BigDecimal>() {
+          @Override
+          public BigDecimal parse(String stringValue) throws ServletException {
+            return BigDecimal.valueOf(Double.parseDouble(stringValue));
+          }
+        },
+        new JSONValueParser<BigDecimal>() {
+          @Override
+          public BigDecimal parse(Object jsonValue) throws ServletException {
+            if (jsonValue instanceof Double) {
+              return BigDecimal.valueOf((double) jsonValue);
+            }
+            if (jsonValue instanceof Long) {
+              return BigDecimal.valueOf((long) jsonValue);
+            }
+            if (jsonValue instanceof Integer) {
+              return BigDecimal.valueOf((int) jsonValue);
+            }
+            if (jsonValue instanceof String) {
+              try {
+                return BigDecimal.valueOf(Double.parseDouble((String) jsonValue));
+              } catch (NumberFormatException e) {
+                throw new ServletException(
+                    "Could not process big double request attribute " + parameter
+                        + ": " + jsonValue);
+              }
+            }
+            throw new ServletException(
+                "Could not process integer request attribute " + parameter + ": " + jsonValue);
           }
         });
   }
