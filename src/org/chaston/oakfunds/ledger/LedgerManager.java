@@ -64,12 +64,17 @@ public interface LedgerManager {
 
   Iterable<Account> getAccounts() throws StorageException;
 
+  Account getAccount(int id) throws StorageException;
+
   Iterable<BankAccount> getBankAccounts() throws StorageException;
 
-  void recordTransaction(Account account, Instant date, BigDecimal amount) throws StorageException;
-
-  void recordTransaction(Account account, Instant date, BigDecimal amount, String comment)
+  AccountTransaction recordTransaction(Account account, Instant date, BigDecimal amount)
       throws StorageException;
+
+  AccountTransaction recordTransaction(Account account, Instant date, BigDecimal amount,
+      String comment) throws StorageException;
+
+  Iterable<AccountTransaction> getAccountTransactions(Account account) throws StorageException;
 
   /**
    * Binds an Account to a ModelAccount so that AccountTransactions are automatically bound

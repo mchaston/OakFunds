@@ -237,6 +237,12 @@ class LedgerManagerImpl implements LedgerManager {
 
   @Override
   @PermissionAssertion("account.read")
+  public Account getAccount(int id) throws StorageException {
+    return store.getRecord(Account.TYPE, id);
+  }
+
+  @Override
+  @PermissionAssertion("account.read")
   public Iterable<Account> getAccounts() throws StorageException {
     return store.findRecords(Account.TYPE, ImmutableList.<SearchTerm>of(),
         ImmutableList.of(
@@ -252,17 +258,26 @@ class LedgerManagerImpl implements LedgerManager {
   }
 
   @Override
-  @PermissionAssertion("account_transaction.create")
-  public void recordTransaction(Account account, Instant date, BigDecimal amount)
+  @PermissionAssertion("account_transaction.read")
+  public Iterable<AccountTransaction> getAccountTransactions(Account account)
       throws StorageException {
-    recordTransaction(account, date, amount, null);
+    return store.findInstantRecords(account, AccountTransaction.TYPE,
+        DateUtil.BEGINNING_OF_TIME, DateUtil.END_OF_TIME,
+        ImmutableList.<SearchTerm>of());
   }
 
   @Override
   @PermissionAssertion("account_transaction.create")
-  public void recordTransaction(Account account, Instant date, BigDecimal amount, String comment)
+  public AccountTransaction recordTransaction(Account account, Instant date, BigDecimal amount)
       throws StorageException {
-    recordTransaction(account, date, amount, comment, null);
+    return recordTransaction(account, date, amount, null);
+  }
+
+  @Override
+  @PermissionAssertion("account_transaction.create")
+  public AccountTransaction recordTransaction(Account account, Instant date, BigDecimal amount, String comment)
+      throws StorageException {
+    return recordTransaction(account, date, amount, comment, null);
   }
 
   @Override
@@ -290,8 +305,8 @@ class LedgerManagerImpl implements LedgerManager {
         searchTerms, "account_id", dimensions, measures);
   }
 
-  private void recordTransaction(Account account, Instant date, BigDecimal amount, String comment,
-      Integer sisterTransactionId) throws StorageException {
+  private AccountTransaction recordTransaction(Account account, Instant date, BigDecimal amount,
+      String comment, Integer sisterTransactionId) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(AccountTransaction.ATTRIBUTE_AMOUNT, amount);
     if (comment != null) {
@@ -312,5 +327,6 @@ class LedgerManagerImpl implements LedgerManager {
       BankAccount bankAccount = getBankAccount(revenueAccount.getDefaultDepositAccountId());
       recordTransaction(bankAccount, date, amount, comment, transaction.getId());
     }
+    return transaction;
   }
 }
