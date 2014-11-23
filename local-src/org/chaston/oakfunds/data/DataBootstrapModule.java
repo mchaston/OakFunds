@@ -16,6 +16,7 @@
 package org.chaston.oakfunds.data;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.AbstractModule;
@@ -25,6 +26,7 @@ import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.account.AccountCodeManager;
 import org.chaston.oakfunds.bootstrap.BootstrapTask;
 import org.chaston.oakfunds.bootstrap.TransactionalBootstrapTask;
+import org.chaston.oakfunds.ledger.Account;
 import org.chaston.oakfunds.ledger.BankAccount;
 import org.chaston.oakfunds.ledger.BankAccountType;
 import org.chaston.oakfunds.ledger.ExpenseAccount;
@@ -34,6 +36,8 @@ import org.chaston.oakfunds.storage.Record;
 import org.chaston.oakfunds.storage.StorageException;
 import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.system.SystemBootstrapModule;
+import org.chaston.oakfunds.util.BigDecimalUtil;
+import org.joda.time.DateTime;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -77,10 +81,13 @@ public class DataBootstrapModule extends AbstractModule {
     protected void bootstrapDuringTransaction() throws Exception {
       ImmutableMap<Integer, AccountCode> accountCodes = bootstrapAccountCodes();
       ImmutableMap<Integer, BankAccount> bankAccounts = bootstrapBankAccounts(accountCodes);
+      addTransactions(bankAccounts.values());
       ImmutableMap<Integer, RevenueAccount> revenueAccounts =
           bootstrapRevenueAccounts(accountCodes, bankAccounts);
+      addTransactions(revenueAccounts.values());
       ImmutableMap<Integer, ExpenseAccount> expenseAccounts =
           bootstrapExpenseAccounts(accountCodes, bankAccounts);
+      addTransactions(expenseAccounts.values());
     }
 
     private ImmutableMap<Integer, AccountCode> bootstrapAccountCodes() throws StorageException{
@@ -136,6 +143,18 @@ public class DataBootstrapModule extends AbstractModule {
                 }
               })));
       return expenseAccounts.build();
+    }
+
+    private void addTransactions(ImmutableCollection<? extends Account> accounts)
+        throws StorageException {
+      int day = 3;
+      long value = 1;
+      for (Account account : accounts) {
+        ledgerManager.recordTransaction(account,
+            DateTime.parse("2014-12-" + day++).toInstant(),
+            BigDecimalUtil.valueOf(value++ * 1000),
+            "bootstrapped");
+      }
     }
 
     @Override
