@@ -1,5 +1,5 @@
 <project name="OakFunds" default="build-war">
-	<property name="appengine.sdk" location="../appengine-1.9.10/appengine-java-sdk-1.9.10" />
+	<property name="appengine.sdk" location="../appengine-1.9.15/appengine-java-sdk-1.9.15" />
 	<property name="src.dir" location="src" />
 	<property name="local-src.dir" location="local-src" />
 	<property name="test.dir" location="tests" />
@@ -13,7 +13,7 @@
 	<import file="${appengine.sdk}/config/user/ant-macros.xml" />
 
 	<path id="prod-classpath">
-		<path location="libraries/appengine/appengine-api-1.0-sdk-1.9.10.jar"/>
+		<path location="libraries/appengine/appengine-api-1.0-sdk-1.9.15.jar"/>
 		<path location="libraries/commons-codec/commons-codec-1.6.jar"/>
 		<path location="libraries/commons-dbcp/commons-dbcp-1.4.jar"/>
 		<path location="libraries/commons-logging/commons-logging-1.2.jar"/>
@@ -172,7 +172,7 @@
         https://security.google.com/settings/security/apppasswords
 
 	  2. Run the following command:
-	    ./Desktop/Projects/appengine-1.9.10/appengine-java-sdk-1.9.10/bin/appcfg.sh \
+	    ./Desktop/Projects/appengine-1.9.15/appengine-java-sdk-1.9.15/bin/appcfg.sh \
 	        vacuum_indexes ~/Desktop/Projects/OakFunds/build/war
 
 	-->

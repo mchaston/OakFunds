@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="appengine">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/libraries/appengine/appengine-api-1.0-sdk-1.9.10.jar!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/appengine/appengine-api-1.0-sdk-1.9.15.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/libraries/appengine/appengine-api-1.0-sdk-1.9.10-src.zip!/" />
+      <root url="jar://$PROJECT_DIR$/libraries/appengine/appengine-api-1.0-sdk-1.9.15-src.zip!/" />
     </SOURCES>
   </library>
 </component>
