@@ -15,7 +15,6 @@
  */
 package org.chaston.oakfunds.util;
 
-import org.chaston.oakfunds.storage.Record;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -32,17 +31,18 @@ import java.io.PrintWriter;
  * TODO(mchaston): write JavaDocs
  */
 public class JSONUtils {
-  public static void writeJSONString(PrintWriter writer, Iterable<? extends Record> records)
-      throws IOException {
+  public static void writeJSONString(PrintWriter writer,
+      Iterable<? extends JSONRepresentable> jsonRepresentables) throws IOException {
     JSONArray jsonArray = new JSONArray();
-    for (Record record : records) {
+    for (JSONRepresentable record : jsonRepresentables) {
       jsonArray.add(record.toJSONObject());
     }
     jsonArray.writeJSONString(writer);
   }
 
-  public static void writeJSONString(PrintWriter writer, Record record) throws IOException {
-    record.toJSONObject().writeJSONString(writer);
+  public static void writeJSONString(PrintWriter writer, JSONRepresentable jsonRepresentable)
+      throws IOException {
+    jsonRepresentable.toJSONObject().writeJSONString(writer);
   }
 
   public static JSONObject readRequest(HttpServletRequest request, String requestType)

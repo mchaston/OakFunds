@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.chaston.oakfunds.storage;
+package org.chaston.oakfunds.util;
 
-import org.chaston.oakfunds.util.JSONRepresentable;
+import org.json.simple.JSONObject;
 
 /**
  * TODO(mchaston): write JavaDocs
  */
-public interface Record<T extends Record> extends JSONRepresentable {
-  int getId();
-
-  RecordType<T> getRecordType();
+public interface JSONRepresentable {
+  JSONObject toJSONObject();
 }
