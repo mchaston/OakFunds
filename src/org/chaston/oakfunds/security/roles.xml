@@ -50,4 +50,7 @@
 	<permission name="user.read"/>
 	<permission name="user.create"/>
 	<permission name="user.upsert"/>
+
+	<permission name="role_grant.read"/>
+	<permission name="role_grant.create"/>
 </role>
