@@ -75,6 +75,13 @@ public class UserManagerImpl implements UserManager {
   }
 
   @Override
+  @PermissionAssertion("user.read")
+  public Iterable<User> getUsers() throws StorageException {
+    return store.findRecords(User.TYPE, ImmutableList.<SearchTerm>of(),
+        ImmutableList.<OrderingTerm>of());
+  }
+
+  @Override
   @PermissionAssertion("user.create")
   public User createUser(String identifier, String email, String name) throws StorageException {
     Preconditions.checkNotNull(identifier, "identifier");

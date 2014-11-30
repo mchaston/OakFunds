@@ -23,6 +23,8 @@ import org.chaston.oakfunds.storage.StorageException;
 public interface UserManager {
   User getUser(String identifier) throws StorageException;
 
+  Iterable<User> getUsers() throws StorageException;
+
   Iterable<RoleGrant> getRoleGrants(User user) throws StorageException;
 
   User createUser(String identifier, String email, String name) throws StorageException;
