@@ -15,6 +15,7 @@
  */
 package org.chaston.oakfunds.security;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -36,6 +37,7 @@ import java.sql.SQLException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -165,5 +167,52 @@ public class UserManagerTest {
     assertEquals("gmail.com:miles.chaston", gotUser.getIdentifier());
     assertEquals("miles.chaston@gmail.com", gotUser.getEmail());
     assertEquals("Miles Chaston", gotUser.getName());
+  }
+
+  @Test
+  public void grantRole() throws StorageException {
+    Transaction transaction = store.startTransaction();
+    User user = userManager.createUser(
+        "gmail.com:miles.chaston", "miles.chaston@gmail.com", "Miles Chaston");
+    assertNotNull(user);
+    assertEquals("gmail.com:miles.chaston", user.getIdentifier());
+    assertEquals("miles.chaston@gmail.com", user.getEmail());
+    assertEquals("Miles Chaston", user.getName());
+
+    userManager.grantRole(user, "admin");
+
+    transaction.commit();
+
+    Iterable<RoleGrant> roleGrants = userManager.getRoleGrants(user);
+
+    assertEquals(1, Iterables.size(roleGrants));
+
+    RoleGrant roleGrant = Iterables.get(roleGrants, 0);
+    assertEquals("admin", roleGrant.getName());
+  }
+
+  @Test
+  public void revokeRole() throws StorageException {
+    Transaction transaction = store.startTransaction();
+    User user = userManager.createUser(
+        "gmail.com:miles.chaston", "miles.chaston@gmail.com", "Miles Chaston");
+    assertNotNull(user);
+    assertEquals("gmail.com:miles.chaston", user.getIdentifier());
+    assertEquals("miles.chaston@gmail.com", user.getEmail());
+    assertEquals("Miles Chaston", user.getName());
+
+    userManager.grantRole(user, "admin");
+
+    transaction.commit();
+
+    Iterable<RoleGrant> roleGrants = userManager.getRoleGrants(user);
+    RoleGrant roleGrant = Iterables.get(roleGrants, 0);
+
+    transaction = store.startTransaction();
+    userManager.revokeRole(roleGrant);
+    transaction.commit();
+
+    roleGrants = userManager.getRoleGrants(user);
+    assertTrue(Iterables.isEmpty(roleGrants));
   }
 }

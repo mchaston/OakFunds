@@ -40,10 +40,17 @@ public class UserTypesModule extends AbstractModule {
         .toInstance(UserManagerImpl.PERMISSION_USER_CREATE);
     permissionMultibinder.addBinding()
         .toInstance(UserManagerImpl.PERMISSION_USER_UPSERT);
+    permissionMultibinder.addBinding()
+        .toInstance(UserManagerImpl.PERMISSION_USER_UPDATE);
+
+    permissionMultibinder.addBinding()
+        .toInstance(UserManagerImpl.PERMISSION_ROLE_READ);
 
     permissionMultibinder.addBinding()
         .toInstance(UserManagerImpl.PERMISSION_ROLE_GRANT_READ);
     permissionMultibinder.addBinding()
         .toInstance(UserManagerImpl.PERMISSION_ROLE_GRANT_CREATE);
+    permissionMultibinder.addBinding()
+        .toInstance(UserManagerImpl.PERMISSION_ROLE_GRANT_DELETE);
   }
 }

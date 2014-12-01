@@ -15,6 +15,7 @@
  */
 package org.chaston.oakfunds.security;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,6 +49,12 @@ public class UserManagerImpl implements UserManager {
       .addRelatedAction(User.TYPE, ActionType.CREATE)
       .addRelatedAction(User.TYPE, ActionType.UPDATE)
       .build();
+  static final Permission PERMISSION_USER_UPDATE = Permission.builder("user.update")
+      .addRelatedAction(User.TYPE, ActionType.UPDATE)
+      .build();
+
+  static final Permission PERMISSION_ROLE_READ = Permission.builder("role.read")
+      .build();
 
   static final Permission PERMISSION_ROLE_GRANT_READ = Permission.builder("role_grant.read")
       .addRelatedAction(RoleGrant.TYPE, ActionType.READ)
@@ -55,12 +62,17 @@ public class UserManagerImpl implements UserManager {
   static final Permission PERMISSION_ROLE_GRANT_CREATE = Permission.builder("role_grant.create")
       .addRelatedAction(RoleGrant.TYPE, ActionType.CREATE)
       .build();
+  static final Permission PERMISSION_ROLE_GRANT_DELETE = Permission.builder("role_grant.delete")
+      .addRelatedAction(RoleGrant.TYPE, ActionType.DELETE)
+      .build();
 
   private final Store store;
+  private final RoleRegistry roleRegistry;
 
   @Inject
-  UserManagerImpl(Store store) {
+  UserManagerImpl(Store store, RoleRegistry roleRegistry) {
     this.store = store;
+    this.roleRegistry = roleRegistry;
   }
 
   @Override
@@ -72,6 +84,12 @@ public class UserManagerImpl implements UserManager {
     Iterable<User> users = store.findRecords(User.TYPE, searchTerms,
         ImmutableList.<OrderingTerm>of());
     return Iterables.getOnlyElement(users, null);
+  }
+
+  @Override
+  @PermissionAssertion("user.read")
+  public User getUser(int id) throws StorageException {
+    return store.getRecord(User.TYPE, id);
   }
 
   @Override
@@ -113,6 +131,16 @@ public class UserManagerImpl implements UserManager {
   }
 
   @Override
+  @PermissionAssertion("user.update")
+  public User updateUser(User user, String email, String name) throws StorageException {
+    Map<String, Object> attributes = new HashMap<>();
+    attributes.put(User.ATTRIBUTE_IDENTIFIER, user.getIdentifier());
+    attributes.put(User.ATTRIBUTE_EMAIL, email);
+    attributes.put(User.ATTRIBUTE_NAME, name);
+    return store.updateRecord(user, attributes);
+  }
+
+  @Override
   @PermissionAssertion("role_grant.read")
   public Iterable<RoleGrant> getRoleGrants(User user) throws StorageException {
     Preconditions.checkNotNull(user, "user");
@@ -128,9 +156,31 @@ public class UserManagerImpl implements UserManager {
   public void grantRole(User user, String roleName) throws StorageException {
     Preconditions.checkNotNull(user, "user");
     Preconditions.checkNotNull(roleName, "roleName");
+    Role role = roleRegistry.getRole(roleName);
+    if (role == null) {
+      throw new StorageException("No such role: " + roleName);
+    }
     Map<String, Object> attributes = ImmutableMap.<String, Object>of(
         RoleGrant.ATTRIBUTE_USER_ID, user.getId(),
         RoleGrant.ATTRIBUTE_NAME, roleName);
     store.createRecord(RoleGrant.TYPE, attributes);
+  }
+
+  @Override
+  @PermissionAssertion("role_grant.delete")
+  public void revokeRole(RoleGrant roleGrant) throws StorageException {
+    Preconditions.checkNotNull(roleGrant, "roleGrant");
+    store.deleteRecord(roleGrant);
+  }
+
+  @Override
+  @PermissionAssertion("role.read")
+  public Iterable<String> getRoleNames() throws StorageException {
+    return Iterables.transform(roleRegistry.getRoles(), new Function<Role, String>() {
+      @Override
+      public String apply(Role role) {
+        return role.getName();
+      }
+    });
   }
 }
