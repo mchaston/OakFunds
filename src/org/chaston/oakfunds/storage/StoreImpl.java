@@ -237,8 +237,40 @@ class StoreImpl implements Store {
       stmt.setInt(nextIndex, id);
       stmt.executeUpdate();
     } catch (SQLException e) {
-      logger.log(Level.WARNING, "Failed to insert record of type " + recordType.getName(), e);
-      throw new StorageException("Failed to insert record of type " + recordType.getName(), e);
+      logger.log(Level.WARNING, "Failed to update record of type " + recordType.getName(), e);
+      throw new StorageException("Failed to update record of type " + recordType.getName(), e);
+    }
+  }
+
+  @Override
+  public <T extends Record> void deleteRecord(T record) throws StorageException {
+    if (record instanceof IntervalRecord) {
+      throw new IllegalArgumentException("Interval records cannot be directly deleted.");
+    }
+    if (record instanceof InstantRecord) {
+      throw new IllegalArgumentException("Instant records cannot be directly deleted.");
+    }
+    authorizationContext.assertAccess(record.getRecordType(), ActionType.DELETE);
+    TransactionImpl currentTransaction = this.currentTransaction.get();
+    if (currentTransaction == null) {
+      throw new IllegalStateException("Not within transaction.");
+    }
+    deleteRecord(currentTransaction.getConnection(),
+        record.getRecordType(), record.getId());
+  }
+
+  private <T extends Record> void deleteRecord(Connection connection,
+      RecordType<T> recordType, int id) throws StorageException {
+    StringBuilder stringBuilder = new StringBuilder();
+    stringBuilder.append("DELETE FROM ").append(recordType.getTableName());
+    stringBuilder.append(" WHERE ").append(SystemColumnDefs.ID_COLUMN_NAME).append(" = ?;");
+
+    try (PreparedStatement stmt = connection.prepareStatement(stringBuilder.toString())) {
+      stmt.setInt(1, id);
+      stmt.executeUpdate();
+    } catch (SQLException e) {
+      logger.log(Level.WARNING, "Failed to delete record of type " + recordType.getName(), e);
+      throw new StorageException("Failed to delete record of type " + recordType.getName(), e);
     }
   }
 

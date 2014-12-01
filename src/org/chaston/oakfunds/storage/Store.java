@@ -38,6 +38,8 @@ public interface Store {
 
   <T extends Record> T updateRecord(T record, Map<String, Object> attributes) throws StorageException;
 
+  <T extends Record> void deleteRecord(T record) throws StorageException;
+
   <T extends IntervalRecord> T updateIntervalRecord(Record containingRecord,
       RecordType<T> recordType, Instant start, Instant end,
       Map<String, Object> attributes)
