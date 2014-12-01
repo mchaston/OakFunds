@@ -48,10 +48,15 @@ public class LocalUserAuthenticatorModule extends AbstractModule {
 
     @Override
     public Iterable<UserDef> get() {
-      UserDef testUserDef = new UserDef(LocalUserAuthenticator.LOCAL_USER_IDENTIFIER,
+      UserDef testUserDef1 = new UserDef(LocalUserAuthenticator.LOCAL_USER_IDENTIFIER,
           "miles.chaston@gmail.com", "Miles Chaston");
-      testUserDef.addRoleGrant("admin");
-      return ImmutableList.of(testUserDef);
+      testUserDef1.addRoleGrant("admin");
+
+      UserDef testUserDef2 = new UserDef("gmail.com:other.user",
+          "other.user@gmail.com", "Other User");
+      testUserDef1.addRoleGrant("account_reader");
+
+      return ImmutableList.of(testUserDef1, testUserDef2);
     }
   }
 }
