@@ -1,2 +1,39 @@
 <h2>Manage users</h2>
-<p>TODO: User list here.</p>
+
+<table>
+    <thead>
+    <td>Email</td>
+    <td>Name</td>
+    <td>Roles</td>
+    </thead>
+    <tbody>
+    <tr ng-repeat="user in users">
+        <td>{{user.attributes.email}}</td>
+        <td>{{user.attributes.name}}</td>
+        <td>
+            <p ng-if="user.role_names.length == 0">[none]</p>
+            <div ng-repeat="role_name in user.role_names">{{role_name}}<br/></div>
+        </td>
+        <td><a href="" ng-click="showUpdateForm(user)">edit</a></td>
+    </tr>
+    </tbody>
+</table>
+
+<modal-dialog show="updateFormVisible" width='500px' dialog-title='Update User' on-close='hideUpdateForm()'>
+    <form ng-submit="update()">
+        <table>
+            <tbody>
+            <input type="hidden" ng-model="user.id"/>
+            <tr><td>Email:</td>
+                <td><input type="text" ng-model="user.email"/></td></tr>
+            <tr><td>Name:</td>
+                <td><input type="text" ng-model="user.name"/></td></tr>
+            <tr><td>Roles:</td>
+                <td><select multiple="multiple" ng-model="user.role_names"
+                            ng-options="role_name for role_name in role_names"/></td></tr>
+            </tbody>
+        </table>
+        <input type="submit" name="Update" value="Update"/>
+        <a href="" ng-click="hideUpdateForm()">Cancel</a>
+    </form>
+</modal-dialog>

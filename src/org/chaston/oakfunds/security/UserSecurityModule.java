@@ -18,6 +18,7 @@ package org.chaston.oakfunds.security;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import org.chaston.oakfunds.bootstrap.BootstrappingDependency;
+import org.chaston.oakfunds.security.ui.UserServletModule;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -36,5 +37,7 @@ public class UserSecurityModule extends AbstractModule {
     bind(UserAuthenticationManagerImpl.class).in(Singleton.class);
 
     bind(RoleRegistry.class).in(Singleton.class);
+
+    install(new UserServletModule());
   }
 }
