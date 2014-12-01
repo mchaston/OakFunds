@@ -15,16 +15,19 @@
  */
 package org.chaston.oakfunds.util;
 
+import com.google.common.collect.ImmutableList;
 import org.chaston.oakfunds.storage.Identifiable;
 import org.chaston.oakfunds.storage.IdentifiableSource;
 import org.joda.time.Instant;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * TODO(mchaston): write JavaDocs
@@ -47,17 +50,21 @@ public class ParameterHandler<T> {
   private final StringValueParser<T> stringValueParser;
   private final JSONValueParser<T> jsonValueParser;
   private final String requiredMessage;
+  private final boolean repeatedValue;
   private final T defaultValue;
 
   private ParameterHandler(
       String parameter,
       StringValueParser<T> stringValueParser,
-      JSONValueParser<T> jsonValueParser, String requiredMessage,
+      JSONValueParser<T> jsonValueParser,
+      String requiredMessage,
+      boolean repeatedValue,
       T defaultValue) {
     this.parameter = parameter;
     this.stringValueParser = stringValueParser;
     this.jsonValueParser = jsonValueParser;
     this.requiredMessage = requiredMessage;
+    this.repeatedValue = repeatedValue;
     this.defaultValue = defaultValue;
   }
 
@@ -78,6 +85,9 @@ public class ParameterHandler<T> {
   }
 
   public T parse(JSONObject jsonRequest) throws ServletException {
+    if (repeatedValue) {
+      throw new IllegalStateException("Parameter " + parameter + " is a repeated value.");
+    }
     Object parameterValue = jsonRequest.get(parameter);
     if (parameterValue == null) {
       if (requiredMessage != null) {
@@ -85,7 +95,33 @@ public class ParameterHandler<T> {
       }
       return defaultValue;
     }
+    if (parameterValue instanceof JSONArray) {
+      throw new ServletException(
+          "Parameter " + parameter
+              + " was expected to be a single value, but an array was provided.");
+    }
     return jsonValueParser.parse(parameterValue);
+  }
+
+  public List<T> parseRepeated(JSONObject jsonRequest) throws ServletException {
+    if (!repeatedValue) {
+      throw new IllegalStateException("Parameter " + parameter + " is not a repeated value.");
+    }
+    Object possibleArray = jsonRequest.get(parameter);
+    if (possibleArray == null) {
+      return ImmutableList.of();
+    }
+    if (!(possibleArray instanceof JSONArray)) {
+      throw new ServletException(
+          "Parameter " + parameter
+              + " was expected to be a multi-value, but a single value was provided.");
+    }
+    JSONArray array = (JSONArray) possibleArray;
+    ImmutableList.Builder<T> valuesBuilder = ImmutableList.builder();
+    for (Object parameterValue : array) {
+      valuesBuilder.add(jsonValueParser.parse(parameterValue));
+    }
+    return valuesBuilder.build();
   }
 
   public static ParameterHandler.Builder<Integer> intParameter(final String parameter) {
@@ -228,6 +264,7 @@ public class ParameterHandler<T> {
     private final StringValueParser<T> parserFunction;
     private final JSONValueParser<T> jsonValueParser;
     private String requiredMessage;
+    private boolean repeatedValue;
     private T defaultValue;
 
     Builder(String parameter,
@@ -243,13 +280,19 @@ public class ParameterHandler<T> {
       return this;
     }
 
+    public Builder<T> repeatedValue() {
+      this.repeatedValue = true;
+      return this;
+    }
+
     public Builder<T> withDefaultValue(T defaultValue) {
       this.defaultValue = defaultValue;
       return this;
     }
 
     public ParameterHandler<T> build() {
-      return new ParameterHandler<>(parameter, parserFunction, jsonValueParser, requiredMessage, defaultValue);
+      return new ParameterHandler<>(parameter, parserFunction, jsonValueParser, requiredMessage,
+          repeatedValue, defaultValue);
     }
   }
 
