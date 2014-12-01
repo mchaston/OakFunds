@@ -53,6 +53,10 @@ class RoleRegistry {
     return roles.get(roleName);
   }
 
+  public Iterable<Role> getRoles() {
+    return roles.values();
+  }
+
   private class RoleBuilder extends DefaultHandler {
     private final ImmutableMap.Builder<String, Role> rolesBuilder = ImmutableMap.builder();
     private final PermissionRegistry permissionRegistry;
@@ -65,7 +69,9 @@ class RoleRegistry {
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes)
         throws SAXException {
-      if (qName.equals("role")) {
+      if (qName.equals("roles")) {
+        // This is the outer element, so we can ignore it.
+      } else if (qName.equals("role")) {
         if (currentRoleBuilder != null) {
           throw new IllegalStateException("New role element before the old one ended.");
         }

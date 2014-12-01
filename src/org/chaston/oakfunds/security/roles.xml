@@ -1,3 +1,4 @@
+<roles>
 <role name="admin">
 	<permission name="account_code.create"/>
 	<permission name="account_code.read"/>
@@ -50,7 +51,24 @@
 	<permission name="user.read"/>
 	<permission name="user.create"/>
 	<permission name="user.upsert"/>
+	<permission name="user.update"/>
+
+	<permission name="role.read"/>
 
 	<permission name="role_grant.read"/>
 	<permission name="role_grant.create"/>
+	<permission name="role_grant.delete"/>
 </role>
+<role name="account_reader">
+	<permission name="account_code.read"/>
+
+	<permission name="account.read"/>
+	<permission name="bank_account.read"/>
+	<permission name="bank_account_interest.read"/>
+	<permission name="expense_account.read"/>
+	<permission name="revenue_account.read"/>
+
+	<permission name="account_transaction.read"/>
+	<permission name="account_transaction.report"/>
+</role>
+</roles>
