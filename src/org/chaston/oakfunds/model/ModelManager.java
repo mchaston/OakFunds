@@ -33,6 +33,10 @@ public interface ModelManager {
 
   Model getModel(int modelId) throws StorageException;
 
+  Iterable<Model> getModels() throws StorageException;
+
+  Model updateModel(Model model, String title) throws StorageException;
+
   ModelExpenseAccount createModelExpenseAccount(String title,
       BankAccountType sourceBankAccountType) throws StorageException;
 

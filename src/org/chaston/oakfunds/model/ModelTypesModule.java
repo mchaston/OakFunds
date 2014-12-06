@@ -50,6 +50,8 @@ public class ModelTypesModule extends AbstractModule {
     permissionMultibinder.addBinding()
         .toInstance(ModelManagerImpl.PERMISSION_MODEL_CREATE);
     permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MODEL_UPDATE);
+    permissionMultibinder.addBinding()
         .toInstance(ModelManagerImpl.PERMISSION_MODEL_EXPENSE_ACCOUNT_CREATE);
     permissionMultibinder.addBinding()
         .toInstance(ModelManagerImpl.PERMISSION_MODEL_REVENUE_ACCOUNT_CREATE);

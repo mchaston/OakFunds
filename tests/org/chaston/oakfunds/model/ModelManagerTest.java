@@ -54,6 +54,7 @@ import java.sql.SQLException;
 import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -119,6 +120,31 @@ public class ModelManagerTest {
   @Test
   public void getBaseModel() throws StorageException {
     assertNotNull(modelManager.getBaseModel());
+  }
+
+  @Test
+  public void updateModel() throws StorageException {
+    Transaction transaction = store.startTransaction();
+    Model model = modelManager.createNewModel("New Model");
+    assertEquals("New Model", model.getTitle());
+    transaction.commit();
+
+    transaction = store.startTransaction();
+    model = modelManager.updateModel(model, "Old Model");
+    assertEquals("Old Model", model.getTitle());
+    assertFalse(model.isBaseModel());
+    transaction.commit();
+
+    assertEquals("Old Model", modelManager.getModel(model.getId()).getTitle());
+
+    transaction = store.startTransaction();
+    model = modelManager.updateModel(modelManager.getBaseModel(), "Base Model");
+    assertEquals("Base Model", model.getTitle());
+    assertTrue(model.isBaseModel());
+    transaction.commit();
+
+    assertEquals("Base Model", modelManager.getBaseModel().getTitle());
+    assertTrue(model.isBaseModel());
   }
 
   @Test

@@ -27,6 +27,7 @@
 
 	<permission name="model.read"/>
 	<permission name="model.create"/>
+	<permission name="model.update"/>
 
 	<permission name="model_expense_account.create"/>
 

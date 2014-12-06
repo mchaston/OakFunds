@@ -26,6 +26,7 @@ import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.security.PermissionAssertion;
 import org.chaston.oakfunds.security.SinglePermissionAssertion;
 import org.chaston.oakfunds.security.SystemAuthenticationManager;
+import org.chaston.oakfunds.storage.AttributeOrderingTerm;
 import org.chaston.oakfunds.storage.AttributeSearchTerm;
 import org.chaston.oakfunds.storage.IdentifierSearchTerm;
 import org.chaston.oakfunds.storage.OrSearchTerm;
@@ -60,6 +61,9 @@ class ModelManagerImpl implements ModelManager {
       .build();
   static final Permission PERMISSION_MODEL_CREATE = Permission.builder("model.create")
       .addRelatedAction(Model.TYPE, ActionType.CREATE)
+      .build();
+  static final Permission PERMISSION_MODEL_UPDATE = Permission.builder("model.update")
+      .addRelatedAction(Model.TYPE, ActionType.UPDATE)
       .build();
   static final Permission PERMISSION_MODEL_EXPENSE_ACCOUNT_CREATE =
       Permission.builder("model_expense_account.create")
@@ -188,6 +192,21 @@ class ModelManagerImpl implements ModelManager {
   @PermissionAssertion("model.read")
   public Model getModel(int modelId) throws StorageException {
     return store.getRecord(Model.TYPE, modelId);
+  }
+
+  @Override
+  @PermissionAssertion("model.read")
+  public Iterable<Model> getModels() throws StorageException {
+    return store.findRecords(Model.TYPE, ImmutableList.<SearchTerm>of(),
+        ImmutableList.of(AttributeOrderingTerm.of(Model.ATTRIBUTE_TITLE, OrderingTerm.Order.ASC)));
+  }
+
+  @Override
+  @PermissionAssertion("model.update")
+  public Model updateModel(Model model, String title) throws StorageException {
+    Map<String, Object> attributes = new HashMap<>();
+    attributes.put(Model.ATTRIBUTE_TITLE, title);
+    return store.updateRecord(model, attributes);
   }
 
   @Override
