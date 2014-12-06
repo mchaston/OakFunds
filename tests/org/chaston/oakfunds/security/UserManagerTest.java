@@ -91,6 +91,11 @@ public class UserManagerTest {
     assertEquals("gmail.com:miles.chaston", gotUser.getIdentifier());
     assertEquals("miles.chaston@gmail.com", gotUser.getEmail());
     assertEquals("Miles Chaston", gotUser.getName());
+
+    gotUser = userManager.getUser(newUser.getId());
+    assertEquals("gmail.com:miles.chaston", gotUser.getIdentifier());
+    assertEquals("miles.chaston@gmail.com", gotUser.getEmail());
+    assertEquals("Miles Chaston", gotUser.getName());
   }
 
   @Test
@@ -109,6 +114,34 @@ public class UserManagerTest {
     assertEquals("gmail.com:miles.chaston", gotUser.getIdentifier());
     assertNull(gotUser.getEmail());
     assertNull(gotUser.getName());
+  }
+
+  @Test
+  public void updateUser() throws StorageException {
+    Transaction transaction = store.startTransaction();
+    User user = userManager.createUser(
+        "gmail.com:miles.chaston", "miles.chaston@gmail.com", "Miles Chaston");
+    assertNotNull(user);
+    assertEquals("gmail.com:miles.chaston", user.getIdentifier());
+    assertEquals("miles.chaston@gmail.com", user.getEmail());
+    assertEquals("Miles Chaston", user.getName());
+
+    transaction.commit();
+
+    transaction = store.startTransaction();
+    user = userManager.updateUser(user,
+        "miles.chaston2@gmail.com", "Miles Chaston2");
+    assertNotNull(user);
+    assertEquals("gmail.com:miles.chaston", user.getIdentifier());
+    assertEquals("miles.chaston2@gmail.com", user.getEmail());
+    assertEquals("Miles Chaston2", user.getName());
+
+    transaction.commit();
+
+    User gotUser = userManager.getUser("gmail.com:miles.chaston");
+    assertEquals("gmail.com:miles.chaston", gotUser.getIdentifier());
+    assertEquals("miles.chaston2@gmail.com", gotUser.getEmail());
+    assertEquals("Miles Chaston2", gotUser.getName());
   }
 
   @Test

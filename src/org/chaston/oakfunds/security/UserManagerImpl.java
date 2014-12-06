@@ -134,7 +134,6 @@ public class UserManagerImpl implements UserManager {
   @PermissionAssertion("user.update")
   public User updateUser(User user, String email, String name) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
-    attributes.put(User.ATTRIBUTE_IDENTIFIER, user.getIdentifier());
     attributes.put(User.ATTRIBUTE_EMAIL, email);
     attributes.put(User.ATTRIBUTE_NAME, name);
     return store.updateRecord(user, attributes);
