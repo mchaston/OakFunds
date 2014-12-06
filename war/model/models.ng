@@ -1,2 +1,42 @@
 <h2>Manage models</h2>
-<p>TODO: Model list here.</p>
+<button ng-click="showCreateForm()">Create model...</button>
+<table>
+    <thead>
+    <td>Title</td>
+    <td>Base Model</td>
+    </thead>
+    <tbody>
+    <tr ng-repeat="model in models">
+        <td>{{model.attributes.title}}</td>
+        <td>{{model.attributes.base_model}}</td>
+        <td><a href="" ng-click="showUpdateForm(model)">edit</a></td>
+    </tr>
+    </tbody>
+</table>
+
+<modal-dialog show="createFormVisible" width='500px' dialog-title='Create Model' on-close='hideCreateForm()'>
+    <form ng-submit="create()">
+        <table>
+            <tbody>
+            <tr><td>Title:</td>
+                <td><input type="text" ng-model="model.title"/></td></tr>
+            </tbody>
+        </table>
+        <input type="submit" name="Create" value="Create"/>
+        <a href="" ng-click="hideCreateForm()">Cancel</a>
+    </form>
+</modal-dialog>
+
+<modal-dialog show="updateFormVisible" width='500px' dialog-title='Update Model' on-close='hideUpdateForm()'>
+    <form ng-submit="update()">
+        <table>
+            <tbody>
+            <input type="hidden" ng-model="model.id"/>
+            <tr><td>Title:</td>
+                <td><input type="text" ng-model="model.title"/></td></tr>
+            </tbody>
+        </table>
+        <input type="submit" name="Update" value="Update"/>
+        <a href="" ng-click="hideUpdateForm()">Cancel</a>
+    </form>
+</modal-dialog>
