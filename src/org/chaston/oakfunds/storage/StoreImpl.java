@@ -88,7 +88,7 @@ class StoreImpl implements Store {
   public <T extends Record> T createRecord(RecordType<T> recordType, int id,
       Map<String, Object> attributes) throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.CREATE);
-    recordTypeRegistry.validateRecordAttributes(recordType, attributes);
+    recordTypeRegistry.validateRecordAttributes(recordType, attributes, true);
     TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
@@ -126,7 +126,7 @@ class StoreImpl implements Store {
   public <T extends Record> T createRecord(RecordType<T> recordType, Map<String, Object> attributes)
       throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.CREATE);
-    recordTypeRegistry.validateRecordAttributes(recordType, attributes);
+    recordTypeRegistry.validateRecordAttributes(recordType, attributes, true);
     TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
@@ -214,7 +214,7 @@ class StoreImpl implements Store {
   public <T extends Record> T updateRecord(T record, Map<String, Object> attributes)
       throws StorageException {
     authorizationContext.assertAccess(record.getRecordType(), ActionType.UPDATE);
-    recordTypeRegistry.validateRecordAttributes(record.getRecordType(), attributes);
+    recordTypeRegistry.validateRecordAttributes(record.getRecordType(), attributes, false);
     TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
@@ -279,7 +279,7 @@ class StoreImpl implements Store {
       RecordType<T> recordType, Instant start, Instant end, Map<String, Object> attributes)
       throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.UPDATE);
-    recordTypeRegistry.validateRecordAttributes(recordType, attributes);
+    recordTypeRegistry.validateRecordAttributes(recordType, attributes, false);
     TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
@@ -402,7 +402,7 @@ class StoreImpl implements Store {
       RecordType<T> recordType, Instant instant, Map<String, Object> attributes)
       throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.CREATE);
-    recordTypeRegistry.validateRecordAttributes(recordType, attributes);
+    recordTypeRegistry.validateRecordAttributes(recordType, attributes, true);
     TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");
@@ -456,7 +456,7 @@ class StoreImpl implements Store {
       RecordType<T> recordType, int id, Instant instant, Map<String, Object> attributes)
       throws StorageException {
     authorizationContext.assertAccess(recordType, ActionType.UPDATE);
-    recordTypeRegistry.validateRecordAttributes(recordType, attributes);
+    recordTypeRegistry.validateRecordAttributes(recordType, attributes, false);
     TransactionImpl currentTransaction = this.currentTransaction.get();
     if (currentTransaction == null) {
       throw new IllegalStateException("Not within transaction.");

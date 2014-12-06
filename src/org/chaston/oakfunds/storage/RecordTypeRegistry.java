@@ -21,8 +21,8 @@ import java.util.Map;
  * TODO(mchaston): write JavaDocs
  */
 public interface RecordTypeRegistry {
-  void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes)
-      throws StorageException;
+  void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes,
+      boolean create) throws StorageException;
 
   <T extends Record> RecordType<T> getType(String name, RecordType<T> recordType);
 

@@ -60,14 +60,14 @@ public class RecordTypeRegistryImpl implements RecordTypeRegistry {
   }
 
   @Override
-  public void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes)
-      throws StorageException {
+  public void validateRecordAttributes(RecordType<?> recordType, Map<String, Object> attributes,
+      boolean create) throws StorageException {
     RecordValidator recordValidator = recordValidators.get(recordType.getName());
     if (recordValidator == null) {
       throw new IllegalStateException(
           "RecordType " + recordType.getName() + " was not bound.");
     }
-    recordValidator.validateAttributes(attributes);
+    recordValidator.validateAttributes(attributes, create);
   }
 
   @Override
@@ -118,7 +118,7 @@ public class RecordTypeRegistryImpl implements RecordTypeRegistry {
       }
     }
 
-    public void validateAttributes(Map<String, Object> attributes) throws StorageException {
+    public void validateAttributes(Map<String, Object> attributes, boolean create) throws StorageException {
       for (Map.Entry<String, Object> entry : attributes.entrySet()) {
         AttributeValidator attributeValidator = attributeValidators.get(entry.getKey());
         if (attributeValidator == null) {
@@ -129,7 +129,7 @@ public class RecordTypeRegistryImpl implements RecordTypeRegistry {
         attributeValidator.validate(entry.getValue());
       }
       for (Map.Entry<String, AttributeValidator> entry : attributeValidators.entrySet()) {
-        if (entry.getValue().required) {
+        if (create && entry.getValue().required) {
           if (!attributes.containsKey(entry.getKey())) {
             throw new StorageException(
                 "Attribute " + entry.getKey() + " on RecordType " + recordType + " is required.");
