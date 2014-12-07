@@ -30,7 +30,7 @@
     </form>
 </modal-dialog>
 
-<button ng-click="showCreateForm()">Create account code...</button>
+<button of-permission="account_code.create" ng-click="showCreateForm()">Create account code...</button>
 <table>
     <thead>
     <td>Number</td>
@@ -40,7 +40,7 @@
     <tr ng-repeat="account_code in account_codes">
         <td>{{account_code.id}}</td>
         <td>{{account_code.attributes.title}}</td>
-        <td><a href="" ng-click="showUpdateForm(account_code)">edit</a></td>
+        <td of-permission="account_code.update"><a href="" ng-click="showUpdateForm(account_code)">edit</a></td>
     </tr>
     </tbody>
 </table>

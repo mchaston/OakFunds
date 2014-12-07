@@ -14,7 +14,7 @@
             <p ng-if="user.role_names.length == 0">[none]</p>
             <div ng-repeat="role_name in user.role_names">{{role_name}}<br/></div>
         </td>
-        <td><a href="" ng-click="showUpdateForm(user)">edit</a></td>
+        <td of-permission="user.update"><a href="" ng-click="showUpdateForm(user)">edit</a></td>
     </tr>
     </tbody>
 </table>

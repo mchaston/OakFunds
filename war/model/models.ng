@@ -1,5 +1,5 @@
 <h2>Manage models</h2>
-<button ng-click="showCreateForm()">Create model...</button>
+<button of-permission="model.create" ng-click="showCreateForm()">Create model...</button>
 <table>
     <thead>
     <td>Title</td>
@@ -9,7 +9,7 @@
     <tr ng-repeat="model in models">
         <td>{{model.attributes.title}}</td>
         <td>{{model.attributes.base_model}}</td>
-        <td><a href="" ng-click="showUpdateForm(model)">edit</a></td>
+        <td of-permission="model.update"><a href="" ng-click="showUpdateForm(model)">edit</a></td>
     </tr>
     </tbody>
 </table>
