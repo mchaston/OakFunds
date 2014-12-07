@@ -33,6 +33,7 @@ import org.chaston.oakfunds.storage.Store;
 import org.chaston.oakfunds.util.DateUtil;
 import org.joda.time.Instant;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -172,7 +173,7 @@ class LedgerManagerImpl implements LedgerManager {
   @Override
   @PermissionAssertion("expense_account.create")
   public ExpenseAccount createExpenseAccount(AccountCode accountCode, String title,
-      BankAccount defaultSourceAccount) throws StorageException {
+      @Nullable BankAccount defaultSourceAccount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(Account.ATTRIBUTE_TITLE, title);
     attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
@@ -187,7 +188,7 @@ class LedgerManagerImpl implements LedgerManager {
   @Override
   @PermissionAssertion("expense_account.update")
   public ExpenseAccount updateExpenseAccount(ExpenseAccount expenseAccount, AccountCode accountCode,
-      String title, BankAccount defaultSourceAccount) throws StorageException {
+      String title, @Nullable BankAccount defaultSourceAccount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(Account.ATTRIBUTE_TITLE, title);
     attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
@@ -208,7 +209,7 @@ class LedgerManagerImpl implements LedgerManager {
   @Override
   @PermissionAssertion("revenue_account.create")
   public RevenueAccount createRevenueAccount(AccountCode accountCode, String title,
-      BankAccount defaultDepositAccount) throws StorageException {
+      @Nullable BankAccount defaultDepositAccount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(Account.ATTRIBUTE_TITLE, title);
     attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
@@ -223,7 +224,7 @@ class LedgerManagerImpl implements LedgerManager {
   @Override
   @PermissionAssertion("revenue_account.update")
   public RevenueAccount updateRevenueAccount(RevenueAccount expenseAccount, AccountCode accountCode,
-      String title, BankAccount defaultDepositAccount) throws StorageException {
+      String title, @Nullable BankAccount defaultDepositAccount) throws StorageException {
     Map<String, Object> attributes = new HashMap<>();
     attributes.put(Account.ATTRIBUTE_TITLE, title);
     attributes.put(Account.ATTRIBUTE_ACCOUNT_CODE_ID, accountCode.getId());
@@ -309,13 +310,17 @@ class LedgerManagerImpl implements LedgerManager {
         store.insertInstantRecord(account, AccountTransaction.TYPE, date, attributes);
     if (account instanceof ExpenseAccount) {
       ExpenseAccount expenseAccount = (ExpenseAccount) account;
-      BankAccount bankAccount = getBankAccount(expenseAccount.getDefaultSourceAccountId());
-      recordTransaction(bankAccount, date, amount.negate(), comment, transaction.getId());
+      if (expenseAccount.getDefaultSourceAccountId() != null) {
+        BankAccount bankAccount = getBankAccount(expenseAccount.getDefaultSourceAccountId());
+        recordTransaction(bankAccount, date, amount.negate(), comment, transaction.getId());
+      }
     }
     if (account instanceof RevenueAccount) {
       RevenueAccount revenueAccount = (RevenueAccount) account;
-      BankAccount bankAccount = getBankAccount(revenueAccount.getDefaultDepositAccountId());
-      recordTransaction(bankAccount, date, amount, comment, transaction.getId());
+      if (revenueAccount.getDefaultDepositAccountId() != null) {
+        BankAccount bankAccount = getBankAccount(revenueAccount.getDefaultDepositAccountId());
+        recordTransaction(bankAccount, date, amount, comment, transaction.getId());
+      }
     }
     return transaction;
   }

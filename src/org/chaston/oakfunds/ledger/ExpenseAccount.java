@@ -18,6 +18,8 @@ package org.chaston.oakfunds.ledger;
 import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.RecordType;
 
+import javax.annotation.Nullable;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
@@ -30,6 +32,7 @@ public interface ExpenseAccount extends Account<ExpenseAccount> {
 
   String ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID = "default_source_account_id";
 
+  @Nullable
   @AttributeMethod(attribute = ATTRIBUTE_DEFAULT_SOURCE_ACCOUNT_ID)
-  int getDefaultSourceAccountId();
+  Integer getDefaultSourceAccountId();
 }

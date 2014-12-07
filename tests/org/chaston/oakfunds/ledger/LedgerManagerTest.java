@@ -145,7 +145,7 @@ public class LedgerManagerTest {
     assertEquals(electricityExpenseAccount.getId(), Iterables.get(accounts, 0).getId());
     assertTrue(Iterables.get(accounts, 0) instanceof ExpenseAccount);
     electricityExpenseAccount = (ExpenseAccount) Iterables.get(accounts, 0);
-    assertEquals(bankAccount.getId(), electricityExpenseAccount.getDefaultSourceAccountId());
+    assertEquals((Integer) bankAccount.getId(), electricityExpenseAccount.getDefaultSourceAccountId());
 
     assertEquals(bankAccount.getId(), Iterables.get(accounts, 1).getId());
     assertTrue(Iterables.get(accounts, 1) instanceof BankAccount);

@@ -21,6 +21,7 @@ import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.StorageException;
 import org.joda.time.Instant;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 
 /**
@@ -46,19 +47,19 @@ public interface LedgerManager {
   ExpenseAccount getExpenseAccount(int id) throws StorageException;
 
   ExpenseAccount createExpenseAccount(AccountCode accountCode, String title,
-      BankAccount defaultSourceAccount) throws StorageException;
+      @Nullable BankAccount defaultSourceAccount) throws StorageException;
 
   ExpenseAccount updateExpenseAccount(ExpenseAccount expenseAccount,
-      AccountCode accountCode, String title, BankAccount defaultSourceAccount)
+      AccountCode accountCode, String title, @Nullable BankAccount defaultSourceAccount)
       throws StorageException;
 
   RevenueAccount getRevenueAccount(int id) throws StorageException;
 
   RevenueAccount createRevenueAccount(AccountCode accountCode, String title,
-      BankAccount defaultDepositAccount) throws StorageException;
+      @Nullable BankAccount defaultDepositAccount) throws StorageException;
 
   RevenueAccount updateRevenueAccount(RevenueAccount expenseAccount,
-      AccountCode accountCode, String title, BankAccount defaultDepositAccount)
+      AccountCode accountCode, String title, @Nullable BankAccount defaultDepositAccount)
       throws StorageException;
 
   Iterable<Account> getAccounts() throws StorageException;
