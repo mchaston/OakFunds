@@ -15,16 +15,27 @@
  */
 package org.chaston.oakfunds.security;
 
+import java.util.Set;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
 class SystemAuthenticationScope extends AbstractAuthenticationScope {
-  SystemAuthenticationScope(SystemAuthenticationManagerImpl authenticationManager) {
+  private final PermissionRegistry permissionRegistry;
+
+  SystemAuthenticationScope(SystemAuthenticationManagerImpl authenticationManager,
+      PermissionRegistry permissionRegistry) {
     super(authenticationManager);
+    this.permissionRegistry = permissionRegistry;
   }
 
   @Override
   boolean hasPermission(String permissionName) {
     return true;
+  }
+
+  @Override
+  Set<String> getPermissions() {
+    return permissionRegistry.getAllPermissionNames();
   }
 }

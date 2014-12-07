@@ -18,6 +18,8 @@ package org.chaston.oakfunds.security;
 import org.chaston.oakfunds.storage.Record;
 import org.chaston.oakfunds.storage.RecordType;
 
+import java.util.Set;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
@@ -25,4 +27,6 @@ public interface AuthorizationContext {
   <T extends Record> void assertAccess(RecordType<T> recordType, ActionType actionType);
 
   SinglePermissionAssertion assertPermission(String permissionName);
+
+  Set<String> getAllPermissions();
 }

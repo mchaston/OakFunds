@@ -15,6 +15,8 @@
  */
 package org.chaston.oakfunds.security;
 
+import com.google.inject.Inject;
+
 /**
  * TODO(mchaston): write JavaDocs
  */
@@ -23,12 +25,20 @@ public class SystemAuthenticationManagerImpl implements SystemAuthenticationMana
   private final ThreadLocal<AbstractAuthenticationScope> currentAuthenticationScope =
       new ThreadLocal<>();
 
+  private PermissionRegistry permissionRegistry;
+
+  @Inject
+  SystemAuthenticationManagerImpl(PermissionRegistry permissionRegistry) {
+    this.permissionRegistry = permissionRegistry;
+  }
+
   @Override
   public AuthenticationScope authenticateSystem() {
     if (currentAuthenticationScope.get() != null) {
       throw new IllegalStateException("Already withing an authentication scope.");
     }
-    SystemAuthenticationScope systemAuthenticationScope = new SystemAuthenticationScope(this);
+    SystemAuthenticationScope systemAuthenticationScope =
+        new SystemAuthenticationScope(this, permissionRegistry);
     setCurrentScope(systemAuthenticationScope);
     return systemAuthenticationScope;
   }

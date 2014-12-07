@@ -19,6 +19,7 @@ import org.chaston.oakfunds.storage.RecordType;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -34,6 +35,8 @@ abstract class AbstractAuthenticationScope implements AuthenticationScope {
   }
 
   abstract boolean hasPermission(String permissionName);
+
+  abstract Set<String> getPermissions();
 
   Map<ActionType, AtomicInteger> getAccessCounters(RecordType<?> recordType) {
     Map<ActionType, AtomicInteger> accessCounters = accessCounterMap.get(recordType);

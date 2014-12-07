@@ -36,4 +36,9 @@ class UserAuthenticationScope extends AbstractAuthenticationScope {
   boolean hasPermission(String permissionName) {
     return userPermissions.contains(permissionName);
   }
+
+  @Override
+  Set<String> getPermissions() {
+    return userPermissions;
+  }
 }

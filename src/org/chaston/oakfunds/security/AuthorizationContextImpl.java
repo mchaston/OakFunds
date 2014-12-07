@@ -20,6 +20,7 @@ import org.chaston.oakfunds.storage.Record;
 import org.chaston.oakfunds.storage.RecordType;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -48,6 +49,11 @@ class AuthorizationContextImpl implements AuthorizationContext {
       throw new IllegalArgumentException("Permission " + permissionName + " does not exist.");
     }
     return new SinglePermissionAssertionImpl(authenticationManager.getCurrentScope(), permission);
+  }
+
+  @Override
+  public Set<String> getAllPermissions() {
+    return authenticationManager.getCurrentScope().getPermissions();
   }
 
   private boolean currentUserHasPermission(String permission) {

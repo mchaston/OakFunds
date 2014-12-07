@@ -40,4 +40,8 @@ class PermissionRegistry {
   Permission getPermission(String permissionName) {
     return permissions.get(permissionName);
   }
+
+  Set<String> getAllPermissionNames() {
+    return permissions.keySet();
+  }
 }
