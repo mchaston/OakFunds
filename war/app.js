@@ -6,6 +6,7 @@ var oakFundsApp = angular.module('oakFundsApp',
     'ledgerControllers',
     'modelControllers',
     'securityControllers',
+    'securityDirectives',
     'systemControllers'
     ]);
 

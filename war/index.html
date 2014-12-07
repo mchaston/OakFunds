@@ -24,6 +24,9 @@
     <script src="security/controllers.js"></script>
     <script src="system/controllers.js"></script>
 
+    <!-- App-specific features. -->
+    <script src="security/directives.js"></script>
+
     <!-- XSRF protection -->
     <script src="xsrf.js"></script>
 
@@ -43,7 +46,7 @@
     <div id="navbar"></div>
 
     <table>
-      <tr>
+      <tr of-permission="account_code.read">
         <td>
           <a href="#/account_codes">Manage account codes</a>
         </td>
@@ -51,27 +54,27 @@
           <div ng-view></div>
         </td>
       </tr>
-      <tr>
+      <tr of-permission="account.read">
         <td>
           <a href="#/accounts">Manage accounts</a>
         </td>
       </tr>
-      <tr>
+      <tr of-permission="model.read">
         <td>
           <a href="#/models">Manage models</a>
         </td>
       </tr>
-      <tr>
+      <tr of-permission="model_account.read">
         <td>
           <a href="#/model_accounts">Manage model accounts</a>
         </td>
       </tr>
-      <tr>
+      <tr of-permission="user.read">
         <td>
           <a href="#/users">Manage users</a>
         </td>
       </tr>
-      <tr>
+      <tr of-permission="system_property.read">
         <td>
           <a href="#/system_properties">Manage system properties</a>
         </td>
