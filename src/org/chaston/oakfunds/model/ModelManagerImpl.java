@@ -21,6 +21,10 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.ledger.Account;
 import org.chaston.oakfunds.ledger.AccountTransaction;
+import org.chaston.oakfunds.ledger.BankAccount;
+import org.chaston.oakfunds.ledger.ExpenseAccount;
+import org.chaston.oakfunds.ledger.LedgerManager;
+import org.chaston.oakfunds.ledger.RevenueAccount;
 import org.chaston.oakfunds.security.ActionType;
 import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.AuthorizationContext;
@@ -127,16 +131,19 @@ class ModelManagerImpl implements ModelManager {
           .build();
 
   private final SystemPropertiesManager systemPropertiesManager;
+  private LedgerManager ledgerManager;
   private final Store store;
   private int baseModelId;
 
   @Inject
   ModelManagerImpl(
       SystemPropertiesManager systemPropertiesManager,
+      LedgerManager ledgerManager,
       Store store,
       AuthorizationContext authorizationContext,
       SystemAuthenticationManager authenticationManager) throws StorageException {
     this.systemPropertiesManager = systemPropertiesManager;
+    this.ledgerManager = ledgerManager;
     this.store = store;
 
     List<? extends SearchTerm> searchTerms =
@@ -248,10 +255,15 @@ class ModelManagerImpl implements ModelManager {
     attributes.put(ModelAccountTransaction.ATTRIBUTE_DERIVED, false);
     attributes.put(ModelAccountTransaction.ATTRIBUTE_DISTRIBUTION_TIME, distributionTime);
     attributes.put(ModelAccountTransaction.ATTRIBUTE_DISTRIBUTION_TIME_UNIT, distributionTimeUnit);
-    ModelAccountTransaction modelAccountTransaction =
+    ModelAccountTransaction accountTransaction =
         store.insertInstantRecord(account, ModelAccountTransaction.TYPE, date, attributes);
-    recalculateDistributionTransactions(model, account, modelAccountTransaction);
-    return modelAccountTransaction;
+    recalculateDistributionTransactions(model, account, accountTransaction);
+    ModelAccountTransaction compensatingAccountTransaction =
+        createCompensatingAccountTransaction(account, date, attributes);
+    if (compensatingAccountTransaction != null) {
+      recalculateDistributionTransactions(model, account, compensatingAccountTransaction);
+    }
+    return accountTransaction;
   }
 
   @Override
@@ -367,28 +379,61 @@ class ModelManagerImpl implements ModelManager {
         for (Instant instant
             : getAllInstantsInRange(recurringEvent.getStart(), recurringEvent.getEnd())) {
           store.insertInstantRecord(account, ModelAccountTransaction.TYPE, instant, attributes);
+          createCompensatingAccountTransaction(account, instant, attributes);
         }
       }
       if (recurringEvent instanceof AnnualRecurringEvent) {
         AnnualRecurringEvent annualRecurringEvent = (AnnualRecurringEvent) recurringEvent;
-        Map<String, Object> accountAttributes = new HashMap<>();
-        accountAttributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
-        accountAttributes.put(ModelAccountTransaction.ATTRIBUTE_AMOUNT, recurringEvent.getAmount());
-        accountAttributes.put(ModelAccountTransaction.ATTRIBUTE_DERIVED, true);
-        accountAttributes.put(ModelAccountTransaction.ATTRIBUTE_DISTRIBUTION_TIME, 1);
-        accountAttributes.put(ModelAccountTransaction.ATTRIBUTE_DISTRIBUTION_TIME_UNIT, DistributionTimeUnit.YEARS);
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put(ModelBound.ATTRIBUTE_MODEL_ID, model.getId());
+        attributes.put(ModelAccountTransaction.ATTRIBUTE_AMOUNT, recurringEvent.getAmount());
+        attributes.put(ModelAccountTransaction.ATTRIBUTE_DERIVED, true);
+        attributes.put(ModelAccountTransaction.ATTRIBUTE_DISTRIBUTION_TIME, 1);
+        attributes.put(ModelAccountTransaction.ATTRIBUTE_DISTRIBUTION_TIME_UNIT,
+            DistributionTimeUnit.YEARS);
 
         for (Instant instant
             : getAllInstantsInRange(recurringEvent.getStart(), recurringEvent.getEnd())) {
           if (instant.get(DateTimeFieldType.monthOfYear()) == annualRecurringEvent.getPaymentMonth()) {
             ModelAccountTransaction accountTransaction =
                 store.insertInstantRecord(account, ModelAccountTransaction.TYPE, instant,
-                    accountAttributes);
+                    attributes);
             recalculateDistributionTransactions(model, account, accountTransaction);
+            ModelAccountTransaction compensatingAccountTransaction =
+                createCompensatingAccountTransaction(account, instant, attributes);
+            if (compensatingAccountTransaction != null) {
+              recalculateDistributionTransactions(model, account, compensatingAccountTransaction);
+            }
           }
         }
       }
     }
+  }
+
+  private ModelAccountTransaction createCompensatingAccountTransaction(Account account,
+      Instant instant, Map<String, Object> attributes) throws StorageException {
+    if (account instanceof ExpenseAccount) {
+      ExpenseAccount revenueAccount = (ExpenseAccount) account;
+      if (revenueAccount.getDefaultSourceAccountId() != null) {
+        BankAccount bankAccount =
+            ledgerManager.getBankAccount(revenueAccount.getDefaultSourceAccountId());
+        Map<String, Object> alternateAttributes = new HashMap<>(attributes);
+        BigDecimal amount = (BigDecimal) attributes.get(ModelAccountTransaction.ATTRIBUTE_AMOUNT);
+        alternateAttributes.put(ModelAccountTransaction.ATTRIBUTE_AMOUNT, amount.negate());
+        return store.insertInstantRecord(bankAccount,
+            ModelAccountTransaction.TYPE, instant, alternateAttributes);
+      }
+    }
+    if (account instanceof RevenueAccount) {
+      RevenueAccount revenueAccount = (RevenueAccount) account;
+      if (revenueAccount.getDefaultDepositAccountId() != null) {
+        BankAccount bankAccount =
+            ledgerManager.getBankAccount(revenueAccount.getDefaultDepositAccountId());
+        return store.insertInstantRecord(bankAccount,
+            ModelAccountTransaction.TYPE, instant, attributes);
+      }
+    }
+    return null;
   }
 
   private void recalculateDistributionTransactions(Model model, Account account, ModelAccountTransaction modelAccountTransaction)

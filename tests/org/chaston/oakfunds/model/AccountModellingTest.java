@@ -165,6 +165,8 @@ public class AccountModellingTest {
     runInTransaction(new Callable<Void>() {
       @Override
       public Void call() throws Exception {
+        ledgerManager.recordTransaction(bankAccount1, DateUtil.endOfMonth(2013, 12),
+            BigDecimalUtil.valueOf(100000));
         ledgerManager.recordTransaction(expenseAccount1, DateUtil.endOfMonth(2014, 1),
             BigDecimalUtil.valueOf(1000));
         modelManager.setMonthlyRecurringEventDetails(baseModel, expenseAccount1,
@@ -176,6 +178,8 @@ public class AccountModellingTest {
 
     Report report = modelManager.runTransactionReport(baseModel, YEAR_2014, YEAR_2015,
         ReportDateGranularity.MONTH);
+
+    // Look at expense account.
     ReportRow row = report.getRow(
         ImmutableMap.<String, Object>of(
             ModelManager.DIMENSION_ACCOUNT_ID, expenseAccount1.getId()));
@@ -195,6 +199,27 @@ public class AccountModellingTest {
     entry = Iterables.get(row.getEntries(), 4);
     assertEquals(DateUtil.endOfMonth(2014, 4), entry.getInstant());
     assertEquals(BigDecimalUtil.valueOf(4000), entry.getMeasure(ModelManager.MEASURE_AMOUNT));
+
+    // Look at bank account.
+    row = report.getRow(
+        ImmutableMap.<String, Object>of(
+            ModelManager.DIMENSION_ACCOUNT_ID, bankAccount1.getId()));
+
+    entry = Iterables.get(row.getEntries(), 0);
+    assertEquals(DateUtil.endOfYear(2013), entry.getInstant());
+    assertEquals(BigDecimalUtil.valueOf(100000), entry.getMeasure(ModelManager.MEASURE_AMOUNT));
+
+    entry = Iterables.get(row.getEntries(), 1);
+    assertEquals(DateUtil.endOfMonth(2014, 1), entry.getInstant());
+    assertEquals(BigDecimalUtil.valueOf(99000), entry.getMeasure(ModelManager.MEASURE_AMOUNT));
+
+    entry = Iterables.get(row.getEntries(), 2);
+    assertEquals(DateUtil.endOfMonth(2014, 2), entry.getInstant());
+    assertEquals(BigDecimalUtil.valueOf(98000), entry.getMeasure(ModelManager.MEASURE_AMOUNT));
+
+    entry = Iterables.get(row.getEntries(), 4);
+    assertEquals(DateUtil.endOfMonth(2014, 4), entry.getInstant());
+    assertEquals(BigDecimalUtil.valueOf(96000), entry.getMeasure(ModelManager.MEASURE_AMOUNT));
   }
 
   @Test
