@@ -16,9 +16,11 @@
 package org.chaston.oakfunds.model;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.ledger.Account;
+import org.chaston.oakfunds.ledger.AccountTransaction;
 import org.chaston.oakfunds.security.ActionType;
 import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.AuthorizationContext;
@@ -116,6 +118,8 @@ class ModelManagerImpl implements ModelManager {
           .build();
   static final Permission PERMISSION_MODEL_DISTRIBUTION_TRANSACTION_REPORT =
       Permission.builder("model_distribution_transaction.report")
+          .addRelatedAction(AccountTransaction.TYPE, ActionType.REPORT)
+          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.REPORT)
           .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.REPORT)
           .build();
 
@@ -303,19 +307,50 @@ class ModelManagerImpl implements ModelManager {
 
   @Override
   @PermissionAssertion("model_distribution_transaction.report")
+  public Report runModelReport(Model model, int startYear, int endYear,
+      ReportDateGranularity reportDateGranularity) throws StorageException {
+    ImmutableList<SearchTerm> modelBoundSearhTerms = ImmutableList.<SearchTerm>of(
+        OrSearchTerm.of(
+            AttributeSearchTerm.of(ModelBound.ATTRIBUTE_MODEL_ID,
+                SearchOperator.EQUALS, baseModelId),
+            AttributeSearchTerm.of(ModelBound.ATTRIBUTE_MODEL_ID,
+                SearchOperator.EQUALS, model.getId())));
+
+    return store.newReportBuilder(startYear, endYear,
+        reportDateGranularity, DIMENSION_ACCOUNT_ID)
+        .addRecordSource(AccountTransaction.TYPE,
+            ImmutableList.<SearchTerm>of(),
+            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(AccountTransaction.ATTRIBUTE_AMOUNT, MEASURE_AMOUNT))
+        .addRecordSource(ModelAccountTransaction.TYPE,
+            modelBoundSearhTerms,
+            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(ModelAccountTransaction.ATTRIBUTE_AMOUNT, MEASURE_AMOUNT))
+        .addRecordSource(ModelDistributionTransaction.TYPE,
+            modelBoundSearhTerms,
+            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(ModelDistributionTransaction.ATTRIBUTE_AMOUNT, MEASURE_AMOUNT))
+        .build();
+  }
+
+  @Override
+  @PermissionAssertion("model_distribution_transaction.report")
   public Report runDistributionReport(Model model, int startYear, int endYear,
       ReportDateGranularity reportDateGranularity) throws StorageException {
-    return store.runReport(ModelDistributionTransaction.TYPE, startYear, endYear,
-        reportDateGranularity,
-        ImmutableList.<SearchTerm>of(
-            OrSearchTerm.of(
-                AttributeSearchTerm.of(ModelBound.ATTRIBUTE_MODEL_ID,
-                    SearchOperator.EQUALS, getBaseModel().getId()),
-                AttributeSearchTerm.of(ModelBound.ATTRIBUTE_MODEL_ID,
-                    SearchOperator.EQUALS, model.getId()))),
-        "model_account_id",
-        ImmutableList.<String>of(),
-        ImmutableList.of(ModelDistributionTransaction.ATTRIBUTE_AMOUNT));
+    ImmutableList<SearchTerm> modelBoundSearhTerms = ImmutableList.<SearchTerm>of(
+        OrSearchTerm.of(
+            AttributeSearchTerm.of(ModelBound.ATTRIBUTE_MODEL_ID,
+                SearchOperator.EQUALS, baseModelId),
+            AttributeSearchTerm.of(ModelBound.ATTRIBUTE_MODEL_ID,
+                SearchOperator.EQUALS, model.getId())));
+
+    return store.newReportBuilder(startYear, endYear,
+            reportDateGranularity, DIMENSION_ACCOUNT_ID)
+        .addRecordSource(ModelDistributionTransaction.TYPE,
+            modelBoundSearhTerms,
+            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(ModelDistributionTransaction.ATTRIBUTE_AMOUNT, MEASURE_AMOUNT))
+        .build();
   }
 
   private void recalculateAccountTransactions(Model model, Account account,

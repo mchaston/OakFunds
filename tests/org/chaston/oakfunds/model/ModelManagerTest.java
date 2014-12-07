@@ -411,7 +411,8 @@ public class ModelManagerTest {
 
     assertEquals(Iterables.size(report.getRows()), 2);
     ReportRow reportRow = report.getRow(
-        ImmutableMap.of("model_account_id", (Object) accounts.longTermExpenseAccount.getId()));
+        ImmutableMap.of(ModelManager.DIMENSION_ACCOUNT_ID,
+            (Object) accounts.longTermExpenseAccount.getId()));
 
     assertEquals(13, Iterables.size(reportRow.getEntries()));
 
@@ -420,7 +421,7 @@ public class ModelManagerTest {
     assertEquals(BigDecimalUtil.valueOf(11500),
         entry.getMeasure(ModelDistributionTransaction.ATTRIBUTE_AMOUNT));
 
-    for (int i = 1; i <=12; i++) {
+    for (int i = 1; i <= 12; i++) {
       entry = Iterables.get(reportRow.getEntries(), i);
       assertEquals(DateUtil.endOfMonth(2014, i), entry.getInstant());
       assertEquals(BigDecimalUtil.valueOf(11500 + (i * 250)),
@@ -428,7 +429,8 @@ public class ModelManagerTest {
     }
 
     reportRow = report.getRow(
-        ImmutableMap.of("model_account_id", (Object) accounts.annualExpenseAccount.getId()));
+        ImmutableMap.of(ModelManager.DIMENSION_ACCOUNT_ID,
+            (Object) accounts.annualExpenseAccount.getId()));
 
     assertEquals(13, Iterables.size(reportRow.getEntries()));
 

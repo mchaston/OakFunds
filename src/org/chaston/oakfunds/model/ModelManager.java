@@ -27,6 +27,9 @@ import java.math.BigDecimal;
  * TODO(mchaston): write JavaDocs
  */
 public interface ModelManager {
+  String DIMENSION_ACCOUNT_ID = "account_id";
+  String MEASURE_AMOUNT = "amount";
+
   Model createNewModel(String title) throws StorageException;
 
   Model getBaseModel() throws StorageException;
@@ -60,6 +63,9 @@ public interface ModelManager {
 
   Iterable<ModelDistributionTransaction> getModelDistributionTransactions(Model model,
       Account account, Instant start, Instant end) throws StorageException;
+
+  Report runModelReport(Model model, int startYear, int endYear,
+      ReportDateGranularity reportDateGranularity) throws StorageException;
 
   Report runDistributionReport(Model model, int startYear, int endYear,
       ReportDateGranularity reportDateGranularity) throws StorageException;

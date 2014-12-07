@@ -751,15 +751,17 @@ class StoreImpl implements Store {
   }
 
   @Override
-  public <T extends InstantRecord> Report runReport(RecordType<T> recordType,
+  public ReportBuilder newReportBuilder(int startYear, int endYear,
+      ReportDateGranularity granularity, @Nullable String containerIdDimension) {
+    return new ReportBuilder(this, startYear, endYear, granularity, containerIdDimension);
+  }
+
+  <T extends InstantRecord> void buildReportPiece(
       int startYear, int endYear, ReportDateGranularity granularity,
-      List<? extends SearchTerm> searchTerms,
-      @Nullable String containerIdDimension, List<String> dimensions, List<String> measures)
+      ReportBuilder.RecordSource<T> recordSource)
       throws StorageException {
+    RecordType<T> recordType = recordSource.getRecordType();
     authorizationContext.assertAccess(recordType, ActionType.REPORT);
-    ReportBuilder reportBuilder =
-        new ReportBuilder(granularity, startYear, endYear, containerIdDimension, dimensions,
-            measures);
     try (ReadingDataSource readingDataSource = new ReadingDataSource()) {
       // Get all records that would match.
       StringBuilder stringBuilder = new StringBuilder();
@@ -769,16 +771,18 @@ class StoreImpl implements Store {
           .append(" AS ").append(SystemColumnDefs.INSTANT.getName());
       stringBuilder.append(", ").append(SystemColumnDefs.CONTAINER_ID.getName());
       // Include the dimensions.
+      Iterable<String> dimensions = recordSource.getDimensionAttributes();
       for (String dimensionColumn : prefixColumnNames(recordType, dimensions)) {
         stringBuilder.append(", ").append(dimensionColumn);
       }
       // Include sums of the measures.
+      Iterable<String> measures = recordSource.getMeasureAttributes();
       for (String measureColumn : prefixColumnNames(recordType, measures)) {
         stringBuilder.append(", SUM(").append(measureColumn).append(") AS ").append(measureColumn);
       }
       stringBuilder.append(" FROM ").append(recordType.getTableName());
-      searchTerms = ImmutableList.<SearchTerm>builder()
-          .addAll(searchTerms)
+      ImmutableList<SearchTerm> searchTerms = ImmutableList.<SearchTerm>builder()
+          .addAll(recordSource.getSearchTerms())
           .add(InstantSearchTerm.of(
               SystemColumnDefs.INSTANT,
               SearchOperator.GREATER_THAN_OR_EQUAL,
@@ -816,7 +820,7 @@ class StoreImpl implements Store {
         try (ResultSet rs = stmt.executeQuery()) {
           while (rs.next()) {
             // Group and sum to create the results.
-            reportBuilder.aggregateEntry(
+            recordSource.aggregateEntry(
                 getInstant(rs, SystemColumnDefs.INSTANT),
                 rs.getInt(SystemColumnDefs.CONTAINER_ID.getName()),
                 readAttributes(jdbcTypeHandlers, rs));
@@ -827,8 +831,6 @@ class StoreImpl implements Store {
         throw new StorageException("Failed to read records for type " + recordType.getName(), e);
       }
     }
-
-    return reportBuilder.build();
   }
 
   private String getInstantFunction(ReportDateGranularity granularity) {

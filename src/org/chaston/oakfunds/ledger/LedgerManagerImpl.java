@@ -16,6 +16,7 @@
 package org.chaston.oakfunds.ledger;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.security.ActionType;
@@ -286,10 +287,12 @@ class LedgerManagerImpl implements LedgerManager {
     ImmutableList<? extends SearchTerm> searchTerms =
         ImmutableList.of(ContainerIdentifierSearchTerm.of(
             account.getRecordType(), account.getId()));
-    ImmutableList<String> dimensions = ImmutableList.of();
-    ImmutableList<String> measures = ImmutableList.of(AccountTransaction.ATTRIBUTE_AMOUNT);
-    return store.runReport(AccountTransaction.TYPE, startYear, endYear, granularity,
-        searchTerms, "account_id", dimensions, measures);
+    ImmutableMap<String, String> dimensions = ImmutableMap.of();
+    ImmutableMap<String, String> measures =
+        ImmutableMap.of(AccountTransaction.ATTRIBUTE_AMOUNT, AccountTransaction.ATTRIBUTE_AMOUNT);
+    return store.newReportBuilder(startYear, endYear, granularity, "account_id")
+        .addRecordSource(AccountTransaction.TYPE, searchTerms, dimensions, measures)
+        .build();
   }
 
   private AccountTransaction recordTransaction(Account account, Instant date, BigDecimal amount,
