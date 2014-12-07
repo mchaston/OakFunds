@@ -64,7 +64,7 @@ public interface ModelManager {
   Iterable<ModelDistributionTransaction> getModelDistributionTransactions(Model model,
       Account account, Instant start, Instant end) throws StorageException;
 
-  Report runModelReport(Model model, int startYear, int endYear,
+  Report runTransactionReport(Model model, int startYear, int endYear,
       ReportDateGranularity reportDateGranularity) throws StorageException;
 
   Report runDistributionReport(Model model, int startYear, int endYear,

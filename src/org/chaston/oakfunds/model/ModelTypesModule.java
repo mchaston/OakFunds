@@ -60,6 +60,8 @@ public class ModelTypesModule extends AbstractModule {
     permissionMultibinder.addBinding()
         .toInstance(ModelManagerImpl.PERMISSION_MODEL_ACCOUNT_TRANSACTION_DELETE);
     permissionMultibinder.addBinding()
+        .toInstance(ModelManagerImpl.PERMISSION_MODEL_ACCOUNT_TRANSACTION_REPORT);
+    permissionMultibinder.addBinding()
         .toInstance(ModelManagerImpl.PERMISSION_MODEL_DISTRIBUTION_TRANSACTION_READ);
     permissionMultibinder.addBinding()
         .toInstance(ModelManagerImpl.PERMISSION_MODEL_DISTRIBUTION_TRANSACTION_REPORT);

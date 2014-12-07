@@ -112,14 +112,17 @@ class ModelManagerImpl implements ModelManager {
           .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.DELETE)
           .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.DELETE)
           .build();
+  static final Permission PERMISSION_MODEL_ACCOUNT_TRANSACTION_REPORT =
+      Permission.builder("model_account_transaction.report")
+          .addRelatedAction(AccountTransaction.TYPE, ActionType.REPORT)
+          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.REPORT)
+          .build();
   static final Permission PERMISSION_MODEL_DISTRIBUTION_TRANSACTION_READ =
       Permission.builder("model_distribution_transaction.read")
           .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.READ)
           .build();
   static final Permission PERMISSION_MODEL_DISTRIBUTION_TRANSACTION_REPORT =
       Permission.builder("model_distribution_transaction.report")
-          .addRelatedAction(AccountTransaction.TYPE, ActionType.REPORT)
-          .addRelatedAction(ModelAccountTransaction.TYPE, ActionType.REPORT)
           .addRelatedAction(ModelDistributionTransaction.TYPE, ActionType.REPORT)
           .build();
 
@@ -306,8 +309,8 @@ class ModelManagerImpl implements ModelManager {
   }
 
   @Override
-  @PermissionAssertion("model_distribution_transaction.report")
-  public Report runModelReport(Model model, int startYear, int endYear,
+  @PermissionAssertion("model_account_transaction.report")
+  public Report runTransactionReport(Model model, int startYear, int endYear,
       ReportDateGranularity reportDateGranularity) throws StorageException {
     ImmutableList<SearchTerm> modelBoundSearhTerms = ImmutableList.<SearchTerm>of(
         OrSearchTerm.of(
@@ -326,10 +329,6 @@ class ModelManagerImpl implements ModelManager {
             modelBoundSearhTerms,
             ImmutableMap.<String, String>of(),
             ImmutableMap.of(ModelAccountTransaction.ATTRIBUTE_AMOUNT, MEASURE_AMOUNT))
-        .addRecordSource(ModelDistributionTransaction.TYPE,
-            modelBoundSearhTerms,
-            ImmutableMap.<String, String>of(),
-            ImmutableMap.of(ModelDistributionTransaction.ATTRIBUTE_AMOUNT, MEASURE_AMOUNT))
         .build();
   }
 
@@ -345,7 +344,7 @@ class ModelManagerImpl implements ModelManager {
                 SearchOperator.EQUALS, model.getId())));
 
     return store.newReportBuilder(startYear, endYear,
-            reportDateGranularity, DIMENSION_ACCOUNT_ID)
+        reportDateGranularity, DIMENSION_ACCOUNT_ID)
         .addRecordSource(ModelDistributionTransaction.TYPE,
             modelBoundSearhTerms,
             ImmutableMap.<String, String>of(),

@@ -33,6 +33,7 @@
 	<permission name="model_account_transaction.create"/>
 	<permission name="model_account_transaction.update"/>
 	<permission name="model_account_transaction.delete"/>
+	<permission name="model_account_transaction.report"/>
 
 	<permission name="model_distribution_transaction.read"/>
 	<permission name="model_distribution_transaction.report"/>

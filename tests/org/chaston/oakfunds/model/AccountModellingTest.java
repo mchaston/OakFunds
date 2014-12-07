@@ -138,7 +138,7 @@ public class AccountModellingTest {
       }
     });
 
-    Report report = modelManager.runModelReport(baseModel, YEAR_2014, YEAR_2015,
+    Report report = modelManager.runTransactionReport(baseModel, YEAR_2014, YEAR_2015,
         ReportDateGranularity.MONTH);
     Iterable<ReportRow> rows = report.getRows();
     assertEquals(2, Iterables.size(rows));
@@ -174,7 +174,7 @@ public class AccountModellingTest {
       }
     });
 
-    Report report = modelManager.runModelReport(baseModel, YEAR_2014, YEAR_2015,
+    Report report = modelManager.runTransactionReport(baseModel, YEAR_2014, YEAR_2015,
         ReportDateGranularity.MONTH);
     ReportRow row = report.getRow(
         ImmutableMap.<String, Object>of(
