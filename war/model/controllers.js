@@ -6,10 +6,6 @@ modelControllers.config(['$routeProvider',
       when('/models', {
         templateUrl: '/model/models.ng',
         controller: 'ModelsCtrl'
-      }).
-      when('/model_accounts', {
-        templateUrl: '/model/accounts.ng',
-        controller: 'ModelAccountsCtrl'
       });
   }]);
 
@@ -86,9 +82,4 @@ modelControllers.controller('ModelsCtrl', ['$scope', '$http', '$window',
     }
 
     $scope.refreshTable();
-  }]);
-
-modelControllers.controller('ModelAccountsCtrl', ['$scope', '$http', '$window',
-  function ($scope, $http, $window) {
-    // TODO: load model accounts
   }]);

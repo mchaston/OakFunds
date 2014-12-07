@@ -18,7 +18,6 @@ package org.chaston.oakfunds.ledger;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.chaston.oakfunds.account.AccountCode;
-import org.chaston.oakfunds.model.ModelAccount;
 import org.chaston.oakfunds.security.ActionType;
 import org.chaston.oakfunds.security.Permission;
 import org.chaston.oakfunds.security.PermissionAssertion;
@@ -278,18 +277,6 @@ class LedgerManagerImpl implements LedgerManager {
   public AccountTransaction recordTransaction(Account account, Instant date, BigDecimal amount, String comment)
       throws StorageException {
     return recordTransaction(account, date, amount, comment, null);
-  }
-
-  @Override
-  public void setRelatedModelAccount(Account account, ModelAccount modelAccount,
-      PaymentIncrement paymentIncrement, boolean retroactive) throws StorageException {
-    throw new UnsupportedOperationException("Not implemented yet.");
-  }
-
-  @Override
-  public void setRelatedModelAccount(AccountTransaction account, ModelAccount modelAccount,
-      PaymentIncrement paymentIncrement) throws StorageException {
-    throw new UnsupportedOperationException("Not implemented yet.");
   }
 
   @Override

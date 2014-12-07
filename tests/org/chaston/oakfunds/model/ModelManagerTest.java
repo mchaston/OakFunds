@@ -20,11 +20,15 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import org.chaston.oakfunds.account.AccountCode;
 import org.chaston.oakfunds.account.AccountCodeManager;
 import org.chaston.oakfunds.account.AccountCodeModule;
 import org.chaston.oakfunds.bootstrap.BootstrapModule;
 import org.chaston.oakfunds.jdbc.DatabaseTearDown;
-import org.chaston.oakfunds.ledger.BankAccountType;
+import org.chaston.oakfunds.ledger.ExpenseAccount;
+import org.chaston.oakfunds.ledger.LedgerManager;
+import org.chaston.oakfunds.ledger.LedgerModule;
+import org.chaston.oakfunds.ledger.RevenueAccount;
 import org.chaston.oakfunds.security.AuthenticationScope;
 import org.chaston.oakfunds.security.TestUserAuthenticatorModule;
 import org.chaston.oakfunds.security.UserAuthenticationManager;
@@ -73,6 +77,8 @@ public class ModelManagerTest {
   @Inject
   private UserAuthenticationManager userAuthenticationManager;
   @Inject
+  private LedgerManager ledgerManager;
+  @Inject
   private ModelManager modelManager;
   @Inject
   private Store store;
@@ -87,6 +93,7 @@ public class ModelManagerTest {
   public void setUp() throws Exception {
     Injector injector = Guice.createInjector(
         new AccountCodeModule(),
+        new LedgerModule(),
         new BootstrapModule(),
         new ModelModule(),
         new UserSecurityModule(),
@@ -148,30 +155,11 @@ public class ModelManagerTest {
   }
 
   @Test
-  public void createModelExpenseAccount() throws StorageException {
-    Transaction transaction = store.startTransaction();
-    ModelExpenseAccount expenseAccount =
-        modelManager.createModelExpenseAccount("Electricity / Water", BankAccountType.OPERATING);
-    transaction.commit();
-
-    assertNotNull(expenseAccount);
-  }
-
-  @Test
-  public void createModelRevenueAccount() throws StorageException {
-    Transaction transaction = store.startTransaction();
-    ModelRevenueAccount revenueAccount =
-        modelManager.createModelRevenueAccount("Dues", BankAccountType.OPERATING);
-    transaction.commit();
-
-    assertNotNull(revenueAccount);
-  }
-
-  @Test
   public void setMonthlyRecurringEventDetails() throws StorageException {
     Transaction transaction = store.startTransaction();
-    ModelExpenseAccount expenseAccount =
-        modelManager.createModelExpenseAccount("Electricity / Water", BankAccountType.OPERATING);
+    AccountCode accountCode = accountCodeManager.createAccountCode(5000, "Utilities");
+    ExpenseAccount expenseAccount =
+        ledgerManager.createExpenseAccount(accountCode, "Electricity / Water", null);
     MonthlyRecurringEvent monthlyRecurringEvent =
         modelManager.setMonthlyRecurringEventDetails(modelManager.getBaseModel(), expenseAccount,
             DateUtil.BEGINNING_OF_TIME, DateUtil.END_OF_TIME,
@@ -202,8 +190,9 @@ public class ModelManagerTest {
   @Test
   public void setAnnualRecurringEventDetails() throws StorageException {
     Transaction transaction = store.startTransaction();
-    ModelExpenseAccount expenseAccount =
-        modelManager.createModelExpenseAccount("Insurance", BankAccountType.OPERATING);
+    AccountCode accountCode = accountCodeManager.createAccountCode(6000, "Insurance");
+    ExpenseAccount expenseAccount =
+        ledgerManager.createExpenseAccount(accountCode, "Insurance", null);
     AnnualRecurringEvent annualRecurringEvent =
         modelManager.setAnnualRecurringEventDetails(modelManager.getBaseModel(), expenseAccount,
             DateUtil.BEGINNING_OF_TIME, DateUtil.END_OF_TIME,
@@ -266,8 +255,9 @@ public class ModelManagerTest {
   @Test
   public void createAdHocEvent() throws StorageException {
     Transaction transaction = store.startTransaction();
-    ModelExpenseAccount expenseAccount =
-        modelManager.createModelExpenseAccount("House Painting", BankAccountType.OPERATING);
+    AccountCode accountCode = accountCodeManager.createAccountCode(7000, "Maintenance");
+    ExpenseAccount expenseAccount =
+        ledgerManager.createExpenseAccount(accountCode, "House Painting", null);
     ModelAccountTransaction modelAccountTransaction =
         modelManager.createAdHocEvent(modelManager.getBaseModel(), expenseAccount,
             Instant.parse("2017-01-01"),
@@ -303,8 +293,9 @@ public class ModelManagerTest {
   @Test
   public void createAdHocEventBeyondTimeHorizon() throws StorageException {
     Transaction transaction = store.startTransaction();
-    ModelExpenseAccount expenseAccount =
-        modelManager.createModelExpenseAccount("House Painting", BankAccountType.OPERATING);
+    AccountCode accountCode = accountCodeManager.createAccountCode(7000, "Maintenance");
+    ExpenseAccount expenseAccount =
+        ledgerManager.createExpenseAccount(accountCode, "House Painting", null);
     ModelAccountTransaction modelAccountTransaction =
         modelManager.createAdHocEvent(modelManager.getBaseModel(), expenseAccount,
             Instant.parse("2027-01-01"),
@@ -341,8 +332,9 @@ public class ModelManagerTest {
   public void updateAdHocEvent() throws StorageException {
     // Create the initial event.
     Transaction transaction = store.startTransaction();
-    ModelExpenseAccount expenseAccount =
-        modelManager.createModelExpenseAccount("House Painting", BankAccountType.OPERATING);
+    AccountCode accountCode = accountCodeManager.createAccountCode(7000, "Maintenance");
+    ExpenseAccount expenseAccount =
+        ledgerManager.createExpenseAccount(accountCode, "House Painting", null);
     modelManager.createAdHocEvent(modelManager.getBaseModel(), expenseAccount,
         Instant.parse("2017-01-01"),
         5, DistributionTimeUnit.YEARS, BigDecimalUtil.valueOf(60000));
@@ -387,8 +379,9 @@ public class ModelManagerTest {
   public void deleteAdHocEvent() throws StorageException {
     // Create the initial event.
     Transaction transaction = store.startTransaction();
-    ModelExpenseAccount expenseAccount =
-        modelManager.createModelExpenseAccount("House Painting", BankAccountType.OPERATING);
+    AccountCode accountCode = accountCodeManager.createAccountCode(7000, "Maintenance");
+    ExpenseAccount expenseAccount =
+        ledgerManager.createExpenseAccount(accountCode, "House Painting", null);
     modelManager.createAdHocEvent(modelManager.getBaseModel(), expenseAccount,
         Instant.parse("2017-01-01"),
         5, DistributionTimeUnit.YEARS, BigDecimalUtil.valueOf(60000));
@@ -471,14 +464,15 @@ public class ModelManagerTest {
     reportingAccounts.model1 = modelManager.createNewModel("Alternative Model 1");
     reportingAccounts.model2 = modelManager.createNewModel("Alternative Model 2");
 
+    AccountCode accountCode = accountCodeManager.createAccountCode(1000, "Unimportant");
     reportingAccounts.revenueAccount =
-        modelManager.createModelRevenueAccount("Revenue", BankAccountType.OPERATING);
+        ledgerManager.createRevenueAccount(accountCode, "Revenue", null);
     reportingAccounts.monthlyExpenseAccount =
-        modelManager.createModelExpenseAccount("Monthly Expense", BankAccountType.OPERATING);
+        ledgerManager.createExpenseAccount(accountCode, "Monthly Expense", null);
     reportingAccounts.annualExpenseAccount =
-        modelManager.createModelExpenseAccount("Annual Expense", BankAccountType.OPERATING);
+        ledgerManager.createExpenseAccount(accountCode, "Annual Expense", null);
     reportingAccounts.longTermExpenseAccount =
-        modelManager.createModelExpenseAccount("Long Term Expense", BankAccountType.RESERVE);
+        ledgerManager.createExpenseAccount(accountCode, "Long Term Expense", null);
 
     // Revenue with model 1.
     modelManager.setMonthlyRecurringEventDetails(reportingAccounts.model1,
@@ -515,9 +509,9 @@ public class ModelManagerTest {
   private static class ReportingAccounts {
     public Model model1;
     public Model model2;
-    public ModelRevenueAccount revenueAccount;
-    public ModelExpenseAccount monthlyExpenseAccount;
-    public ModelExpenseAccount annualExpenseAccount;
-    public ModelExpenseAccount longTermExpenseAccount;
+    public RevenueAccount revenueAccount;
+    public ExpenseAccount monthlyExpenseAccount;
+    public ExpenseAccount annualExpenseAccount;
+    public ExpenseAccount longTermExpenseAccount;
   }
 }

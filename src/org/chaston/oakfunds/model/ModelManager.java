@@ -15,7 +15,7 @@
  */
 package org.chaston.oakfunds.model;
 
-import org.chaston.oakfunds.ledger.BankAccountType;
+import org.chaston.oakfunds.ledger.Account;
 import org.chaston.oakfunds.storage.Report;
 import org.chaston.oakfunds.storage.ReportDateGranularity;
 import org.chaston.oakfunds.storage.StorageException;
@@ -37,19 +37,13 @@ public interface ModelManager {
 
   Model updateModel(Model model, String title) throws StorageException;
 
-  ModelExpenseAccount createModelExpenseAccount(String title,
-      BankAccountType sourceBankAccountType) throws StorageException;
-
-  ModelRevenueAccount createModelRevenueAccount(String title,
-      BankAccountType depositBankAccountType) throws StorageException;
-
-  MonthlyRecurringEvent setMonthlyRecurringEventDetails(Model model, ModelAccount account,
+  MonthlyRecurringEvent setMonthlyRecurringEventDetails(Model model, Account account,
       Instant start, Instant end, BigDecimal amount) throws StorageException;
 
-  AnnualRecurringEvent setAnnualRecurringEventDetails(Model model, ModelAccount account,
+  AnnualRecurringEvent setAnnualRecurringEventDetails(Model model, Account account,
       Instant start, Instant end, int paymentMonth, BigDecimal amount) throws StorageException;
 
-  ModelAccountTransaction createAdHocEvent(Model model, ModelAccount account, Instant date,
+  ModelAccountTransaction createAdHocEvent(Model model, Account account, Instant date,
       int distributionTime, DistributionTimeUnit distributionTimeUnit, BigDecimal amount)
       throws StorageException;
 
@@ -61,11 +55,11 @@ public interface ModelManager {
   void deleteAdHocEvent(ModelAccountTransaction modelAccountTransaction)
       throws StorageException;
 
-  Iterable<ModelAccountTransaction> getModelTransactions(Model model, ModelAccount account,
+  Iterable<ModelAccountTransaction> getModelTransactions(Model model, Account account,
       Instant start, Instant end) throws StorageException;
 
   Iterable<ModelDistributionTransaction> getModelDistributionTransactions(Model model,
-      ModelAccount account, Instant start, Instant end) throws StorageException;
+      Account account, Instant start, Instant end) throws StorageException;
 
   Report runDistributionReport(Model model, int startYear, int endYear,
       ReportDateGranularity reportDateGranularity) throws StorageException;

@@ -15,6 +15,7 @@
  */
 package org.chaston.oakfunds.model;
 
+import org.chaston.oakfunds.ledger.Account;
 import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.InstantRecord;
 import org.chaston.oakfunds.storage.RecordType;
@@ -28,7 +29,7 @@ public interface ModelDistributionTransaction extends InstantRecord<ModelDistrib
 
   static final RecordType<ModelDistributionTransaction> TYPE =
       RecordType.builder("model_distribution_transaction", ModelDistributionTransaction.class)
-          .containedBy(ModelAccount.TYPE)
+          .containedBy(Account.TYPE)
           .build();
 
   String ATTRIBUTE_AMOUNT = "amount";

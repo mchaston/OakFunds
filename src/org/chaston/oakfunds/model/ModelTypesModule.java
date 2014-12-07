@@ -35,10 +35,6 @@ public class ModelTypesModule extends AbstractModule {
     recordTypeMultibinder.addBinding().toInstance(AnnualRecurringEvent.TYPE);
     recordTypeMultibinder.addBinding().toInstance(MonthlyRecurringEvent.TYPE);
 
-    recordTypeMultibinder.addBinding().toInstance(ModelAccount.TYPE);
-    recordTypeMultibinder.addBinding().toInstance(ModelExpenseAccount.TYPE);
-    recordTypeMultibinder.addBinding().toInstance(ModelRevenueAccount.TYPE);
-
     recordTypeMultibinder.addBinding().toInstance(ModelAccountTransaction.TYPE);
     recordTypeMultibinder.addBinding().toInstance(ModelDistributionTransaction.TYPE);
 
@@ -51,10 +47,6 @@ public class ModelTypesModule extends AbstractModule {
         .toInstance(ModelManagerImpl.PERMISSION_MODEL_CREATE);
     permissionMultibinder.addBinding()
         .toInstance(ModelManagerImpl.PERMISSION_MODEL_UPDATE);
-    permissionMultibinder.addBinding()
-        .toInstance(ModelManagerImpl.PERMISSION_MODEL_EXPENSE_ACCOUNT_CREATE);
-    permissionMultibinder.addBinding()
-        .toInstance(ModelManagerImpl.PERMISSION_MODEL_REVENUE_ACCOUNT_CREATE);
     permissionMultibinder.addBinding()
         .toInstance(ModelManagerImpl.PERMISSION_MONTHLY_RECURRING_EVENT_UPDATE);
     permissionMultibinder.addBinding()

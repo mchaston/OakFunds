@@ -15,6 +15,7 @@
  */
 package org.chaston.oakfunds.model;
 
+import org.chaston.oakfunds.ledger.Account;
 import org.chaston.oakfunds.storage.AttributeMethod;
 import org.chaston.oakfunds.storage.IntervalRecord;
 import org.chaston.oakfunds.storage.RecordType;
@@ -28,7 +29,7 @@ public interface RecurringEvent<T extends RecurringEvent> extends IntervalRecord
 
   static final RecordType<RecurringEvent> TYPE =
       RecordType.builder("recurring_event", RecurringEvent.class)
-          .containedBy(ModelAccount.TYPE)
+          .containedBy(Account.TYPE)
           .build();
 
   String ATTRIBUTE_AMOUNT = "amount";
