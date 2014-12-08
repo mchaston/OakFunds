@@ -259,7 +259,7 @@ class ModelManagerImpl implements ModelManager {
         store.insertInstantRecord(account, ModelAccountTransaction.TYPE, date, attributes);
     recalculateDistributionTransactions(model, account, accountTransaction);
     ModelAccountTransaction compensatingAccountTransaction =
-        createCompensatingAccountTransaction(account, date, attributes);
+        createCompensatingAccountTransaction(account, accountTransaction, attributes);
     if (compensatingAccountTransaction != null) {
       recalculateDistributionTransactions(model, account, compensatingAccountTransaction);
     }
@@ -378,8 +378,9 @@ class ModelManagerImpl implements ModelManager {
         attributes.put(ModelAccountTransaction.ATTRIBUTE_DERIVED, true);
         for (Instant instant
             : getAllInstantsInRange(recurringEvent.getStart(), recurringEvent.getEnd())) {
-          store.insertInstantRecord(account, ModelAccountTransaction.TYPE, instant, attributes);
-          createCompensatingAccountTransaction(account, instant, attributes);
+          ModelAccountTransaction accountTransaction = store.insertInstantRecord(
+              account, ModelAccountTransaction.TYPE, instant, attributes);
+          createCompensatingAccountTransaction(account, accountTransaction, attributes);
         }
       }
       if (recurringEvent instanceof AnnualRecurringEvent) {
@@ -400,7 +401,7 @@ class ModelManagerImpl implements ModelManager {
                     attributes);
             recalculateDistributionTransactions(model, account, accountTransaction);
             ModelAccountTransaction compensatingAccountTransaction =
-                createCompensatingAccountTransaction(account, instant, attributes);
+                createCompensatingAccountTransaction(account, accountTransaction, attributes);
             if (compensatingAccountTransaction != null) {
               recalculateDistributionTransactions(model, account, compensatingAccountTransaction);
             }
@@ -411,17 +412,19 @@ class ModelManagerImpl implements ModelManager {
   }
 
   private ModelAccountTransaction createCompensatingAccountTransaction(Account account,
-      Instant instant, Map<String, Object> attributes) throws StorageException {
+      ModelAccountTransaction accountTransaction, Map<String, Object> attributes) throws StorageException {
+    Map<String, Object> alternateAttributes = new HashMap<>(attributes);
+    alternateAttributes.put(
+        ModelAccountTransaction.ATTRIBUTE_SISTER_TRANSACTION_ID, accountTransaction.getId());
     if (account instanceof ExpenseAccount) {
       ExpenseAccount revenueAccount = (ExpenseAccount) account;
       if (revenueAccount.getDefaultSourceAccountId() != null) {
         BankAccount bankAccount =
             ledgerManager.getBankAccount(revenueAccount.getDefaultSourceAccountId());
-        Map<String, Object> alternateAttributes = new HashMap<>(attributes);
         BigDecimal amount = (BigDecimal) attributes.get(ModelAccountTransaction.ATTRIBUTE_AMOUNT);
         alternateAttributes.put(ModelAccountTransaction.ATTRIBUTE_AMOUNT, amount.negate());
         return store.insertInstantRecord(bankAccount,
-            ModelAccountTransaction.TYPE, instant, alternateAttributes);
+            ModelAccountTransaction.TYPE, accountTransaction.getInstant(), alternateAttributes);
       }
     }
     if (account instanceof RevenueAccount) {
@@ -430,7 +433,7 @@ class ModelManagerImpl implements ModelManager {
         BankAccount bankAccount =
             ledgerManager.getBankAccount(revenueAccount.getDefaultDepositAccountId());
         return store.insertInstantRecord(bankAccount,
-            ModelAccountTransaction.TYPE, instant, attributes);
+            ModelAccountTransaction.TYPE, accountTransaction.getInstant(), alternateAttributes);
       }
     }
     return null;

@@ -36,6 +36,7 @@ public interface ModelAccountTransaction extends InstantRecord<ModelAccountTrans
   String ATTRIBUTE_DISTRIBUTION_TIME = "distribution_time";
   String ATTRIBUTE_DISTRIBUTION_TIME_UNIT = "distribution_time_unit";
   String ATTRIBUTE_DERIVED = "derived";
+  String ATTRIBUTE_SISTER_TRANSACTION_ID = "sister_transaction_id";
 
   @AttributeMethod(attribute = ATTRIBUTE_AMOUNT, required = true)
   BigDecimal getAmount();
@@ -48,4 +49,7 @@ public interface ModelAccountTransaction extends InstantRecord<ModelAccountTrans
 
   @AttributeMethod(attribute = ATTRIBUTE_DERIVED, required = true)
   boolean isDerived();
+
+  @AttributeMethod(attribute = ATTRIBUTE_SISTER_TRANSACTION_ID)
+  int getSisterTransactionId();
 }
